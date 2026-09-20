@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DSHDesktop</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<body><main><header><img class="mark" src="icon.png" alt="DSH"><div><h1>DeepSeek Harness Desktop</h1><p>原生 Harness · 本机运行</p></div></header>
+<section class="status"><strong id="health">Starting DSH…</strong><p id="detail">正在启动内置引擎</p></section>
+<section><h2>连接设置</h2><p>配置兼容 OpenAI Chat Completions 的内网服务。API Key 保存至 Windows 凭据管理器。</p>
+<form id="settings"><label>Provider name<input id="provider" required maxlength="128" value="Internal LLM"></label><label>Base URL<input id="url" type="url" placeholder="http://your-server/v1" required></label><label>API Key<input id="key" type="password" autocomplete="off" placeholder="已保存时留空以保留原密钥"></label><label>Model<input id="model" required maxlength="256" placeholder="填写服务提供的模型名称"></label><button type="submit">保存并重启引擎</button><span id="message" role="status"></span></form></section>
+<section><h2>Diagnostics</h2><pre id="diagnostics"></pre><div class="actions"><button id="copy">Copy diagnostics</button><button id="logs">Open Logs</button><button id="restart">Restart Engine</button><button id="quit">Quit</button></div></section>
+<footer>DSHDesktop 0.1.2 · 原生 DSH Web UI 在引擎就绪后打开。Help 菜单可随时返回此页。</footer></main></body></html>

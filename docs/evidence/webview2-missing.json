@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "startupFailureReported": true,
+  "corruptBrowser": false,
+  "systemNodeFallback": false,
+  "systemWebViewFallback": false,
+  "fixture": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\missing-runtime-6dfe656f"
+}

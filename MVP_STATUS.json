@@ -1,0 +1,20 @@
+{
+  "status": "DSH_DESKTOP_MVP_BLOCKED",
+  "reason": "BLOCKED_BY_CLEAN_ENVIRONMENT_AND_GUI_VALIDATION",
+  "architecture": "A_ARCHITECTURE_ACCEPTED",
+  "customApi": "C_CUSTOM_LLM_API_PASSED",
+  "portableArtifactProduced": true,
+  "portableExtractedSmokePassed": true,
+  "desktopVersion": "0.1.2",
+  "bundledWebView2Version": "153.0.4234.48",
+  "bundledWebView2ProcessVerified": true,
+  "nativeRestartAndQuitPassed": true,
+  "upstreamSourcePatches": 0,
+  "remaining": [
+    "Full desktop settings/save/copy interaction matrix (appearance, restart and normal quit verified)",
+    "Actual Windows 10 x64 target-image validation",
+    "Clean corporate Windows image without developer runtimes",
+    "System-wide offline and WebView egress verification",
+    "Windows taskbar close, logout and shutdown lifecycle"
+  ]
+}

@@ -1,0 +1,9 @@
+DSHDesktop includes unmodified third-party software in its generated portable package.
+
+Node.js 24.16.0: Copyright Node.js contributors. See resources/runtime/LICENSE.
+DeepSeek Harness 0.1.5-rc.2: Copyright DeepSeek and contributors. MIT; see the published packages' LICENSE files.
+Tauri 2.11.5: MIT OR Apache-2.0; see packaged Rust crate license texts.
+
+The build generates complete npm-license-inventory.json, rust-license-inventory.json,
+and copies included license/notice texts to licenses/ in the portable output.
+See docs/THIRD_PARTY_LICENSES.md for inventory method and outstanding release review.

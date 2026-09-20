@@ -1,0 +1,60 @@
+{
+  "resources": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-win-x64-portable-20260920-143153\\resources",
+  "results": [
+    {
+      "name": "bundled Node / no Node,npm,pnpm in PATH / HTTP UI",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "upstream UI assets served locally",
+      "status": "PASS",
+      "detail": "4 assets"
+    },
+    {
+      "name": "workspace creation, Chinese/space/parenthesis paths",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "native session creation",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "custom Base URL + API Key + Model reaches mock",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "native file read tool",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "native file edit tool",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "native PowerShell tool",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "no denied public internet/package-manager calls",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "graceful backend stop",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "session persists across restart",
+      "status": "PASS",
+      "detail": ""
+    }
+  ]
+}

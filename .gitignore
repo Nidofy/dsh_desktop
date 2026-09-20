@@ -1,0 +1,24 @@
+.investigation/
+.build/
+runtime/
+dist/
+src-tauri/target/
+node_modules/
+*.log
+src-tauri/generated/
+src-tauri/gen/schemas/
+
+# Local credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.local
+*.pfx
+*.p12
+*.key
+
+# Editor and operating-system metadata
+.vs/
+.idea/
+.DS_Store
+Thumbs.db

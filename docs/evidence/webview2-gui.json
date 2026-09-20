@@ -1,0 +1,16 @@
+{
+  "desktopVersion": "0.1.2",
+  "testHost": "Windows 11 build 26200",
+  "profile": ".build/fixed-browser-ui-profile",
+  "webview2Version": "153.0.4234.48",
+  "restartButtonClicked": true,
+  "backendBefore": 29768,
+  "backendAfter": 22176,
+  "portBefore": 58192,
+  "portAfter": 64599,
+  "restartStartupMs": 4229,
+  "quitButtonClicked": true,
+  "backendJobClosed": true,
+  "desktopAndBackendExited": true,
+  "actualWindows10Tested": false
+}

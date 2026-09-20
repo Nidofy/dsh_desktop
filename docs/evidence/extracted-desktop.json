@@ -1,0 +1,13 @@
+{
+  "administratorToken": false,
+  "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\unzip-b6fec185\\DSHDesktop-win-x64-portable",
+  "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-50f7054e63f147e79c848cd6b38f885f",
+  "startupMs": 5451,
+  "loopbackOnly": true,
+  "port": 53693,
+  "secondInstanceExited": true,
+  "backendCrashReported": true,
+  "desktopStayedAliveAfterBackendCrash": true,
+  "backendRemains": false,
+  "result": "PASS"
+}
