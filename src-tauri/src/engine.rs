@@ -36,6 +36,7 @@ pub struct Diagnostics {
 }
 pub enum Control {
     Restart,
+    RestartAndWait(Sender<Result<(), String>>),
     Stop,
 }
 #[derive(Clone)]
@@ -44,6 +45,7 @@ pub struct Engine {
     pub state: Arc<Mutex<Diagnostics>>,
     pub control: Sender<Control>,
     pub done: Arc<Mutex<Receiver<()>>>,
+    pub save_lock: Arc<Mutex<()>>,
 }
 struct Running {
     child: Child,
@@ -118,6 +120,7 @@ impl Engine {
             state,
             control: tx,
             done: Arc::new(Mutex::new(done_rx)),
+            save_lock: Arc::new(Mutex::new(())),
         };
         let worker = engine.clone();
         thread::spawn(move || {
@@ -129,11 +132,20 @@ impl Engine {
                     " dsh=0.1.5-rc.2 node=24.16.0 supervisor started"
                 ),
             );
+            let mut completion: Option<Sender<Result<(), String>>> = None;
             loop {
-                match run(&app, &worker, &runtime, &logs, &rx) {
+                match run(&app, &worker, &runtime, &logs, &rx, &mut completion) {
                     Ok(Control::Stop) => break,
                     Ok(Control::Restart) => {}
+                    Ok(Control::RestartAndWait(reply)) => {
+                        if let Some(old) = completion.replace(reply) {
+                            let _ = old.send(Err("Restart was superseded".into()));
+                        }
+                    }
                     Err(message) => {
+                        if let Some(reply) = completion.take() {
+                            let _ = reply.send(Err(message.clone()));
+                        }
                         worker.update("failed", &message, None, None);
                         logs.write("desktop.log", &message);
                         if let Some(w) = app.get_webview_window("shell") {
@@ -142,10 +154,14 @@ impl Engine {
                         }
                         match rx.recv() {
                             Ok(Control::Restart) => {}
+                            Ok(Control::RestartAndWait(reply)) => completion = Some(reply),
                             _ => break,
                         }
                     }
                 }
+            }
+            if let Some(reply) = completion {
+                let _ = reply.send(Err("Engine stopped before restart completed".into()));
             }
             logs.write("desktop.log", "backend job closed; supervisor stopped");
             let _ = done_tx.send(());
@@ -175,6 +191,7 @@ fn run(
     runtime: &PathBuf,
     logs: &Logs,
     rx: &Receiver<Control>,
+    completion: &mut Option<Sender<Result<(), String>>>,
 ) -> Result<Control, String> {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.destroy();
@@ -195,7 +212,7 @@ fn run(
         return Err("Bundled runtime is missing. Re-extract the complete portable ZIP; see runtime path in Diagnostics.".into());
     }
     let c = config::load(&engine.root)?;
-    config::write_overlay(&engine.root, &c)?;
+    config::write_overlay(&engine.root, &c, runtime)?;
     let key = config::read_key(&c.base_url)?;
     let home = engine.root.join("dsh");
     let workspace = engine.root.join("workspace");
@@ -292,6 +309,10 @@ fn run(
     let mut misses = 0;
     loop {
         if let Ok(control) = rx.try_recv() {
+            engine.update("restarting", "正在停止旧引擎并应用设置…", Some(pid), None);
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.hide();
+            }
             process.stop();
             return Ok(control);
         }
@@ -321,6 +342,9 @@ fn run(
                 {
                     show_main(app, u.clone())?;
                     engine.update("ready", "Native DSH Web UI is ready", Some(pid), u.port());
+                    if let Some(reply) = completion.take() {
+                        let _ = reply.send(Ok(()));
+                    }
                     logs.write(
                         "desktop.log",
                         &format!(
@@ -360,8 +384,32 @@ fn run(
     }
 }
 fn show_main(app: &tauri::AppHandle, url: Url) -> Result<(), String> {
+    use tauri::menu::{Menu, MenuItem, Submenu};
+    // Use a fresh native menu for each recreated window; Windows destroys the old HWND menu.
+    let menu = (|| -> tauri::Result<_> {
+        let settings = MenuItem::with_id(
+            app,
+            "settings",
+            "Settings / Diagnostics",
+            true,
+            None::<&str>,
+        )?;
+        let restart = MenuItem::with_id(app, "restart", "Restart Engine", true, None::<&str>)?;
+        let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+        Menu::with_items(
+            app,
+            &[&Submenu::with_items(
+                app,
+                "Help",
+                true,
+                &[&settings, &restart, &quit],
+            )?],
+        )
+    })()
+    .map_err(|_| "Cannot create desktop Help menu".to_string())?;
     let origin = url.origin();
     WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
+        .menu(menu)
         .initialization_script(include_str!("../generated/desktop-theme.js"))
         .data_directory(app.state::<Engine>().root.join("webview"))
         .title("DeepSeek Harness — DSHDesktop")

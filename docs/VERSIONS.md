@@ -2,7 +2,7 @@
 
 | Component | Version / evidence |
 |---|---|
-| Desktop | 0.1.4 engineering candidate |
+| Desktop | 0.1.5 engineering candidate |
 | Official npm DSH | 0.1.5-rc.2 |
 | Node Windows x64 | 24.16.0 |
 | Node executable SHA256 | b3094d0b49f9ad602262a9921551737bb97637c05dd357a06ae98188d7290aa3 |

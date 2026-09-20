@@ -21,16 +21,28 @@ fn connection(state: tauri::State<Engine>) -> Result<config::Connection, String>
     config::load(&state.root)
 }
 #[tauri::command]
-fn save_connection(
-    state: tauri::State<Engine>,
+async fn save_connection(
+    state: tauri::State<'_, Engine>,
     connection: config::Connection,
     api_key: String,
 ) -> Result<(), String> {
-    config::save(&state.root, &connection, &api_key)?;
-    state
-        .control
-        .send(Control::Restart)
-        .map_err(|_| "Supervisor is unavailable".into())
+    let engine = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _save = engine
+            .save_lock
+            .lock()
+            .map_err(|_| "Configuration save lock unavailable")?;
+        config::save(&engine.root, &connection, &api_key)?;
+        let (tx, rx) = std::sync::mpsc::channel();
+        engine
+            .control
+            .send(Control::RestartAndWait(tx))
+            .map_err(|_| "Supervisor is unavailable")?;
+        rx.recv_timeout(std::time::Duration::from_secs(110))
+            .map_err(|_| "配置已保存，但等待引擎启动超时。请查看诊断状态。".to_string())?
+    })
+    .await
+    .map_err(|_| "Configuration save task failed".to_string())?
 }
 #[tauri::command]
 fn restart_engine(state: tauri::State<Engine>) -> Result<(), String> {

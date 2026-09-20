@@ -23,6 +23,7 @@ function events(dir,id){
 for(const protocol of ['openai','anthropic']){
  const home=join(root,protocol);mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PROTOCOL_TOOL_READ_OK');
  const requests=[], failures=[];
+ let overrideEffort;
  const server=http.createServer(async(req,res)=>{
   try{
    const endpoint=new URL(req.url,'http://localhost').pathname;
@@ -34,9 +35,14 @@ for(const protocol of ['openai','anthropic']){
    const toolResults=protocol==='openai'?body.messages.filter(m=>m.role==='tool').map(m=>m.content):body.messages.flatMap(m=>Array.isArray(m.content)?m.content.filter(c=>c.type==='tool_result').map(c=>c.content):[]);
    const maxTokens=body.max_tokens??body.max_completion_tokens;
    const isTitle=JSON.stringify(body.messages).includes('Generate the session title from this JSON array of human messages:');
-   requests.push({model:body.model,endpoint,authenticated,toolResults,maxTokens,purpose:isTitle?'session-title':'conversation'});
+   requests.push({model:body.model,endpoint,authenticated,toolResults,maxTokens,reasoningEffort:body.reasoning_effort,thinking:body.thinking,purpose:isTitle?'session-title':'conversation'});
    assert(authenticated,'protocol-specific authentication');assert(['glm-5.3-flash','glm-5.3'].includes(body.model));assert(body.stream);
-   assert.equal(maxTokens,isTitle?64:body.model==='glm-5.3-flash'?8192:16384,'conversation budget or explicit auxiliary title override reaches the API');
+   assert.equal(maxTokens,isTitle?64:body.model==='glm-5.3-flash'?8192:128000,'conversation budget or explicit auxiliary title override reaches the API');
+   if(!isTitle){
+    const effort=overrideEffort??(body.model==='glm-5.3'?'high':'low');
+    if(protocol==='openai')assert.equal(body.reasoning_effort,effort);
+    else {assert.equal(body.thinking?.type,'enabled');assert.equal(body.thinking.budget_tokens,Math.min({high:16384,medium:8192,low:2048}[effort],maxTokens-1024));}
+   }
    const callTool=!isTitle&&!toolResults.length;
    res.writeHead(200,{'content-type':'text/event-stream'});
    if(protocol==='openai'){
@@ -59,11 +65,15 @@ for(const protocol of ['openai','anthropic']){
  patch[1].config.providers['desktop-internal'].baseURL=`http://127.0.0.1:${server.address().port}/gateway${protocol==='openai'?'/v1':''}`;
  const overlay=join(home,'desktop.patch.json');writeFileSync(overlay,JSON.stringify(patch));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'desktop-test-key',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
+ mkdirSync(env.DSH_HOME,{recursive:true});
+ const nativeSettings=join(env.DSH_HOME,'settings.yaml');
+ writeFileSync(nativeSettings,JSON.stringify({'llm-pi-ai':{providers:{'desktop-internal':{...patch[1].config.providers['desktop-internal'],models:[{...patch[1].config.providers['desktop-internal'].models[1],id:'glm-5.3[1m]',contextWindow:32768,maxTokens:4096}]}}},'agent-default-model':{provider:'desktop-internal',model:'glm-5.3[1m]'},'desktop-sync-test':{preserve:true}}));
  for(const key of Object.keys(env))if(/^(DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(key))delete env[key];
  let child,output='',origin,cookie;
- async function start(){
+ async function start(sync=true){
   let launch;output='';
-  child=spawn(join(resources,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(resources,'host.mjs')).href,join(resources,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',overlay,'--host','127.0.0.1','--port','0','--no-open'],{cwd:home,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
+  const launchEnv={...env};delete launchEnv.DSH_DESKTOP_PATCH;if(sync)launchEnv.DSH_DESKTOP_PATCH=overlay;
+  child=spawn(join(resources,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(resources,'host.mjs')).href,join(resources,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',overlay,'--host','127.0.0.1','--port','0','--no-open'],{cwd:home,env:launchEnv,windowsHide:true,stdio:['pipe','pipe','pipe']});
   for(const stream of [child.stdout,child.stderr])stream.on('data',c=>{output+=c;launch??=/dsh web: (http:\/\/127\.0\.0\.1:\d+\/[^\s]*)/.exec(output)?.[1];});
   child.stdin.write('start\n');const deadline=Date.now()+90000;while(!launch&&child.exitCode===null&&Date.now()<deadline)await pause();assert(launch,'DSH startup');
   const response=await fetch(launch,{redirect:'manual'});cookie=response.headers.get('set-cookie').split(';')[0];origin=new URL(launch).origin;
@@ -71,11 +81,19 @@ for(const protocol of ['openai','anthropic']){
  async function stop(){if(!child||child.exitCode!==null)return;child.stdin.write('stop\n');const end=Date.now()+10000;while(child.exitCode===null&&Date.now()<end)await pause();if(child.exitCode===null)child.kill();}
  async function rpc(method,request){const response=await fetch(`${origin}/api/${method}`,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args:request===undefined?{}:{request}}})});const data=await response.json();assert(data.result?.ok,JSON.stringify(data));return data.result.value;}
  try{
+  await start(false);
+  const stale=await rpc('session/modelCatalog');
+  assert.deepEqual(stale.groups.find(g=>g.id==='desktop-internal').models.map(m=>m.id),['glm-5.3[1m]'],'reproduce native settings overriding the desktop overlay');
+  assert.equal(stale.default.model,'glm-5.3[1m]');
+  const {sessionId}=await rpc('session/create',{cwd:home});
+  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3[1m]',reasoningEffort:'high'});
+  await stop();
   await start();
   const catalog=await rpc('session/modelCatalog');
   assert.deepEqual(catalog.groups.find(g=>g.id==='desktop-internal').models.map(m=>m.id),['glm-5.3-flash','glm-5.3']);
   assert.equal(catalog.default.model,'glm-5.3');
-  const {sessionId}=await rpc('session/create',{cwd:home});
+  assert.equal(catalog.default.reasoningEffort,'high');
+  assert(catalog.groups.find(g=>g.id==='desktop-internal').models.every(m=>m.reasoning.efforts.some(e=>e.id==='high')),'native thinking selector enabled');
   async function prompt(count){
    await rpc('session/prompt',{sessionId,requestId:crypto.randomUUID(),mode:'queue',content:[{type:'text',text:'Read fixture.txt, then reply PROTOCOL_REPLY_OK.'}]});
    const end=Date.now()+25000;let history=[];
@@ -92,16 +110,19 @@ for(const protocol of ['openai','anthropic']){
   await prompt(1);
   assert(requests.some(r=>JSON.stringify(r.toolResults).includes('PROTOCOL_TOOL_READ_OK')),'native read result returned through protocol');
   const boundary=requests.length;
-  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3-flash'});
+  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3-flash',reasoningEffort:'low'});
   await prompt(2);
   assert(requests.slice(boundary).some(r=>r.model==='glm-5.3-flash'),'selection changes actual request model');
   assert(!output.includes('OFFLINE_TEST_DENIED'));
   await stop();await start();
   assert.equal((await rpc('session/modelCatalog')).default.model,'glm-5.3-flash','native last selection persists');
   await prompt(3);
+  overrideEffort='medium';
+  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3-flash',reasoningEffort:'medium'});
+  await prompt(4);
   assert.deepEqual(failures,[],'no mock request validation failures, including auxiliary requests');
-  results.push({protocol,status:'PASS',models:['glm-5.3-flash','glm-5.3'],defaultModel:'glm-5.3',switchedModel:'glm-5.3-flash',contextWindows:[131072,1000000],maxOutputTokens:[8192,16384],nativeContextCapacityVerified:true,nativeReadTool:true,streamedReply:true,selectionPersistsAfterRestart:true,requests:requests.map(({toolResults,...r})=>r)});
+  results.push({protocol,status:'PASS',staleNativeSettingsReproduced:true,fixedOnFirstRestart:true,oldSessionModelRepaired:true,nativeThinkingSelector:true,nativeEffortSelection:true,nativeThinkingOverride:true,models:['glm-5.3-flash','glm-5.3'],defaultModel:'glm-5.3',switchedModel:'glm-5.3-flash',contextWindows:[131072,1000000],maxOutputTokens:[8192,128000],nativeContextCapacityVerified:true,nativeReadTool:true,streamedReply:true,selectionPersistsAfterRestart:true,requests:requests.map(({toolResults,...r})=>r)});
   console.log(`PASS ${protocol}: catalog, default, model switch, auth, streaming, read tool, restart persistence`);
- }finally{await stop();server.closeAllConnections();server.close();writeFileSync(join(root,'report.json'),JSON.stringify(results,null,2));}
+ }finally{await stop();writeFileSync(join(home,'backend-test.log'),output);server.closeAllConnections();server.close();writeFileSync(join(root,'report.json'),JSON.stringify(results,null,2));}
 }
 console.log('Evidence directory:',root);

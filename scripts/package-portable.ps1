@@ -1,5 +1,6 @@
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
+Get-ChildItem -LiteralPath (Join-Path $root 'runtime-src') -Filter '*.mjs' | Copy-Item -Destination (Join-Path $root 'runtime') -Force
 & "$PSScriptRoot/verify-webview2.ps1" -RuntimePath (Join-Path $root 'runtime')
 $dist=Join-Path $root 'dist'
 $stage=Join-Path $dist 'DSHDesktop-win-x64-portable'

@@ -6,6 +6,10 @@ Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`Administ
 
 ## Executed evidence
 
+### 0.1.5 settings precedence and native reasoning selection
+
+See [configuration synchronization and Thinking effort](SETTINGS-0.1.5.md). The regression first reproduces native settings overriding the desktop overlay, then verifies first-restart synchronization, old-session model repair, per-model capacity/output and native effort selection through both API formats. Nine Rust tests and settings synchronization checks passed. Actual desktop GUI verified the GLM preset, native save/restart and High selection. The previous 0.1.4 clean-profile tests did not cover persisted native overrides; this release adds that missing case.
+
 ### 0.1.4 model context and output limits
 
 See [context fix details](CONTEXT-0.1.4.md). Nine Rust tests passed. Both native protocol integration paths verified per-model context windows and output limits, bare GLM wire IDs, model switching and restart persistence. Browser settings checks used mock IPC; actual provider capacity and million-token requests were not tested.

@@ -6,7 +6,7 @@ Copy-Item -LiteralPath (Join-Path $Root 'build-deps/package.json'),(Join-Path $R
 # Developer/build environment only. Never included as a runtime launch step.
 & npm.cmd ci --prefix $out --omit=dev --no-audit --no-fund --registry=https://registry.npmjs.org --cache (Join-Path $Root '.build/npm-cache')
 if ($LASTEXITCODE -ne 0) { throw 'Pinned DSH production installation failed' }
-Copy-Item -LiteralPath (Join-Path $Root 'runtime-src/host.mjs') -Destination (Join-Path $Root 'runtime/host.mjs') -Force
+Get-ChildItem -LiteralPath (Join-Path $Root 'runtime-src') -Filter '*.mjs' | Copy-Item -Destination (Join-Path $Root 'runtime') -Force
 $v = Get-Content -LiteralPath (Join-Path $Root 'versions.json') -Raw | ConvertFrom-Json
 $actual = Get-Content -LiteralPath (Join-Path $out 'node_modules/@deepseek-ai/dsh/package.json') -Raw | ConvertFrom-Json
 if ($actual.version -ne $v.dsh) { throw 'DSH version mismatch' }

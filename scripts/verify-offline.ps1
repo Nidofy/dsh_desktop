@@ -4,7 +4,7 @@ $root=Split-Path $PSScriptRoot -Parent
 $package=(Resolve-Path -LiteralPath $PackagePath).Path
 $node=Join-Path $package 'resources/runtime/node.exe'
 & "$PSScriptRoot/verify-webview2.ps1" -RuntimePath (Join-Path $package 'resources')
-foreach ($f in @('DSHDesktop.exe','resources/runtime/node.exe','resources/host.mjs','resources/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js')) {
+foreach ($f in @('DSHDesktop.exe','resources/runtime/node.exe','resources/host.mjs','resources/settings-sync.mjs','resources/model-defaults.mjs','resources/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js')) {
     if (!(Test-Path -LiteralPath (Join-Path $package $f))) { throw "Missing portable resource: $f" }
 }
 $v=Get-Content -LiteralPath (Join-Path $root 'versions.json') -Raw | ConvertFrom-Json

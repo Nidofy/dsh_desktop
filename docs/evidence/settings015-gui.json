@@ -1,0 +1,20 @@
+{
+  "desktopVersion": "0.1.5",
+  "isolatedProfile": true,
+  "nativeGlmPreset": true,
+  "contextWindow": 1000000,
+  "maxTokens": 128000,
+  "nativeSettingsSynchronized": true,
+  "oldBackendPid": 15216,
+  "newBackendPid": 28212,
+  "restartStartupMs": 4127,
+  "thinkingOnlyInNativeConversation": true,
+  "thinkingSelection": "high",
+  "thinkingSavedToNativeDefault": true,
+  "liveGlmEndpointTested": false,
+  "helpMenuSurvivesRestart": true,
+  "finalRestartStartupMs": 4132,
+  "thinkingSurvivesRestart": true,
+  "finalHelpQuitCleansUp": true,
+  "executableSha256": "35f45d5ecda77369c4a4b3c73e6ad5dd5cbcc3dbaaef25fe17b134d0a058e1dd"
+}

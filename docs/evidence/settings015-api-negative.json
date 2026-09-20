@@ -1,0 +1,18 @@
+[
+  {
+    "test": "T42 invalid API key",
+    "status": "PASS"
+  },
+  {
+    "test": "T43 unreachable Base URL",
+    "status": "PASS"
+  },
+  {
+    "test": "T44 model error",
+    "status": "PASS"
+  },
+  {
+    "test": "T45 stream idle timeout",
+    "status": "PASS"
+  }
+]

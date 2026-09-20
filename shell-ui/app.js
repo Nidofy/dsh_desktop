@@ -50,8 +50,11 @@ function addModel(id = '', selected = false, limits) {
     field.required = true; field.min = min; field.max = max; field.step = '1'; field.value = value;
     label.append(field); capacity.append(label); return field;
   };
-  const context = numberField('上下文容量（tokens）', 'context-window', limits?.contextWindow ?? 32768, 1024, 100000000);
-  const output = numberField('最大输出（tokens）', 'max-tokens', limits?.maxTokens ?? 4096, 1, 99999999);
+  const isGlm = value => /^glm-5\.3(?:-flash)?(?:\[1m\])?$/i.test(value.trim());
+  const defaults = () => isGlm(input.value) ? [1000000,128000] : [32768,4096];
+  const context = numberField('上下文容量（tokens）', 'context-window', limits?.contextWindow ?? defaults()[0], 1024, 100000000);
+  const output = numberField('最大输出（tokens）', 'max-tokens', limits?.maxTokens ?? defaults()[1], 1, 99999999);
+  let limitsEdited = !!limits;
   const presetLabel = document.createElement('label'); presetLabel.textContent = '上下文快捷设置';
   const preset = document.createElement('select');
   for (const [value, text] of [['','自定义'],['32768','32K · 32,768'],['131072','128K · 131,072'],['200000','200K · 200,000'],['1000000','1M · 1,000,000']]) {
@@ -61,17 +64,19 @@ function addModel(id = '', selected = false, limits) {
     preset.value = [...preset.options].some(o => o.value === context.value) ? context.value : '';
     output.setCustomValidity(Number(output.value) >= Number(context.value) ? '最大输出必须小于上下文容量。' : '');
   };
-  preset.onchange = () => { if (preset.value) context.value = preset.value; sync(); };
-  context.oninput = output.oninput = sync; sync();
+  preset.onchange = () => { limitsEdited = true; if (preset.value) context.value = preset.value; sync(); };
+  context.oninput = output.oninput = () => { limitsEdited = true; sync(); }; sync();
   presetLabel.append(preset); capacity.append(presetLabel);
   const note = document.createElement('small'); note.className = 'capacity-note';
-  note.textContent = limits ? '请按当前服务的实际限制设置，1M = 1,000,000 tokens。' : '旧配置未记录容量，初始回退为 32,768 / 4,096。请按服务限制调整后保存。';
+  note.textContent = 'GLM 5.3 默认 1M / 128,000；其他模型回退为 32,768 / 4,096。请按服务限制调整。';
+  const glmPreset = document.createElement('button'); glmPreset.type = 'button'; glmPreset.className = 'secondary glm-preset'; glmPreset.textContent = 'GLM：1M 上下文 / 128,000 最大输出';
+  glmPreset.onclick = () => { context.value = '1000000'; output.value = '128000'; limitsEdited = true; sync(); };
   const suffix = document.createElement('button'); suffix.type = 'button'; suffix.className = 'secondary suffix-fix';
-  suffix.textContent = '移除 [1m] 后缀并将上下文设为 1M';
-  const updateSuffix = () => { suffix.hidden = !/^glm-.*\[1m\]$/i.test(input.value.trim()); };
-  input.oninput = updateSuffix; updateSuffix();
-  suffix.onclick = () => { input.value = input.value.trim().replace(/\[1m\]$/i, ''); context.value = '1000000'; sync(); updateSuffix(); };
-  row.append(label, input, remove, capacity, note, suffix); $('models').append(row); updateModelRows();
+  suffix.textContent = '移除 [1m] 后缀并设为 1M / 128,000';
+  const updateSuffix = () => { suffix.hidden = !/^glm-.*\[1m\]$/i.test(input.value.trim()); glmPreset.hidden = !isGlm(input.value); };
+  input.oninput = () => { if (!limitsEdited) { [context.value,output.value] = defaults(); sync(); } updateSuffix(); }; updateSuffix();
+  suffix.onclick = () => { input.value = input.value.trim().replace(/\[1m\]$/i, ''); context.value = '1000000'; output.value = '128000'; limitsEdited = true; sync(); updateSuffix(); };
+  row.append(label, input, remove, capacity, note, glmPreset, suffix); $('models').append(row); updateModelRows();
   return input;
 }
 $('add-model').onclick = () => { if ($('models').children.length < 100) addModel().focus(); };
@@ -92,6 +97,7 @@ $('settings').addEventListener('submit',async event=>{
   const selected = rows.findIndex(row => row.querySelector('input[type=radio]').checked);
   if (selected < 0) { $('message').textContent = '请选择默认模型。'; return; }
   $('connection-fields').disabled = true;
+  $('message').textContent = '正在保存、同步 DSH 设置并等待新引擎就绪…';
   try {
     const modelLimits = Object.fromEntries(rows.map((row, i) => [models[i], {
       contextWindow: Number(row.querySelector('.context-window').value),
@@ -99,7 +105,7 @@ $('settings').addEventListener('submit',async event=>{
     }]));
     await invoke('save_connection',{connection:{providerName:$('provider').value.trim(),baseUrl:$('url').value.trim(),api:$('api').value,models,model:models[selected],modelLimits},apiKey:$('key').value});
     for (const row of rows) row.querySelector('.capacity-note').textContent = '请按当前服务的实际限制设置，1M = 1,000,000 tokens。';
-    $('key').value=''; $('message').textContent='已保存，正在重启引擎。';
+    $('key').value=''; $('message').textContent='已保存并同步，新的引擎已就绪。旧对话的容量统计将在下一轮请求刷新。';
   } catch(e){$('message').textContent=String(e);} finally{$('connection-fields').disabled=false;}
 });
 for(const [id,cmd] of [['logs','open_logs'],['restart','restart_engine'],['quit','quit_app']]) $(id).onclick=()=>invoke(cmd).catch(e=>{$('message').textContent=String(e);});

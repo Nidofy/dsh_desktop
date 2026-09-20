@@ -58,7 +58,19 @@ impl Default for Connection {
 }
 impl Connection {
     pub fn limits(&self, id: &str) -> ModelLimits {
-        self.model_limits.get(id).copied().unwrap_or_default()
+        self.model_limits.get(id).copied().unwrap_or_else(|| {
+            if matches!(
+                id.to_ascii_lowercase().trim_end_matches("[1m]"),
+                "glm-5.3" | "glm-5.3-flash"
+            ) {
+                ModelLimits {
+                    context_window: 1000000,
+                    max_tokens: 128000,
+                }
+            } else {
+                ModelLimits::default()
+            }
+        })
     }
     pub fn model_ids(&self) -> Vec<String> {
         self.models.clone().unwrap_or_else(|| {
@@ -226,7 +238,7 @@ pub fn save(root: &Path, c: &Connection, key: &str) -> Result<(), String> {
     .map_err(|_| "Cannot commit connection configuration")?;
     Ok(())
 }
-pub fn write_overlay(root: &Path, c: &Connection) -> Result<(), String> {
+pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), String> {
     // JSON is YAML-compatible; no string interpolation into executable YAML tags.
     let mut overlay = vec![serde_json::json!({"id":"session-telemetry-otel","disabled":true})];
     if !c.base_url.is_empty() {
@@ -235,11 +247,17 @@ pub fn write_overlay(root: &Path, c: &Connection) -> Result<(), String> {
             "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":c.api,
             "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| {
                 let limits = c.limits(id);
-                serde_json::json!({"id":id,"name":id,"contextWindow":limits.context_window,"maxTokens":limits.max_tokens})
+                let mut model = serde_json::json!({"id":id,"name":id,"contextWindow":limits.context_window,"maxTokens":limits.max_tokens});
+                model["reasoningEfforts"] = serde_json::json!({"off":null,"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"});
+                model
             }).collect::<Vec<_>>(),
             "retryPolicy":{"mode":"normal","maxRetries":0}
         }}}}));
-        overlay.push(serde_json::json!({"id":"agent-default-model","config":{"provider":"desktop-internal","model":c.model}}));
+        let selection = serde_json::json!({"provider":"desktop-internal","model":c.model});
+        overlay.push(serde_json::json!({"id":"agent-default-model","config":selection}));
+        let plugin = url::Url::from_file_path(runtime.join("model-defaults.mjs"))
+            .map_err(|_| "Invalid model defaults runtime path")?;
+        overlay.push(serde_json::json!({"insert":[{"id":"desktop-model-defaults","name":plugin.as_str(),"config":{"models":c.model_ids(),"defaultModel":c.model}}]}));
     }
     fs::write(
         root.join("desktop.patch.json"),
@@ -285,14 +303,19 @@ mod tests {
                         "glm-5.3".into(),
                         ModelLimits {
                             context_window: 1000000,
-                            max_tokens: 16384,
+                            max_tokens: 128000,
                         },
                     ),
                 ]
                 .into(),
                 ..legacy.clone()
             };
-            write_overlay(&dir, &c).unwrap();
+            write_overlay(
+                &dir,
+                &c,
+                &root.parent().unwrap().parent().unwrap().join("runtime"),
+            )
+            .unwrap();
             let value: serde_json::Value =
                 serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap()).unwrap();
             let provider = &value[1]["config"]["providers"]["desktop-internal"];
@@ -357,7 +380,13 @@ mod tests {
             r#"{"providerName":"Old","baseUrl":"http://localhost/v1","model":"glm-5.3","models":["glm-5.3","glm-5.3-flash"]}"#,
         ] {
             let mut c: Connection = serde_json::from_str(json).unwrap();
-            assert_eq!(c.limits("glm-5.3"), ModelLimits::default());
+            assert_eq!(
+                c.limits("glm-5.3"),
+                ModelLimits {
+                    context_window: 1000000,
+                    max_tokens: 128000
+                }
+            );
             for (context_window, max_tokens, valid) in [
                 (1000000, 16384, true),
                 (1024, 1, true),
@@ -422,7 +451,7 @@ mod tests {
             ..Default::default()
         };
         save(&dir, &c, "desktop-credential-fixture").unwrap();
-        write_overlay(&dir, &c).unwrap();
+        write_overlay(&dir, &c, &std::env::current_dir().unwrap()).unwrap();
         assert_eq!(read_key(&c.base_url).unwrap(), "desktop-credential-fixture");
         assert_eq!(read_key("http://127.0.0.1:12346/v1").unwrap(), "");
         for f in ["connection.json", "desktop.patch.json"] {

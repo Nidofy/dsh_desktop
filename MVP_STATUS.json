@@ -5,7 +5,7 @@
   "customApi": "C_CUSTOM_LLM_API_PASSED",
   "portableArtifactProduced": true,
   "portableExtractedSmokePassed": true,
-  "desktopVersion": "0.1.4",
+  "desktopVersion": "0.1.5",
   "bundledWebView2Version": "153.0.4234.48",
   "bundledWebView2ProcessVerified": true,
   "nativeRestartAndQuitPassed": true,
@@ -24,5 +24,7 @@
     "System-wide offline and WebView egress verification",
     "Explicit tray Exit click, Windows taskbar close, logout and shutdown lifecycle"
   ],
-  "perModelLimitsIntegrationPassed": true
+  "perModelLimitsIntegrationPassed": true,
+  "nativeSettingsPrecedenceRegressionPassed": true,
+  "nativeThinkingSelectionPassed": true
 }
