@@ -2,7 +2,16 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DSHDesktop</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
 <body><main><header><img class="mark" src="icon.png" alt="DSH"><div><h1>DeepSeek Harness Desktop</h1><p>原生 Harness · 本机运行</p></div></header>
 <section class="status"><strong id="health">Starting DSH…</strong><p id="detail">正在启动内置引擎</p></section>
-<section><h2>连接设置</h2><p>配置兼容 OpenAI Chat Completions 的内网服务。API Key 保存至 Windows 凭据管理器。</p>
-<form id="settings"><label>Provider name<input id="provider" required maxlength="128" value="Internal LLM"></label><label>Base URL<input id="url" type="url" placeholder="http://your-server/v1" required></label><label>API Key<input id="key" type="password" autocomplete="off" placeholder="已保存时留空以保留原密钥"></label><label>Model<input id="model" required maxlength="256" placeholder="填写服务提供的模型名称"></label><button type="submit">保存并重启引擎</button><span id="message" role="status"></span></form></section>
+<section><h2>连接设置</h2><p>选择服务的 API 格式并配置模型。此连接中的模型共享地址与密钥；密钥保存至 Windows 凭据管理器。</p>
+<form id="settings"><fieldset id="connection-fields" disabled>
+<label>连接名称<input id="provider" required maxlength="128" value="Internal LLM"></label>
+<label>API 格式<select id="api"><option value="openai-completions">OpenAI · Chat Completions</option><option value="anthropic-messages">Anthropic · Messages</option></select></label>
+<label>Base URL<input id="url" type="url" placeholder="http://your-server/v1" aria-describedby="url-help endpoint" required></label><small id="url-help"></small><small id="endpoint"></small>
+<label>API Key<input id="key" type="password" autocomplete="off" placeholder="已保存时留空以保留原密钥"></label>
+<div class="models-heading"><h3>模型列表</h3><button id="add-model" type="button" class="secondary">＋ 添加模型</button></div>
+<p class="model-help" id="models-help">填写服务提供的模型 ID，选中圆点设为默认模型。保存后可在对话中的模型选择器切换。</p>
+<div id="models" aria-describedby="models-help"></div>
+<button type="submit">保存并重启引擎</button>
+</fieldset><span id="message" role="status" aria-live="polite">正在读取配置…</span></form></section>
 <section><h2>Diagnostics</h2><pre id="diagnostics"></pre><div class="actions"><button id="copy">Copy diagnostics</button><button id="logs">Open Logs</button><button id="restart">Restart Engine</button><button id="quit">Quit</button></div></section>
-<footer>DSHDesktop 0.1.2 · 原生 DSH Web UI 在引擎就绪后打开。Help 菜单可随时返回此页。</footer></main></body></html>
+<footer>DSHDesktop 0.1.3 · 原生 DSH Web UI 在引擎就绪后打开。Help 菜单可随时返回此页。</footer></main></body></html>

@@ -5,16 +5,20 @@
   "customApi": "C_CUSTOM_LLM_API_PASSED",
   "portableArtifactProduced": true,
   "portableExtractedSmokePassed": true,
-  "desktopVersion": "0.1.2",
+  "desktopVersion": "0.1.3",
   "bundledWebView2Version": "153.0.4234.48",
   "bundledWebView2ProcessVerified": true,
   "nativeRestartAndQuitPassed": true,
+  "supportedApiFormats": ["openai-completions", "anthropic-messages"],
+  "multiModelProtocolIntegrationPassed": true,
+  "nativeConnectionSavePassed": true,
+  "closeToTrayAndRestorePassed": true,
   "upstreamSourcePatches": 0,
   "remaining": [
-    "Full desktop settings/save/copy interaction matrix (appearance, restart and normal quit verified)",
+    "Full desktop settings/copy interaction matrix (basic connection save, restart and tray restore verified)",
     "Actual Windows 10 x64 target-image validation",
     "Clean corporate Windows image without developer runtimes",
     "System-wide offline and WebView egress verification",
-    "Windows taskbar close, logout and shutdown lifecycle"
+    "Explicit tray Exit click, Windows taskbar close, logout and shutdown lifecycle"
   ]
 }

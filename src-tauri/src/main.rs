@@ -7,7 +7,8 @@ mod process;
 use engine::{Control, Engine};
 use std::{fs, os::windows::process::CommandExt, path::PathBuf};
 use tauri::{
-    menu::{Menu, MenuItem, Submenu},
+    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, WebviewUrl, WebviewWindowBuilder,
 };
 
@@ -53,6 +54,21 @@ fn open_logs(state: tauri::State<Engine>) -> Result<(), String> {
 #[tauri::command]
 fn quit_app(app: tauri::AppHandle) {
     app.exit(0);
+}
+fn restore_window(app: &tauri::AppHandle, label: &str) {
+    if let Some(window) = app.get_webview_window(label) {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+fn restore_main(app: &tauri::AppHandle) {
+    let label = if app.get_webview_window("main").is_some() {
+        "main"
+    } else {
+        "shell"
+    };
+    restore_window(app, label);
 }
 fn main() {
     let Some(_instance) = process::Instance::acquire() else {
@@ -111,16 +127,50 @@ fn main() {
                     &[&settings, &restart, &quit],
                 )?],
             )?)?;
+            let tray_menu = Menu::with_items(
+                app,
+                &[
+                    &MenuItem::with_id(app, "show", "打开 DSH Desktop", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "settings", "设置 / 诊断", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "restart", "重启引擎", true, None::<&str>)?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?,
+                ],
+            )?;
+            // Tauri retains the tray handle for the application's lifetime.
+            // Fail startup if it cannot be created: hidden windows must remain recoverable.
+            TrayIconBuilder::with_id("dsh-desktop")
+                .icon(
+                    app.default_window_icon()
+                        .ok_or("Application icon is missing")?
+                        .clone(),
+                )
+                .tooltip("DSH Desktop — 点击打开，右键退出")
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_tray_icon_event(|tray, event| {
+                    if matches!(
+                        event,
+                        TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        }
+                    ) {
+                        restore_main(tray.app_handle());
+                    }
+                })
+                .build(app)?;
+            logs.write(
+                "desktop.log",
+                "system tray initialized; window close hides to tray",
+            );
             app.manage(Engine::start(app.handle().clone(), root, runtime, logs));
             Ok(())
         })
         .on_menu_event(|app, event| match event.id().as_ref() {
-            "settings" => {
-                if let Some(w) = app.get_webview_window("shell") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
-            }
+            "show" => restore_main(app),
+            "settings" => restore_window(app, "shell"),
             "restart" => {
                 let _ = app.state::<Engine>().control.send(Control::Restart);
             }
@@ -129,14 +179,18 @@ fn main() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "shell"
-                    && window.app_handle().get_webview_window("main").is_some()
-                {
-                    api.prevent_close();
-                    let _ = window.hide();
-                } else {
-                    window.app_handle().exit(0);
+                api.prevent_close();
+                let _ = window.hide();
+                // Closing the main window also hides its companion settings window.
+                if window.label() == "main" {
+                    if let Some(shell) = window.app_handle().get_webview_window("shell") {
+                        let _ = shell.hide();
+                    }
                 }
+                browser_runtime::write_startup_log(&format!(
+                    "window hidden to tray: {}",
+                    window.label()
+                ));
             }
         })
         .build(tauri::generate_context!());

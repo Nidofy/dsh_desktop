@@ -10,6 +10,7 @@ This is an acceptance-evidence blocker, not a discovered upstream incompatibilit
 - Native GUI inspection initially timed out. Subsequent checks passed actual rendering, icons/backgrounds, welcome acknowledgement persistence and main-window close. Version 0.1.2 additionally verified the bundled WebView2 process, native Restart Engine and Quit with backend cleanup. Real connection-form saving, copy diagnostics and the full exit matrix remain unverified. See docs/TEST_REPORT.md.
 - No clean corporate Windows image/VM is available in this task. PATH isolation and Node transport interception are useful partial evidence; they do not prove absent system installations, all native DLL prerequisites or WebView/OS-wide egress behavior.
 - Windows logout/shutdown tests were not run on the user's working machine.
+- Version 0.1.3 added and tested native basic connection saving, both protocol transports, multiple-model switching, close-to-tray and tray-click restore. Tray context-menu labels were inspected; automated selection of its Exit item was interrupted by changing desktop focus, so that specific click is not recorded as passed. The existing explicit quit handler and bounded cleanup remain unchanged.
 
 ## Root cause
 

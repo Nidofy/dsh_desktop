@@ -1,0 +1,72 @@
+[
+  {
+    "protocol": "openai",
+    "status": "PASS",
+    "models": [
+      "fixture-first",
+      "fixture-second"
+    ],
+    "defaultModel": "fixture-second",
+    "switchedModel": "fixture-first",
+    "nativeReadTool": true,
+    "streamedReply": true,
+    "selectionPersistsAfterRestart": true,
+    "requests": [
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-first",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true
+      }
+    ]
+  },
+  {
+    "protocol": "anthropic",
+    "status": "PASS",
+    "models": [
+      "fixture-first",
+      "fixture-second"
+    ],
+    "defaultModel": "fixture-second",
+    "switchedModel": "fixture-first",
+    "nativeReadTool": true,
+    "streamedReply": true,
+    "selectionPersistsAfterRestart": true,
+    "requests": [
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-second",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true
+      },
+      {
+        "model": "fixture-first",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true
+      }
+    ]
+  }
+]

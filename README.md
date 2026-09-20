@@ -6,17 +6,19 @@ Windows x64 的 Tauri 2 桌面壳，直接运行官方 DeepSeek Harness 和原�
 
 ## 使用
 
-桌面壳 **0.1.2** 已内置 WebView2 Fixed Version，修复未预装 WebView2 的内网电脑无法启动的问题，并保留用户提供的图标与透明背景。首次打开看到的“DSH 0.1 仍在测试”是官方欢迎说明；随包引擎的完整版本为 **0.1.5-rc.2**。
+桌面壳 **0.1.3** 支持 OpenAI / Anthropic API、多模型列表和系统托盘；已内置 WebView2 Fixed Version，并保留用户提供的图标与透明背景。首次打开看到的“DSH 0.1 仍在测试”是官方欢迎说明；随包引擎的完整版本为 **0.1.5-rc.2**。
 
 1. 将 `DSHDesktop-win-x64-portable.zip` 完整解压到当前用户拥有的本机目录，保留目录内全部文件。不要在压缩包、网络共享或 Program Files 中直接运行。
 2. 双击 `DSHDesktop.exe`。
-3. 在 Connection Settings 填写 Base URL、API Key 和 Model，点击“保存并重启引擎”。V1 连接设置使用 OpenAI Chat Completions 协议；Base URL 通常以 `/v1` 结尾。
+3. 在连接设置选择 **OpenAI · Chat Completions** 或 **Anthropic · Messages**，填写 Base URL、API Key，添加一个或多个模型 ID，并选择初始默认模型，点击“保存并重启引擎”。同一连接的模型共用地址和密钥。OpenAI 地址通常以 `/v1` 结尾；Anthropic 填写 API 根地址（也接受末尾 `/v1`），页面显示实际请求地址。不要填写完整的 `/chat/completions` 或 `/messages` 请求路径。
 4. 在原生 DSH 窗口打开代码 Workspace。
-5. 使用 DSH。`Help → Settings / Diagnostics` 可返回设置、复制诊断、打开日志或重启引擎。
+5. 使用 DSH，在原生对话的模型选择器切换已配置的模型；DSH 会保留后续选择。`Help → Settings / Diagnostics` 或托盘右键“设置 / 诊断”可返回设置。旧版单模型配置会自动作为 OpenAI 连接读取。
 
 需要 Windows 10/11 x64。**无需预装或安装 WebView2**：窗口使用 `resources/webview2` 中随包的微软 Fixed Version 运行时。Windows 10 首次运行会给该浏览器目录设置沙箱所需的读取/执行权限，不请求管理员权限、不修改系统 WebView2。请解压到自己拥有的本机目录。
 
-API Key 保存到当前 Windows 用户的凭据管理器，页面不会回显；同一 Base URL 再次保存时留空表示保留原密钥，改换地址需要提供该地址的密钥。其余数据位于 `%LOCALAPPDATA%\DSHDesktop`。关闭主窗口会退出；只关闭设置窗口会隐藏该窗口。第二次启动退出，不创建另一套引擎。
+API Key 保存到当前 Windows 用户的凭据管理器，页面不会回显；同一 Base URL 再次保存时留空表示保留原密钥，改换地址需要提供该地址的密钥。其余数据位于 `%LOCALAPPDATA%\DSHDesktop`。
+
+启动后 Windows 通知区域会出现相同图标的 **DSH Desktop**（可能位于右下角 `^` 隐藏图标中，具体位置由 Windows 管理）。关闭主窗口会隐藏到托盘，后台引擎继续运行；单击托盘图标或右键“打开 DSH Desktop”恢复窗口。右键“退出”才会结束程序及后台引擎，设置页和 Help 菜单中的 Quit 同样执行完整退出。第二次启动不创建另一套引擎。
 
 先结束当前任务，再重启引擎或退出。离线包只支持随包提供的插件及已有配置；新增插件应由构建者制作下一版离线包。用户主动调用网络工具或 MCP 时，仍需要相应目标网络权限。
 

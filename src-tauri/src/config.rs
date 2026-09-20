@@ -7,12 +7,25 @@ const TARGET: &str = "DSHDesktop/InternalLLM";
 #[cfg(test)]
 const TARGET: &str = "DSHDesktop/IsolatedCredentialTest";
 pub const KEY_ENV: &str = "DSH_DESKTOP_LLM_KEY";
+#[derive(Clone, Copy, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub enum ApiFormat {
+    #[default]
+    #[serde(rename = "openai-completions")]
+    OpenAi,
+    #[serde(rename = "anthropic-messages")]
+    Anthropic,
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Connection {
     pub provider_name: String,
     pub base_url: String,
     pub model: String,
+    #[serde(default)]
+    pub api: ApiFormat,
+    // None distinguishes legacy single-model files from an invalid empty list.
+    #[serde(default)]
+    pub models: Option<Vec<String>>,
 }
 impl Default for Connection {
     fn default() -> Self {
@@ -20,6 +33,28 @@ impl Default for Connection {
             provider_name: "Internal LLM".into(),
             base_url: String::new(),
             model: String::new(),
+            api: ApiFormat::default(),
+            models: None,
+        }
+    }
+}
+impl Connection {
+    pub fn model_ids(&self) -> Vec<String> {
+        self.models.clone().unwrap_or_else(|| {
+            if self.model.is_empty() {
+                vec![]
+            } else {
+                vec![self.model.clone()]
+            }
+        })
+    }
+
+    fn provider_base_url(&self) -> &str {
+        let base = self.base_url.trim_end_matches('/');
+        if self.api == ApiFormat::Anthropic {
+            base.strip_suffix("/v1").unwrap_or(base)
+        } else {
+            base
         }
     }
 }
@@ -115,6 +150,26 @@ pub fn validate(c: &Connection) -> Result<(), String> {
     {
         return Err("Enter a provider name and model (maximum 128/256 characters)".into());
     }
+    let models = c.model_ids();
+    if models.is_empty() || models.len() > 100 {
+        return Err("请配置 1–100 个模型。".into());
+    }
+    let mut unique = std::collections::HashSet::new();
+    for id in &models {
+        if id.trim().is_empty()
+            || id != id.trim()
+            || id.len() > 256
+            || id.chars().any(char::is_control)
+        {
+            return Err("模型 ID 不能为空、包含首尾空白或控制字符，且不能超过 256 字节。".into());
+        }
+        if !unique.insert(id) {
+            return Err(format!("模型 ID 重复：{id}"));
+        }
+    }
+    if !models.contains(&c.model) {
+        return Err("默认模型必须在模型列表中。".into());
+    }
     Ok(())
 }
 pub fn save(root: &Path, c: &Connection, key: &str) -> Result<(), String> {
@@ -143,8 +198,8 @@ pub fn write_overlay(root: &Path, c: &Connection) -> Result<(), String> {
     if !c.base_url.is_empty() {
         validate(c)?;
         overlay.push(serde_json::json!({"id":"llm-pi-ai","config":{"providers":{"desktop-internal":{
-            "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":"openai-completions",
-            "baseURL":c.base_url,"models":[{"id":c.model,"name":c.model,"contextWindow":32768,"maxTokens":4096}],
+            "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":c.api,
+            "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| serde_json::json!({"id":id,"name":id,"contextWindow":32768,"maxTokens":4096})).collect::<Vec<_>>(),
             "retryPolicy":{"mode":"normal","maxRetries":0}
         }}}}));
         overlay.push(serde_json::json!({"id":"agent-default-model","config":{"provider":"desktop-internal","model":c.model}}));
@@ -158,6 +213,88 @@ pub fn write_overlay(root: &Path, c: &Connection) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn legacy_connection_and_multiple_models_use_native_protocols() {
+        let legacy: Connection = serde_json::from_str(
+            r#"{"providerName":"Legacy","baseUrl":"http://localhost:9000/v1","model":"old-model"}"#,
+        )
+        .unwrap();
+        assert_eq!(legacy.api, ApiFormat::OpenAi);
+        assert_eq!(legacy.model_ids(), vec!["old-model"]);
+        validate(&legacy).unwrap();
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join(".build/config-protocol-fixtures");
+        for (name, api) in [
+            ("openai", ApiFormat::OpenAi),
+            ("anthropic", ApiFormat::Anthropic),
+        ] {
+            let dir = root.join(name);
+            fs::create_dir_all(&dir).unwrap();
+            let c = Connection {
+                api,
+                models: Some(vec!["fixture-first".into(), "fixture-second".into()]),
+                model: "fixture-second".into(),
+                ..legacy.clone()
+            };
+            write_overlay(&dir, &c).unwrap();
+            let value: serde_json::Value =
+                serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap()).unwrap();
+            let provider = &value[1]["config"]["providers"]["desktop-internal"];
+            assert_eq!(provider["api"], serde_json::to_value(api).unwrap());
+            assert_eq!(provider["models"].as_array().unwrap().len(), 2);
+            assert_eq!(value[2]["config"]["model"], "fixture-second");
+            assert_eq!(
+                provider["baseURL"],
+                if api == ApiFormat::Anthropic {
+                    "http://localhost:9000"
+                } else {
+                    "http://localhost:9000/v1"
+                }
+            );
+            let roundtrip: Connection =
+                serde_json::from_value(serde_json::to_value(&c).unwrap()).unwrap();
+            assert_eq!(roundtrip.model_ids(), c.model_ids());
+            assert_eq!(roundtrip.api, api);
+        }
+        let c = Connection {
+            api: ApiFormat::Anthropic,
+            base_url: "https://gateway.example/anthropic/v1/".into(),
+            ..legacy
+        };
+        assert_eq!(c.provider_base_url(), "https://gateway.example/anthropic");
+        assert!(serde_json::from_str::<Connection>(
+            r#"{"providerName":"bad","baseUrl":"http://localhost","model":"m","api":"unsupported"}"#
+        )
+        .is_err());
+    }
+    #[test]
+    fn rejects_empty_duplicate_and_missing_default_models() {
+        let valid = Connection {
+            base_url: "http://localhost:9000/v1".into(),
+            model: "one".into(),
+            models: Some(vec!["one".into(), "two".into()]),
+            ..Default::default()
+        };
+        validate(&valid).unwrap();
+        for models in [
+            vec![],
+            vec!["".into()],
+            vec!["one".into(), "one".into()],
+            vec!["two".into()],
+            vec!["one".into(), " bad ".into()],
+            vec!["one".into(), "bad\nvalue".into()],
+            vec!["x".repeat(257)],
+            vec!["one".into(); 101],
+        ] {
+            assert!(validate(&Connection {
+                models: Some(models),
+                ..valid.clone()
+            })
+            .is_err());
+        }
+    }
     #[test]
     fn windows_credential_bridge_keeps_key_out_of_config() {
         struct Cleanup;
@@ -182,6 +319,7 @@ mod tests {
             provider_name: "Test".into(),
             base_url: "http://127.0.0.1:12345/v1".into(),
             model: "test-model".into(),
+            ..Default::default()
         };
         save(&dir, &c, "desktop-credential-fixture").unwrap();
         write_overlay(&dir, &c).unwrap();

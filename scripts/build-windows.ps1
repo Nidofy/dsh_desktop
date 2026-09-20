@@ -10,6 +10,8 @@ if (!$ReusePreparedRuntime) { & "$PSScriptRoot/fetch-runtime.ps1"; & "$PSScriptR
 if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed' }
 & cargo test --locked --release --manifest-path src-tauri/Cargo.toml --target x86_64-pc-windows-msvc
 if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/protocol-models.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Protocol and multi-model integration tests failed' }
 & cargo build --locked --release --manifest-path src-tauri/Cargo.toml --target x86_64-pc-windows-msvc
 if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
 & "$PSScriptRoot/package-portable.ps1"

@@ -1,0 +1,26 @@
+{
+  "desktopVersion": "0.1.3",
+  "testHost": "Windows 11 build 26200",
+  "isolatedProfile": ".build/feature013-profile",
+  "legacySingleModelLoaded": true,
+  "anthropicSelected": true,
+  "secondModelAdded": true,
+  "defaultModel": "claude-fixture-second",
+  "configurationSaved": true,
+  "apiKeyExcludedFromJson": true,
+  "backendBeforeSave": 39024,
+  "backendAfterSave": 16964,
+  "closeMainHidBothWindows": true,
+  "desktopAliveAfterClose": true,
+  "backendAliveAfterClose": true,
+  "trayIconObserved": true,
+  "trayLeftClickRestoredMain": true,
+  "trayMenuLabelsObserved": [
+    "打开 DSH Desktop",
+    "设置 / 诊断",
+    "重启引擎",
+    "退出"
+  ],
+  "trayExitClickVerified": false,
+  "fixtureCredentialRemoved": true
+}

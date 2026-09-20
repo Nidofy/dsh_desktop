@@ -10,6 +10,8 @@ Build on Windows x64. Tested compiler: Rust 1.97.1 with Visual Studio 2026 MSVC.
 
 Stages: verify build tools → pinned official Node → `npm ci --omit=dev` → pinned Microsoft WebView2 Fixed Version CAB (hash/signature/file inventory) → local icon/wallpaper conversion → release Rust tests → locked release build → copy full production and browser trees → collect original licenses → offline smoke → ZIP with folder icon metadata → SHA256.
 
+Version 0.1.3 also runs `tests/protocol-models.mjs` after the Rust tests. The Rust configuration test emits production overlays under `.build/config-protocol-fixtures`; the Node integration check consumes them and exercises OpenAI and Anthropic locally, including streaming, native tool use, model switching and persistence. Re-run the Rust tests first when invoking this integration check directly.
+
 Node and DSH dependencies are not installed at runtime. Do not copy a macOS/Linux node_modules tree into a Windows package. No tree pruning, bundling transform, upstream patch or package-manager executable is added by the wrapper. Package scripts operate only on build directories. Packaging never recursively deletes an old artifact directory.
 
 Direct build:

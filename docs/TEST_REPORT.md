@@ -6,6 +6,10 @@ Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`Administ
 
 ## Executed evidence
 
+### 0.1.3 protocols, models and tray
+
+See [feature implementation and validation](FEATURES-0.1.3.md). Both protocol integration paths, multiple-model catalogs/selection, old configuration compatibility and native settings save/restart passed. The main-window close behavior is intentionally changed: it now hides to the tray and keeps the engine running. Clicking the tray icon restored the main window; earlier tests claiming main-window close exits refer only to versions before 0.1.3.
+
 ### 0.1.2 bundled WebView2 fix
 
 - The reported `Could not find the WebView2 Runtime` came from the previous package's dependency on a system-installed browser runtime. Version 0.1.2 includes the complete official Fixed Version 153.0.4234.48 x64 tree (257 files), pinned CAB checksum, file inventory and Microsoft license.
@@ -40,7 +44,7 @@ Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`Administ
 | T03 startup failure | PASS | Final executable reports missing runtime without system Node fallback; visual error controls unverified |
 | T04 backend crash | PASS / BLOCKED | Final executable records error and remains alive; visual error controls unverified |
 | T05 restart | PASS | Backend persistence test and 0.1.2 native Restart Engine button passed |
-| T06 app exit | PASS / BLOCKED | 0.1.1 native main-window close and backend cleanup passed; full menu/taskbar/logout/shutdown matrix pending |
+| T06 app exit | PASS / BLOCKED | 0.1.3 native close-to-tray and click-to-restore passed; explicit Quit retains the prior shutdown path; full exit matrix pending |
 | T07 forced close | PASS | Owning desktop killed, Job Object removed backend |
 | T10–T12 no Node/npm/pnpm in PATH | PASS | Bundled executable, Windows-only child PATH |
 | T13 no administrator | PASS | Token explicitly checked false; native shell smoke passed |
@@ -78,7 +82,7 @@ Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`Administ
 | G12 workspace, G13 session, G14 read, G15 edit, G16 shell | PASS |
 | G17–G20 connection | Native configuration + mock request passed; actual desktop form round-trip BLOCKED |
 | G21 log secret absence | Controlled-metadata design and inspected startup logs passed; full credentialed desktop run pending |
-| G22 graceful desktop quit | PASS: native main-window close and settings Quit; taskbar/logout/shutdown remain unverified |
+| G22 graceful desktop quit | Earlier settings Quit passed; 0.1.3 close hides to tray; full taskbar/logout/shutdown matrix remains pending |
 | G23 orphan cleanup | PASS for forced desktop close; logout/shutdown unverified |
 | G24 restart, G25 diagnostics | Restart button and displayed bundled-browser diagnostics PASS; clipboard copy interaction unverified |
 
