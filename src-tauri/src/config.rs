@@ -15,6 +15,21 @@ pub enum ApiFormat {
     #[serde(rename = "anthropic-messages")]
     Anthropic,
 }
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelLimits {
+    pub context_window: u32,
+    pub max_tokens: u32,
+}
+impl Default for ModelLimits {
+    fn default() -> Self {
+        // Preserve the conservative legacy fallback; never infer gateway limits from an ID.
+        Self {
+            context_window: 32768,
+            max_tokens: 4096,
+        }
+    }
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Connection {
@@ -26,6 +41,8 @@ pub struct Connection {
     // None distinguishes legacy single-model files from an invalid empty list.
     #[serde(default)]
     pub models: Option<Vec<String>>,
+    #[serde(default)]
+    pub model_limits: std::collections::BTreeMap<String, ModelLimits>,
 }
 impl Default for Connection {
     fn default() -> Self {
@@ -35,10 +52,14 @@ impl Default for Connection {
             model: String::new(),
             api: ApiFormat::default(),
             models: None,
+            model_limits: Default::default(),
         }
     }
 }
 impl Connection {
+    pub fn limits(&self, id: &str) -> ModelLimits {
+        self.model_limits.get(id).copied().unwrap_or_default()
+    }
     pub fn model_ids(&self) -> Vec<String> {
         self.models.clone().unwrap_or_else(|| {
             if self.model.is_empty() {
@@ -170,6 +191,19 @@ pub fn validate(c: &Connection) -> Result<(), String> {
     if !models.contains(&c.model) {
         return Err("默认模型必须在模型列表中。".into());
     }
+    for (id, limits) in &c.model_limits {
+        if !models.contains(id) {
+            return Err(format!("容量设置对应的模型不在列表中：{id}"));
+        }
+        if !(1024..=100_000_000).contains(&limits.context_window)
+            || limits.max_tokens == 0
+            || limits.max_tokens >= limits.context_window
+        {
+            return Err(format!(
+                "{id}：上下文须为 1,024–100,000,000 tokens 的整数；最大输出须大于 0 且小于上下文。"
+            ));
+        }
+    }
     Ok(())
 }
 pub fn save(root: &Path, c: &Connection, key: &str) -> Result<(), String> {
@@ -199,7 +233,10 @@ pub fn write_overlay(root: &Path, c: &Connection) -> Result<(), String> {
         validate(c)?;
         overlay.push(serde_json::json!({"id":"llm-pi-ai","config":{"providers":{"desktop-internal":{
             "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":c.api,
-            "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| serde_json::json!({"id":id,"name":id,"contextWindow":32768,"maxTokens":4096})).collect::<Vec<_>>(),
+            "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| {
+                let limits = c.limits(id);
+                serde_json::json!({"id":id,"name":id,"contextWindow":limits.context_window,"maxTokens":limits.max_tokens})
+            }).collect::<Vec<_>>(),
             "retryPolicy":{"mode":"normal","maxRetries":0}
         }}}}));
         overlay.push(serde_json::json!({"id":"agent-default-model","config":{"provider":"desktop-internal","model":c.model}}));
@@ -234,8 +271,25 @@ mod tests {
             fs::create_dir_all(&dir).unwrap();
             let c = Connection {
                 api,
-                models: Some(vec!["fixture-first".into(), "fixture-second".into()]),
-                model: "fixture-second".into(),
+                models: Some(vec!["glm-5.3-flash".into(), "glm-5.3".into()]),
+                model: "glm-5.3".into(),
+                model_limits: [
+                    (
+                        "glm-5.3-flash".into(),
+                        ModelLimits {
+                            context_window: 131072,
+                            max_tokens: 8192,
+                        },
+                    ),
+                    (
+                        "glm-5.3".into(),
+                        ModelLimits {
+                            context_window: 1000000,
+                            max_tokens: 16384,
+                        },
+                    ),
+                ]
+                .into(),
                 ..legacy.clone()
             };
             write_overlay(&dir, &c).unwrap();
@@ -244,7 +298,7 @@ mod tests {
             let provider = &value[1]["config"]["providers"]["desktop-internal"];
             assert_eq!(provider["api"], serde_json::to_value(api).unwrap());
             assert_eq!(provider["models"].as_array().unwrap().len(), 2);
-            assert_eq!(value[2]["config"]["model"], "fixture-second");
+            assert_eq!(value[2]["config"]["model"], "glm-5.3");
             assert_eq!(
                 provider["baseURL"],
                 if api == ApiFormat::Anthropic {
@@ -257,6 +311,7 @@ mod tests {
                 serde_json::from_value(serde_json::to_value(&c).unwrap()).unwrap();
             assert_eq!(roundtrip.model_ids(), c.model_ids());
             assert_eq!(roundtrip.api, api);
+            assert_eq!(roundtrip.model_limits, c.model_limits);
         }
         let c = Connection {
             api: ApiFormat::Anthropic,
@@ -294,6 +349,51 @@ mod tests {
             })
             .is_err());
         }
+    }
+    #[test]
+    fn model_limits_migrate_validate_and_preserve_wire_ids() {
+        for json in [
+            r#"{"providerName":"Old","baseUrl":"http://localhost/v1","model":"glm-5.3"}"#,
+            r#"{"providerName":"Old","baseUrl":"http://localhost/v1","model":"glm-5.3","models":["glm-5.3","glm-5.3-flash"]}"#,
+        ] {
+            let mut c: Connection = serde_json::from_str(json).unwrap();
+            assert_eq!(c.limits("glm-5.3"), ModelLimits::default());
+            for (context_window, max_tokens, valid) in [
+                (1000000, 16384, true),
+                (1024, 1, true),
+                (0, 1, false),
+                (100000001, 4096, false),
+                (32768, 0, false),
+                (32768, 32768, false),
+                (32768, 32769, false),
+            ] {
+                c.model_limits.insert(
+                    "glm-5.3".into(),
+                    ModelLimits {
+                        context_window,
+                        max_tokens,
+                    },
+                );
+                assert_eq!(validate(&c).is_ok(), valid);
+                assert_eq!(c.model_ids()[0], "glm-5.3");
+            }
+            c.model_limits.insert(
+                "glm-5.3".into(),
+                ModelLimits {
+                    context_window: 1000000,
+                    max_tokens: 16384,
+                },
+            );
+            c.model_limits
+                .insert("removed-model".into(), ModelLimits::default());
+            assert!(validate(&c).is_err());
+        }
+        assert!(
+            serde_json::from_str::<ModelLimits>(r#"{"contextWindow":1.5,"maxTokens":1}"#).is_err()
+        );
+        assert!(
+            serde_json::from_str::<ModelLimits>(r#"{"contextWindow":-1,"maxTokens":1}"#).is_err()
+        );
     }
     #[test]
     fn windows_credential_bridge_keeps_key_out_of_config() {

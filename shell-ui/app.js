@@ -27,6 +27,8 @@ function updateModelRows() {
     rows[0].querySelector('input[type=radio]').checked = true;
   rows.forEach((row, i) => {
     row.querySelector('.model-id').setAttribute('aria-label', `模型 ${i + 1} ID`);
+    row.querySelector('.context-window').setAttribute('aria-label', `模型 ${i + 1} 上下文容量 tokens`);
+    row.querySelector('.max-tokens').setAttribute('aria-label', `模型 ${i + 1} 最大输出 tokens`);
     row.querySelector('input[type=radio]').setAttribute('aria-label', `将模型 ${i + 1} 设为默认`);
     const remove = row.querySelector('button');
     remove.disabled = rows.length === 1;
@@ -34,14 +36,42 @@ function updateModelRows() {
   });
   $('add-model').disabled = rows.length >= 100;
 }
-function addModel(id = '', selected = false) {
+function addModel(id = '', selected = false, limits) {
   const row = document.createElement('div'); row.className = 'model-row';
   const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'default-model'; radio.checked = selected;
   const label = document.createElement('label'); label.className = 'default-model'; label.append(radio, '默认');
   const input = document.createElement('input'); input.className = 'model-id'; input.value = id; input.required = true; input.maxLength = 256; input.placeholder = '模型 ID，例如 deepseek-chat';
   const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = '删除';
   remove.onclick = () => { row.remove(); updateModelRows(); };
-  row.append(label, input, remove); $('models').append(row); updateModelRows();
+  const capacity = document.createElement('div'); capacity.className = 'model-capacity';
+  const numberField = (title, className, value, min, max) => {
+    const label = document.createElement('label'); label.textContent = title;
+    const field = document.createElement('input'); field.type = 'number'; field.className = className;
+    field.required = true; field.min = min; field.max = max; field.step = '1'; field.value = value;
+    label.append(field); capacity.append(label); return field;
+  };
+  const context = numberField('上下文容量（tokens）', 'context-window', limits?.contextWindow ?? 32768, 1024, 100000000);
+  const output = numberField('最大输出（tokens）', 'max-tokens', limits?.maxTokens ?? 4096, 1, 99999999);
+  const presetLabel = document.createElement('label'); presetLabel.textContent = '上下文快捷设置';
+  const preset = document.createElement('select');
+  for (const [value, text] of [['','自定义'],['32768','32K · 32,768'],['131072','128K · 131,072'],['200000','200K · 200,000'],['1000000','1M · 1,000,000']]) {
+    const option = document.createElement('option'); option.value = value; option.textContent = text; preset.append(option);
+  }
+  const sync = () => {
+    preset.value = [...preset.options].some(o => o.value === context.value) ? context.value : '';
+    output.setCustomValidity(Number(output.value) >= Number(context.value) ? '最大输出必须小于上下文容量。' : '');
+  };
+  preset.onchange = () => { if (preset.value) context.value = preset.value; sync(); };
+  context.oninput = output.oninput = sync; sync();
+  presetLabel.append(preset); capacity.append(presetLabel);
+  const note = document.createElement('small'); note.className = 'capacity-note';
+  note.textContent = limits ? '请按当前服务的实际限制设置，1M = 1,000,000 tokens。' : '旧配置未记录容量，初始回退为 32,768 / 4,096。请按服务限制调整后保存。';
+  const suffix = document.createElement('button'); suffix.type = 'button'; suffix.className = 'secondary suffix-fix';
+  suffix.textContent = '移除 [1m] 后缀并将上下文设为 1M';
+  const updateSuffix = () => { suffix.hidden = !/^glm-.*\[1m\]$/i.test(input.value.trim()); };
+  input.oninput = updateSuffix; updateSuffix();
+  suffix.onclick = () => { input.value = input.value.trim().replace(/\[1m\]$/i, ''); context.value = '1000000'; sync(); updateSuffix(); };
+  row.append(label, input, remove, capacity, note, suffix); $('models').append(row); updateModelRows();
   return input;
 }
 $('add-model').onclick = () => { if ($('models').children.length < 100) addModel().focus(); };
@@ -49,7 +79,7 @@ $('api').onchange = updateEndpoint; $('url').oninput = updateEndpoint;
 invoke('connection').then(c => {
   $('provider').value = c.providerName; $('url').value = c.baseUrl; $('api').value = c.api || 'openai-completions';
   const models = c.models ?? (c.model ? [c.model] : ['']);
-  for (const id of models.length ? models : ['']) addModel(id, id === c.model);
+  for (const id of models.length ? models : ['']) addModel(id, id === c.model, c.modelLimits?.[id]);
   updateEndpoint(); $('connection-fields').disabled = false; $('message').textContent = '';
 }).catch(e => { $('message').textContent = `无法读取配置：${e}。请修复后重新打开设置。`; });
 $('settings').addEventListener('submit',async event=>{
@@ -63,7 +93,12 @@ $('settings').addEventListener('submit',async event=>{
   if (selected < 0) { $('message').textContent = '请选择默认模型。'; return; }
   $('connection-fields').disabled = true;
   try {
-    await invoke('save_connection',{connection:{providerName:$('provider').value.trim(),baseUrl:$('url').value.trim(),api:$('api').value,models,model:models[selected]},apiKey:$('key').value});
+    const modelLimits = Object.fromEntries(rows.map((row, i) => [models[i], {
+      contextWindow: Number(row.querySelector('.context-window').value),
+      maxTokens: Number(row.querySelector('.max-tokens').value)
+    }]));
+    await invoke('save_connection',{connection:{providerName:$('provider').value.trim(),baseUrl:$('url').value.trim(),api:$('api').value,models,model:models[selected],modelLimits},apiKey:$('key').value});
+    for (const row of rows) row.querySelector('.capacity-note').textContent = '请按当前服务的实际限制设置，1M = 1,000,000 tokens。';
     $('key').value=''; $('message').textContent='已保存，正在重启引擎。';
   } catch(e){$('message').textContent=String(e);} finally{$('connection-fields').disabled=false;}
 });

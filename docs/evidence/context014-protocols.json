@@ -1,0 +1,120 @@
+[
+  {
+    "protocol": "openai",
+    "status": "PASS",
+    "models": [
+      "glm-5.3-flash",
+      "glm-5.3"
+    ],
+    "defaultModel": "glm-5.3",
+    "switchedModel": "glm-5.3-flash",
+    "contextWindows": [
+      131072,
+      1000000
+    ],
+    "maxOutputTokens": [
+      8192,
+      16384
+    ],
+    "nativeContextCapacityVerified": true,
+    "nativeReadTool": true,
+    "streamedReply": true,
+    "selectionPersistsAfterRestart": true,
+    "requests": [
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true,
+        "maxTokens": 16384,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true,
+        "maxTokens": 64,
+        "purpose": "session-title"
+      },
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true,
+        "maxTokens": 16384,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3-flash",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true,
+        "maxTokens": 8192,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3-flash",
+        "endpoint": "/gateway/v1/chat/completions",
+        "authenticated": true,
+        "maxTokens": 8192,
+        "purpose": "conversation"
+      }
+    ]
+  },
+  {
+    "protocol": "anthropic",
+    "status": "PASS",
+    "models": [
+      "glm-5.3-flash",
+      "glm-5.3"
+    ],
+    "defaultModel": "glm-5.3",
+    "switchedModel": "glm-5.3-flash",
+    "contextWindows": [
+      131072,
+      1000000
+    ],
+    "maxOutputTokens": [
+      8192,
+      16384
+    ],
+    "nativeContextCapacityVerified": true,
+    "nativeReadTool": true,
+    "streamedReply": true,
+    "selectionPersistsAfterRestart": true,
+    "requests": [
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true,
+        "maxTokens": 16384,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true,
+        "maxTokens": 64,
+        "purpose": "session-title"
+      },
+      {
+        "model": "glm-5.3",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true,
+        "maxTokens": 16384,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3-flash",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true,
+        "maxTokens": 8192,
+        "purpose": "conversation"
+      },
+      {
+        "model": "glm-5.3-flash",
+        "endpoint": "/gateway/v1/messages",
+        "authenticated": true,
+        "maxTokens": 8192,
+        "purpose": "conversation"
+      }
+    ]
+  }
+]

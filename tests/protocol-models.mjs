@@ -22,7 +22,7 @@ function events(dir,id){
 }
 for(const protocol of ['openai','anthropic']){
  const home=join(root,protocol);mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PROTOCOL_TOOL_READ_OK');
- const requests=[];
+ const requests=[], failures=[];
  const server=http.createServer(async(req,res)=>{
   try{
    const endpoint=new URL(req.url,'http://localhost').pathname;
@@ -32,9 +32,12 @@ for(const protocol of ['openai','anthropic']){
    const body=JSON.parse(raw);
    const authenticated=protocol==='openai'?req.headers.authorization==='Bearer desktop-test-key':req.headers['x-api-key']==='desktop-test-key'&&!!req.headers['anthropic-version'];
    const toolResults=protocol==='openai'?body.messages.filter(m=>m.role==='tool').map(m=>m.content):body.messages.flatMap(m=>Array.isArray(m.content)?m.content.filter(c=>c.type==='tool_result').map(c=>c.content):[]);
-   requests.push({model:body.model,endpoint,authenticated,toolResults});
-   assert(authenticated,'protocol-specific authentication');assert(['fixture-first','fixture-second'].includes(body.model));assert(body.stream);
-   const callTool=!toolResults.length;
+   const maxTokens=body.max_tokens??body.max_completion_tokens;
+   const isTitle=JSON.stringify(body.messages).includes('Generate the session title from this JSON array of human messages:');
+   requests.push({model:body.model,endpoint,authenticated,toolResults,maxTokens,purpose:isTitle?'session-title':'conversation'});
+   assert(authenticated,'protocol-specific authentication');assert(['glm-5.3-flash','glm-5.3'].includes(body.model));assert(body.stream);
+   assert.equal(maxTokens,isTitle?64:body.model==='glm-5.3-flash'?8192:16384,'conversation budget or explicit auxiliary title override reaches the API');
+   const callTool=!isTitle&&!toolResults.length;
    res.writeHead(200,{'content-type':'text/event-stream'});
    if(protocol==='openai'){
     const delta=callTool?{role:'assistant',tool_calls:[{index:0,id:'fixture-read',type:'function',function:{name:'read',arguments:JSON.stringify({file_path:'fixture.txt'})}}]}:{role:'assistant',content:'PROTOCOL_REPLY_OK'};
@@ -49,7 +52,7 @@ for(const protocol of ['openai','anthropic']){
     send('message_delta',{delta:{stop_reason:callTool?'tool_use':'end_turn',stop_sequence:null},usage:{output_tokens:12}});
     send('message_stop',{});res.end();
    }
-  }catch(error){res.writeHead(400,{'content-type':'application/json'}).end(JSON.stringify({error:{type:'invalid_request_error',message:String(error)}}));}
+  }catch(error){failures.push(String(error));res.writeHead(400,{'content-type':'application/json'}).end(JSON.stringify({error:{type:'invalid_request_error',message:String(error)}}));}
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const patch=JSON.parse(readFileSync(`.build/config-protocol-fixtures/${protocol}/desktop.patch.json`,'utf8'));
@@ -70,8 +73,8 @@ for(const protocol of ['openai','anthropic']){
  try{
   await start();
   const catalog=await rpc('session/modelCatalog');
-  assert.deepEqual(catalog.groups.find(g=>g.id==='desktop-internal').models.map(m=>m.id),['fixture-first','fixture-second']);
-  assert.equal(catalog.default.model,'fixture-second');
+  assert.deepEqual(catalog.groups.find(g=>g.id==='desktop-internal').models.map(m=>m.id),['glm-5.3-flash','glm-5.3']);
+  assert.equal(catalog.default.model,'glm-5.3');
   const {sessionId}=await rpc('session/create',{cwd:home});
   async function prompt(count){
    await rpc('session/prompt',{sessionId,requestId:crypto.randomUUID(),mode:'queue',content:[{type:'text',text:'Read fixture.txt, then reply PROTOCOL_REPLY_OK.'}]});
@@ -80,17 +83,24 @@ for(const protocol of ['openai','anthropic']){
    const turns=history.filter(e=>e.type==='turn/end');
    assert(turns.length>=count,'completed turn persisted');assert(!turns.some(e=>e.data?.reason?.kind==='error'),JSON.stringify(turns));
    assert(JSON.stringify(history).includes('PROTOCOL_REPLY_OK'),'streamed assistant text persisted');
+   const contexts=history.filter(e=>e.type==='request/context');
+   assert(contexts.length,'native request context persisted');
+   const context=contexts.at(-1).data;
+   assert.equal(context.model,count===1?'glm-5.3':'glm-5.3-flash');
+   assert.equal(context.contextWindow,count===1?1000000:131072,'native context meter uses per-model configured capacity');
   }
   await prompt(1);
   assert(requests.some(r=>JSON.stringify(r.toolResults).includes('PROTOCOL_TOOL_READ_OK')),'native read result returned through protocol');
   const boundary=requests.length;
-  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'fixture-first'});
+  await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3-flash'});
   await prompt(2);
-  assert(requests.slice(boundary).some(r=>r.model==='fixture-first'),'selection changes actual request model');
+  assert(requests.slice(boundary).some(r=>r.model==='glm-5.3-flash'),'selection changes actual request model');
   assert(!output.includes('OFFLINE_TEST_DENIED'));
   await stop();await start();
-  assert.equal((await rpc('session/modelCatalog')).default.model,'fixture-first','native last selection persists');
-  results.push({protocol,status:'PASS',models:['fixture-first','fixture-second'],defaultModel:'fixture-second',switchedModel:'fixture-first',nativeReadTool:true,streamedReply:true,selectionPersistsAfterRestart:true,requests:requests.map(({toolResults,...r})=>r)});
+  assert.equal((await rpc('session/modelCatalog')).default.model,'glm-5.3-flash','native last selection persists');
+  await prompt(3);
+  assert.deepEqual(failures,[],'no mock request validation failures, including auxiliary requests');
+  results.push({protocol,status:'PASS',models:['glm-5.3-flash','glm-5.3'],defaultModel:'glm-5.3',switchedModel:'glm-5.3-flash',contextWindows:[131072,1000000],maxOutputTokens:[8192,16384],nativeContextCapacityVerified:true,nativeReadTool:true,streamedReply:true,selectionPersistsAfterRestart:true,requests:requests.map(({toolResults,...r})=>r)});
   console.log(`PASS ${protocol}: catalog, default, model switch, auth, streaming, read tool, restart persistence`);
  }finally{await stop();server.closeAllConnections();server.close();writeFileSync(join(root,'report.json'),JSON.stringify(results,null,2));}
 }

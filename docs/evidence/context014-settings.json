@@ -1,0 +1,12 @@
+{
+  "desktopVersion": "0.1.4",
+  "environment": "local browser preview of production shell-ui with mock Tauri IPC; no user credentials",
+  "legacyConfigLoaded": true,
+  "glmSuffixRepair": true,
+  "customContextAndOutput": true,
+  "oneMillionPreset": true,
+  "independentModelLimitsSubmitted": true,
+  "outputAtOrAboveContextBlocked": true,
+  "visualLayoutChecked": true,
+  "nativeSaveNotRepeated": true
+}

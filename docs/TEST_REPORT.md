@@ -6,6 +6,10 @@ Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`Administ
 
 ## Executed evidence
 
+### 0.1.4 model context and output limits
+
+See [context fix details](CONTEXT-0.1.4.md). Nine Rust tests passed. Both native protocol integration paths verified per-model context windows and output limits, bare GLM wire IDs, model switching and restart persistence. Browser settings checks used mock IPC; actual provider capacity and million-token requests were not tested.
+
 ### 0.1.3 protocols, models and tray
 
 See [feature implementation and validation](FEATURES-0.1.3.md). Both protocol integration paths, multiple-model catalogs/selection, old configuration compatibility and native settings save/restart passed. The main-window close behavior is intentionally changed: it now hides to the tray and keeps the engine running. Clicking the tray icon restored the main window; earlier tests claiming main-window close exits refer only to versions before 0.1.3.

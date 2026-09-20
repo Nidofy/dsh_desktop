@@ -6,13 +6,17 @@ Windows x64 的 Tauri 2 桌面壳，直接运行官方 DeepSeek Harness 和原�
 
 ## 使用
 
-桌面壳 **0.1.3** 支持 OpenAI / Anthropic API、多模型列表和系统托盘；已内置 WebView2 Fixed Version，并保留用户提供的图标与透明背景。首次打开看到的“DSH 0.1 仍在测试”是官方欢迎说明；随包引擎的完整版本为 **0.1.5-rc.2**。
+桌面壳 **0.1.4** 支持 OpenAI / Anthropic API、多模型列表和系统托盘；已内置 WebView2 Fixed Version，并保留用户提供的图标与透明背景。首次打开看到的“DSH 0.1 仍在测试”是官方欢迎说明；随包引擎的完整版本为 **0.1.5-rc.2**。
 
 1. 将 `DSHDesktop-win-x64-portable.zip` 完整解压到当前用户拥有的本机目录，保留目录内全部文件。不要在压缩包、网络共享或 Program Files 中直接运行。
 2. 双击 `DSHDesktop.exe`。
 3. 在连接设置选择 **OpenAI · Chat Completions** 或 **Anthropic · Messages**，填写 Base URL、API Key，添加一个或多个模型 ID，并选择初始默认模型，点击“保存并重启引擎”。同一连接的模型共用地址和密钥。OpenAI 地址通常以 `/v1` 结尾；Anthropic 填写 API 根地址（也接受末尾 `/v1`），页面显示实际请求地址。不要填写完整的 `/chat/completions` 或 `/messages` 请求路径。
 4. 在原生 DSH 窗口打开代码 Workspace。
 5. 使用 DSH，在原生对话的模型选择器切换已配置的模型；DSH 会保留后续选择。`Help → Settings / Diagnostics` 或托盘右键“设置 / 诊断”可返回设置。旧版单模型配置会自动作为 OpenAI 连接读取。
+
+每个模型可以单独设置 **上下文容量** 和 **最大输出**（单位 tokens），支持自定义整数和 1M 快捷选项（1,000,000 tokens）。填写当前服务实际支持的限制；客户端设置不会提升服务端容量。旧配置保持 32,768 / 4,096 的兼容回退值，并在设置页明确提示调整。
+
+GLM 模型 ID 填 `glm-5.3` / `glm-5.3-flash` 等服务提供的原名，**不要添加 `[1m]` 来表示容量**。若服务支持 1M，单独将上下文设为 `1000000`；已填后缀的模型可点击“移除 [1m] 后缀并将上下文设为 1M”。保存并重启后，已有对话须重新选择有效模型，或新建对话；更新后的上下文统计在下一轮请求时生效。最大输出按服务限制设置，不能大于或等于上下文。
 
 需要 Windows 10/11 x64。**无需预装或安装 WebView2**：窗口使用 `resources/webview2` 中随包的微软 Fixed Version 运行时。Windows 10 首次运行会给该浏览器目录设置沙箱所需的读取/执行权限，不请求管理员权限、不修改系统 WebView2。请解压到自己拥有的本机目录。
 
