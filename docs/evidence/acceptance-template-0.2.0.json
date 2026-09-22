@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "kind": "desktop-field-acceptance",
+  "desktopVersion": "0.2.0",
+  "buildId": null,
+  "zipSha256": null,
+  "environment": {
+    "windowsVersion": null,
+    "accountType": null,
+    "developerRuntimesPreinstalled": null,
+    "networkClass": null,
+    "apiFormat": null
+  },
+  "checks": [
+    {
+      "id": "package_integrity",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "clean_windows10",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "clean_windows11",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "dsh_appearance_all_auxiliary_pages",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "internal_connection_and_network",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "external_connection_and_network",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "real_cache_efficiency_and_quality",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "git_project",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "hg_solver_project",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "actions_trust_cancel_logs",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "selected_diff_draft",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "automatic_snapshot_restore_archive",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "notifications_and_focus",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "artifacts_open_reveal_save",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "config_recovery_credentials_storage_quota",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "network_sleep_crash_exit",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "target_network_observation",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "redistribution_inventory_review",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    },
+    {
+      "id": "environment_floating_card",
+      "status": "UNKNOWN",
+      "steps": [],
+      "observations": [],
+      "evidence": []
+    }
+  ],
+  "notes": "Copy this template and fill the actual BUILD_RECEIPT.json id. For an unpacked verification directory ZIP hash remains null. Record only non-sensitive observations; do not include credentials, internal URLs, source or raw model context.",
+  "validationDirectory": null,
+  "purpose": "Ongoing field validation; not a prerequisite to the locally verified 0.2.0 baseline"
+}

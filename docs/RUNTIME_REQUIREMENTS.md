@@ -1,4 +1,4 @@
-# Runtime requirements — Desktop 0.1.3
+# Runtime requirements — Desktop 0.2.0
 
 - Windows 10/11 x64, ordinary non-administrator account; writable `%LOCALAPPDATA%` and chosen workspace.
 - **No preinstalled WebView2 is required.** The complete Microsoft WebView2 Fixed Version 153.0.4234.48 x64 is included under `resources/webview2`.

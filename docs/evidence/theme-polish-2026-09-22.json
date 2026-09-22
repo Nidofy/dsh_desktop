@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "status": "PASS",
+  "scope": "Auxiliary surface palette and typography",
+  "changes": [
+    "Removed legacy hardcoded palette and background image from desktop settings and early diagnostic/action/comparison pages",
+    "Scaled provider labels, headings, model notes, timeline text and footer with the DSH content font setting",
+    "Constrained grid children and form controls to available width",
+    "Aligned apply-button help and removed comparison-page meta disclaimer"
+  ],
+  "browser": {
+    "settings": {
+      "theme": "light",
+      "fontSize": 17,
+      "widths": [
+        640,
+        480
+      ],
+      "providerFontBefore": 14,
+      "providerFontAfter": 17,
+      "footerFontBefore": 12,
+      "footerFontAfter": 15,
+      "heading2After": 20,
+      "horizontalOverflow": false,
+      "customProviderEditor": "PASS"
+    },
+    "diagnostics": {
+      "theme": "dark",
+      "fontSize": 17,
+      "width": 480,
+      "horizontalPageOverflow": false,
+      "tableScroll": "contained"
+    },
+    "actions": {
+      "theme": "dark",
+      "fontSize": 17,
+      "width": 480,
+      "horizontalPageOverflow": false
+    },
+    "compare": {
+      "theme": "dark",
+      "fontSize": 17,
+      "width": 480,
+      "horizontalPageOverflow": false,
+      "heading1": 27
+    }
+  },
+  "checks": {
+    "desktopThemeUnit": "PASS",
+    "changedPageSyntax": "PASS"
+  },
+  "limitations": [
+    "Browser fixtures verify layout; live data and native dialogs are covered separately",
+    "Final native executable interaction and target internal/external gateways remain pending"
+  ],
+  "buildLog": ".build/theme-polish-build.log",
+  "zipCreated": false,
+  "buildReceiptId": "242b744c-5be4-47dc-b919-93ada7087cb3",
+  "rustTestsPassed": 70,
+  "completeBuildGate": "PASS",
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-theme",
+  "nativeDesktopInteraction": "Pending final executable user validation",
+  "stagedOutputsMatchReceipt": true,
+  "runtimeFilesVerified": 25772
+}

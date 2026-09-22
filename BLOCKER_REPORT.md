@@ -1,31 +1,7 @@
-# Acceptance blocker report
+# 0.2.0 发布与后续验证
 
-Status: **DSH_DESKTOP_MVP_BLOCKED** / **BLOCKED_BY_CLEAN_ENVIRONMENT_AND_GUI_VALIDATION**.
+按用户 2026-09-22 的指示，当前验证版继续测试，同时推进 0.2.0 日常使用基准；后续根据实际结果修复问题。现场测试不再作为本轮开发和版本收尾的等待条件。
 
-This is an acceptance-evidence blocker, not a discovered upstream incompatibility hard stop. The Windows x64 executable and portable ZIP exist and have passed the recorded automated tests. No upstream code was patched or functionality replaced.
+发布仍要求本机完整构建、原生进程检查和交付目录完整性通过。真实内外网缓存效果、企业目标环境、大型工程和系统交互等观察保持单独记录，不虚构 PASS，不阻止本轮版本收尾。当前发布进度以 [发布记录](docs/RELEASE-0.2.0.md) 和 `MVP_STATUS.json` 为准。
 
-## Observed behavior and evidence
-
-- Original DSH UI HTTP assets, workspace/session, mock custom LLM, read/edit/pwsh, persistence, API failures, ordinary-user execution, exact localhost binding, second-instance behavior, backend crash reporting and forced-close cleanup passed. See docs/TEST_REPORT.md and docs/evidence/.
-- Native GUI inspection initially timed out. Subsequent checks passed actual rendering, icons/backgrounds, welcome acknowledgement persistence and main-window close. Version 0.1.2 additionally verified the bundled WebView2 process, native Restart Engine and Quit with backend cleanup. Real connection-form saving, copy diagnostics and the full exit matrix remain unverified. See docs/TEST_REPORT.md.
-- No clean corporate Windows image/VM is available in this task. PATH isolation and Node transport interception are useful partial evidence; they do not prove absent system installations, all native DLL prerequisites or WebView/OS-wide egress behavior.
-- Windows logout/shutdown tests were not run on the user's working machine.
-- Version 0.1.3 added and tested native basic connection saving, both protocol transports, multiple-model switching, close-to-tray and tray-click restore. Tray context-menu labels were inspected; automated selection of its Exit item was interrupted by changing desktop focus, so that specific click is not recorded as passed. The existing explicit quit handler and bounded cleanup remain unchanged.
-
-## Root cause
-
-The remaining blockers are the incomplete native interaction matrix and clean target-environment evidence. No requirement for elevation or mandatory runtime dependency installation was established. The initial restricted-token failure was specific to the nested Codex sandbox; the same default DSH sandbox succeeded under a normal non-admin token.
-
-## Upstream behavior
-
-The published CLI supports --host 127.0.0.1 --port 0 --no-open, authenticated launch URLs and the native pi-ai custom-provider configuration. New plugin installation is an explicit upstream pnpm action, not a required core launch path. Prebundled core plugins run without package managers.
-
-## Possible options
-
-1. Execute the remaining native settings/save/copy and exit matrix.
-2. Supply the company's normal Windows image, or perform the documented matrix in a clean non-admin test VM with its public route blocked.
-3. Version 0.1.2 now bundles official Fixed Version WebView2 for the reported Windows 10 target. Qualify the actual package on that image, including AppContainer RX setup in a user-owned directory; no preinstallation is required.
-
-## Recommended next step
-
-Use the supplied candidate ZIP for those acceptance checks. Keep the status blocked until their evidence is recorded; do not disable DSH's sandbox or substitute another Harness to obtain a passing label.
+历史审计 [STABLE-AUDIT-2026-09-22.md](docs/STABLE-AUDIT-2026-09-22.md) 保留，用于说明验证边界；其中“等待全部现场验收再推进”的工作顺序已由上述用户指示替代。已知限制见 README，后续检查项目见 [ACCEPTANCE-0.2.0.md](docs/ACCEPTANCE-0.2.0.md)。

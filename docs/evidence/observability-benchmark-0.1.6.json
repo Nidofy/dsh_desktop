@@ -1,0 +1,54 @@
+{
+  "fixture": "300 logical requests; 20 x 2048-character messages; 4 tools; 16 streamed chunks; no network delay; default spill unchanged",
+  "interpretation": "Synthetic CPU/memory overhead, not end-to-end model performance. Independent child processes; maxRSS is process high-water mark including Node.",
+  "samples": [
+    {
+      "enabled": false,
+      "requests": 300,
+      "chunks": 4800,
+      "wallMs": 1.046599999999998,
+      "cpuMs": 0,
+      "peakRssKiB": 43820,
+      "retainedHeapDeltaBytes": -644216,
+      "retainedRecordBytes": 0,
+      "records": 0,
+      "incompleteFingerprints": 0
+    },
+    {
+      "enabled": true,
+      "requests": 300,
+      "chunks": 4800,
+      "wallMs": 54.692499999999995,
+      "cpuMs": 79,
+      "peakRssKiB": 52328,
+      "retainedHeapDeltaBytes": 786736,
+      "retainedRecordBytes": 806216,
+      "records": 300,
+      "incompleteFingerprints": 0
+    },
+    {
+      "enabled": true,
+      "requests": 300,
+      "chunks": 4800,
+      "wallMs": 55.8841,
+      "cpuMs": 47,
+      "peakRssKiB": 52784,
+      "retainedHeapDeltaBytes": 1037040,
+      "retainedRecordBytes": 806187,
+      "records": 300,
+      "incompleteFingerprints": 0
+    },
+    {
+      "enabled": false,
+      "requests": 300,
+      "chunks": 4800,
+      "wallMs": 1.0897000000000006,
+      "cpuMs": 0,
+      "peakRssKiB": 43892,
+      "retainedHeapDeltaBytes": 33048,
+      "retainedRecordBytes": 0,
+      "records": 0,
+      "incompleteFingerprints": 0
+    }
+  ]
+}

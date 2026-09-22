@@ -1,16 +1,18 @@
-# Offline deployment
+# 离线部署
 
-1. Build and verify on the connected Windows build host.
-2. Transfer the ZIP and SHA256SUMS through the company's approved channel.
-3. Verify ZIP SHA256 before extracting; retain all resources and license files.
-4. Extract the complete ZIP to a local directory owned by the current ordinary user, then run DSHDesktop.exe. Version 0.1.2 includes WebView2; no runtime installation or download is needed. Do not launch from inside the ZIP, a UNC/network share, or a protected installation directory. Windows 10 requires the program to grant AppContainer read/execute access to its own browser folder.
-5. Select OpenAI Chat Completions or Anthropic Messages; set the internal Base URL, API Key and model list, then choose a workspace in native DSH. Anthropic accepts a root URL with or without a trailing `/v1`; the settings page previews the actual request URL.
-6. Closing the main window hides it to the Windows notification area and keeps the engine running. Click the DSH Desktop tray icon to reopen; right-click it and choose Exit to stop the application before replacing files. Windows controls whether the icon is visible directly or inside the hidden-icons flyout.
+0.2.0 提供完整未压缩程序目录；本轮不生成 ZIP。目录包含 EXE、resources、BUILD_RECEIPT.json、package-integrity.json、许可证清单和 Verify-DSHDesktop.ps1。
 
-The executable is portable; user state is deliberately outside the portable folder in `%LOCALAPPDATA%\DSHDesktop`. Moving the package does not delete sessions or credentials. Exit the application before replacing a package. Keep the old ZIP for rollback; upstream session-format compatibility must be checked before downgrading DSH.
+1. 在联网构建机完成构建与目录验证，通过企业允许的方式传输整个目录。若使用另行生成的 ZIP，先核对对应 SHA-256 再完整解压。
+2. 放在当前普通用户拥有的本机目录，不从压缩包、UNC/网络共享或受保护的安装目录启动。保持目录结构，不能只复制 EXE。
+3. 企业允许运行 PowerShell 脚本时，执行目录内的 `Verify-DSHDesktop.ps1` 检查文件。无需修改系统执行策略。
+4. 双击 `DSHDesktop.exe`。程序携带 Node、DSH 和 WebView2，不需要安装或首次下载这些环境。
+5. 选择「DeepSeek 官方连接」「添加提供方」或「添加自定义提供方」，填写相应凭据及模型。内网服务通常使用自定义提供方，按需配置代理与 PEM 企业 CA。保存后点击「应用」。
+6. 打开工程。工程自身的 Git/Hg、编译器和测试工具需由工程环境提供。
 
-The package starts an OS-assigned IPv4 loopback listener and exchanges the upstream one-time launch URL for its HttpOnly cookie. Do not share the launch URL or DSH authentication files. The desktop never includes the URL query or API key in logs/diagnostics.
+关闭主窗口会隐藏到通知区域，后台继续运行；托盘「退出」结束程序。升级前先退出旧版，再启动新目录。数据保存在 `%LOCALAPPDATA%\DSHDesktop`，移动程序目录不删除会话或凭据；旧目录共用同一份用户数据。降级 DSH 前需核对其数据格式兼容性。
 
-Allowed intended network: the configured LLM Base URL, plus tools/MCP deliberately invoked by the user. No wrapper update service exists. Build scripts and smoke instruments are not shipped as startup actions. Arbitrary new npm plugin installation is outside offline V1; make a new complete build instead.
+本机服务只监听系统分配的 IPv4 回环端口。不要分享启动 URL 或 DSH 认证文件。桌面日志及诊断不记录启动 URL 查询参数或 API Key。
 
-Before production use, run the remaining clean-image and UI cases in TEST_REPORT.md. The supplied ZIP is a candidate artifact, not an accepted enterprise deployment.
+配置的模型服务、用户调用的网络工具和 MCP 仍需目标网络可达。没有桌面自动更新服务；新增插件依赖应由构建者提供下一份完整目录。真实企业网络访问范围按现场工具与策略检查。
+
+现场检查与日常使用同步进行，问题按 [持续现场验证](ACCEPTANCE-0.2.0.md) 记录并修复。已知限制和当前版本入口见 [发布记录](RELEASE-0.2.0.md)。

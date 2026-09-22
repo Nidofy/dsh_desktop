@@ -1,0 +1,20 @@
+{
+  "name": "project-regression",
+  "mode": "task",
+  "provider": {
+    "api": "openai-completions",
+    "baseURL": "https://replace-with-your-provider.example/v1",
+    "model": "replace-with-your-model",
+    "apiKeyEnv": "DSH_EXPERIMENT_API_KEY"
+  },
+  "template": "../replace-with-a-fixture-directory",
+  "prompt": "Fix the regression described in TASK.md, and run the supplied checks.",
+  "acceptance": [{"command": "python", "args": ["-m", "unittest", "discover", "-s", "acceptance"], "timeoutMs": 60000}],
+  "protectedAcceptancePaths": ["acceptance"],
+  "matrix": {"toolOutputBudget": [50000, 24000], "skillDescription": [500, 250]},
+  "repeat": 2,
+  "tasksPerCase": 1,
+  "timeoutMs": 600000,
+  "maxRequests": 60,
+  "maxOutputTokens": 8192
+}

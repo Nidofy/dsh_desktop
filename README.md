@@ -1,56 +1,60 @@
 # DSHDesktop
 
-Windows x64 的 Tauri 2 桌面壳，直接运行官方 DeepSeek Harness 和原生 Web UI。完整携带运行环境，无首次启动下载，无桌面自动更新。
+Windows x64 的 Tauri 2 桌面程序，直接运行官方 DeepSeek Harness 和原生 Web UI。**0.2.0 为日常使用基准版本**，携带固定 Node 和 WebView2，首次启动无需下载运行环境。
 
-**当前是工程候选版，尚未通过全部 MVP 验收。** 已实测原生 workspace、session、文件读写、PowerShell、mock API 和受限网络下的后端运行；0.1.1 已检查实际窗口外观、欢迎说明确认与正常关闭。干净虚拟机、完整设置交互及 Windows 退出矩阵尚未验收，详见 [测试报告](docs/TEST_REPORT.md)。不得据此标注 `DSH_DESKTOP_MVP_ACCEPTED`。
+本版沿用已验证的功能基线，后续根据实际内外网和工程使用反馈修复。完整本机构建与回归结果见 [0.2.0 发布记录](docs/RELEASE-0.2.0.md)；现场观察单独记录，不表示所有目标环境均已测试。
 
-## 使用
+## 开始使用
 
-桌面壳 **0.1.5** 支持 OpenAI / Anthropic API、多模型列表、对话 Thinking effort 和系统托盘；已内置 WebView2 Fixed Version，并保留用户提供的图标与透明背景。首次打开看到的“DSH 0.1 仍在测试”是官方欢迎说明；随包引擎的完整版本为 **0.1.5-rc.2**。
+1. 使用完整程序目录，保留 `DSHDesktop.exe` 同级的 `resources`，放在当前用户拥有的本机路径中。已有程序先从托盘选择「退出」，再启动新目录中的 EXE。
+2. 在「连接与模型」顶部选择 **DeepSeek 官方连接 / 添加提供方 / 添加自定义提供方**。已知提供方预填地址、协议和模型；自定义提供方填写 Base URL、API Key 和模型 ID。
+3. 点击「保存连接」，待任务结束后点击提供方旁的「应用」。当前已生效且配置未变时显示不可点击的「已应用」。切换不同连接会重载后端；重复应用相同配置不会重载。
+4. 打开工作区开始任务，在对话输入框的模型选择器切换当前连接内的模型。Thinking effort 使用原生 DSH 选择器。
+5. 工作区右上角的「环境信息」图标打开浮动卡片，查看变更、分支、本地环境和来源。加号菜单可打开构建、文件产物、诊断、缓存、自检等工具。窗口缩小时自动收起，不使用右侧栏。
+6. 托盘「设置 / 诊断」打开桌面设置；页面按连接、快照、存储、备份与凭据、运行状态分类。辅助页面跟随 DSH 的明暗/系统主题及字号。
 
-1. 将 `DSHDesktop-win-x64-portable.zip` 完整解压到当前用户拥有的本机目录，保留目录内全部文件。不要在压缩包、网络共享或 Program Files 中直接运行。
-2. 双击 `DSHDesktop.exe`。
-3. 在连接设置选择 **OpenAI · Chat Completions** 或 **Anthropic · Messages**，填写 Base URL、API Key，添加一个或多个模型 ID，并选择初始默认模型，点击“保存并重启引擎”。同一连接的模型共用地址和密钥。OpenAI 地址通常以 `/v1` 结尾；Anthropic 填写 API 根地址（也接受末尾 `/v1`），页面显示实际请求地址。不要填写完整的 `/chat/completions` 或 `/messages` 请求路径。
-4. 在原生 DSH 窗口打开代码 Workspace。
-5. 使用 DSH，在原生对话的模型选择器切换已配置的模型；DSH 会保留后续选择。`Help → Settings / Diagnostics` 或托盘右键“设置 / 诊断”可返回设置。旧版单模型配置会自动作为 OpenAI 连接读取。
+连接共享工作区、会话、附件和外观设置。地址、协议、模型与网络参数可编辑；连接可删除，删除连接不删除会话或工程。API Key 按连接保存到 Windows 凭据管理器，编辑时留空保留密钥。切换连接本身不发送历史，继续任务时使用当前服务。
 
-每个模型可以单独设置 **上下文容量** 和 **最大输出**（单位 tokens），支持自定义整数和 1M 快捷选项（1,000,000 tokens）。GLM 5.3 / Flash 未设置容量时采用 1,000,000 / 128,000；已保存的值保留，可点“GLM：1M 上下文 / 128,000 最大输出”更新。其他模型回退为 32,768 / 4,096。请填写当前服务实际支持的限制；客户端设置不会提升服务端容量。
+OpenAI 使用 Chat Completions，Anthropic 使用 Messages。填写服务基础地址，不要填写完整 `/chat/completions` 或 `/messages` 请求路径。每个模型可分别设置上下文容量和最大输出；GLM 模型 ID 使用服务提供的原名，不添加 `[1m]` 容量后缀。代理、企业 CA 和超时在连接的高级设置中配置。
 
-GLM 模型 ID 填 `glm-5.3` / `glm-5.3-flash` 等服务提供的原名，**不要添加 `[1m]` 来表示容量**。已填后缀的模型可点击“移除 [1m] 后缀并设为 1M / 128,000”。保存操作会同步 DSH 自带设置中的桌面模型配置，并等待新引擎就绪，一次重启即可生效。已有对话引用的已移除模型在下一轮自动修复；历史上下文统计也在下一轮请求刷新，无需再次重启。最大输出须小于上下文。
+所有版本使用 `%LOCALAPPDATA%\DSHDesktop` 数据目录。旧版连接与工作区在启动时迁移；重复目录记录自动备份并合并，冲突停止迁移并保留原数据。详情见 [连接与迁移](docs/CONNECTION_PROFILES.md)。
 
-**Thinking effort 只在原生 DSH 对话模型选择器旁选择**，设置/诊断页不增加此选项。选择会随对话和原生默认模型保留。OpenAI 格式发送 reasoning effort；Anthropic 格式由官方引擎映射为 thinking 参数，实际支持的档位取决于服务。桌面连接设置管理 `desktop-internal` 模型列表和容量，其他原生设置保持不变；同步前的设置备份位于 `%LOCALAPPDATA%\DSHDesktop\dsh\desktop-settings-backups`。
+## 日常功能
 
-需要 Windows 10/11 x64。**无需预装或安装 WebView2**：窗口使用 `resources/webview2` 中随包的微软 Fixed Version 运行时。Windows 10 首次运行会给该浏览器目录设置沙箱所需的读取/执行权限，不请求管理员权限、不修改系统 WebView2。请解压到自己拥有的本机目录。
+- [工作区环境浮窗](docs/ENVIRONMENT_PLUGIN.md)：按需打开，可在 DSH 设置 → 插件 → 工作区环境启停；Git 分支搜索/切换/创建、比较、提交暂存区及确认后推送，Hg 状态与变更查看。
+- [项目操作](docs/PROJECT_ACTIONS.md)：构建与测试命令、配置绑定信任、取消、日志和产物，复用 DSH 权限与执行后端。
+- [变更查看](docs/CHANGE_REVIEW.md)：Git/Hg 差异、任务前后基线、选中片段追加现有草稿。
+- [文件与产物](docs/ARTIFACTS.md)、[快照与恢复](docs/TASK_SNAPSHOTS.md)、[任务状态](docs/TASK_RECOVERY.md)、[后台提醒](docs/NOTIFICATIONS.md)。
+- [诊断与归档](docs/OBSERVABILITY-0.1.6.md)、[A/B 比较](docs/EXPERIMENTS-0.1.7.md)、[缓存配置与探针](docs/CACHE_CENTER.md)、[环境自检](docs/SELF_TEST_CENTER.md)。
+- [识图插件](docs/VISION_PLUGIN.md)：独立 Base URL、模型和凭据，支持 OpenAI/Anthropic 格式，在 DSH 设置 → 插件 → 识图中配置。
 
-API Key 保存到当前 Windows 用户的凭据管理器，页面不会回显；同一 Base URL 再次保存时留空表示保留原密钥，改换地址需要提供该地址的密钥。其余数据位于 `%LOCALAPPDATA%\DSHDesktop`。
+关闭窗口会隐藏到托盘，后台任务继续运行。托盘「打开 DSH Desktop」恢复窗口，「退出」结束程序及引擎；第二次启动不会创建另一套引擎。重启或退出前先结束任务。
 
-启动后 Windows 通知区域会出现相同图标的 **DSH Desktop**（可能位于右下角 `^` 隐藏图标中，具体位置由 Windows 管理）。关闭主窗口会隐藏到托盘，后台引擎继续运行；单击托盘图标或右键“打开 DSH Desktop”恢复窗口。右键“退出”才会结束程序及后台引擎，设置页和 Help 菜单中的 Quit 同样执行完整退出。第二次启动不创建另一套引擎。
+## 运行范围与已知限制
 
-先结束当前任务，再重启引擎或退出。离线包只支持随包提供的插件及已有配置；新增插件应由构建者制作下一版离线包。用户主动调用网络工具或 MCP 时，仍需要相应目标网络权限。
+面向 Windows 10/11 x64 普通用户账户。程序自带 Node 24.16.0、DSH 0.1.5-rc.2 和 WebView2 Fixed Version 153.0.4234.48；工程所需 Git/Hg、编译器和测试工具由工程环境提供。无自动更新、首次运行下载或系统 Node 回退。
 
-已知限制：内置下载操作当前被拒绝；外部弹窗链接仅交给系统浏览器；主窗口不允许跳转到外部站点。未签名，企业应用执行策略可能拒绝运行，应由企业按内部流程分发。
+- 当前本机验证环境为 Windows 11；干净 Windows 10/11、企业策略、休眠/注销及真实内外网网关持续验证中。
+- 实际缓存命中取决于服务及任务；计数缺失显示未知。客户端缓存键、标记和前缀稳定性已有本机双协议回归。
+- Hg 写操作和在线 Pull Request 尚未接入。浮窗来源展示桌面连接与工作区根目录 AGENTS.md/CLAUDE.md。
+- 通知点击、系统另存对话框及大型真实工程仍持续收集反馈。程序未签名，企业应用策略可能限制运行。
+- 随包插件可离线使用；新增依赖需由构建者准备完整运行时。网络插件和 MCP 仍需要相应服务可达。
 
-## Developer Build
+本轮提供完整未压缩目录，不生成 ZIP。旧验证目录保留；它们共用用户数据，不能据目录名称视为独立配置环境。
 
-仅开发者构建机需要 Node/npm、Rust 和 MSVC C++ build tools，允许访问 npm registry、Cargo、GitHub、Node 官方站点。
+## 开发构建
+
+构建机需要 Node/npm、Rust 和 MSVC；最终用户不需要这些开发工具。版本和依赖锁定在 `versions.json`、`build-deps/package-lock.json` 与 `src-tauri/Cargo.lock`。
 
 ```powershell
-git clone https://github.com/Nidofy/dsh_desktop.git
-cd dsh_desktop
+# 已准备运行时：完成全部检查和 EXE 构建，不生成 ZIP
+.\scripts\build-windows.ps1 -ReusePreparedRuntime -SkipPackage
+# 完整目录：包含许可证清单和离线启动验证，不生成 ZIP
+.\scripts\package-portable.ps1 -SkipArchive
 ```
 
-Git 管理源码、图片资源、依赖锁文件、构建脚本和测试记录。`runtime/`、`dist/`、`.build/`、`node_modules/` 和 Rust 构建产物保留在本地，由构建脚本准备；克隆源码后需要在联网的 Windows 构建机上生成离线包。
+首次构建去掉 `-ReusePreparedRuntime`。默认打包命令仍可生成 ZIP。源码仓库为 `https://github.com/Nidofy/dsh_desktop`；`runtime/`、`dist/` 和 `.build/` 为本机构建数据。
 
-```powershell
-.\scripts\build-windows.ps1
-```
-
-脚本下载并校验固定 Node 版本，在构建时执行 `npm ci`，测试及构建 Tauri，再生成 portable ZIP 和 SHA256。详细步骤见 [BUILD](docs/BUILD.md)。最终使用者不执行构建脚本。
-
-## 文档
-
-- [架构 ADR](docs/ADR-001-DESKTOP-ARCHITECTURE.md)
-- [离线部署](docs/OFFLINE_DEPLOYMENT.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md)
-- [离线审计](docs/OFFLINE_AUDIT.md) / [版本](docs/VERSIONS.md)
-- [第三方许可](docs/THIRD_PARTY_LICENSES.md)
-- [测试及验收状态](docs/TEST_REPORT.md)
+- [构建](docs/BUILD.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md) / [离线部署](docs/OFFLINE_DEPLOYMENT.md)
+- [0.2.0 发布记录](docs/RELEASE-0.2.0.md) / [后续现场检查](docs/ACCEPTANCE-0.2.0.md)
+- [第三方许可](docs/THIRD_PARTY_LICENSES.md) / [完整性校验](docs/RUNTIME_INTEGRITY.md)

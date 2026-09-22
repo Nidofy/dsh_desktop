@@ -28,7 +28,12 @@ try {
         }
         Start-Sleep -Milliseconds 200
     }
-    if (!$ready) { throw 'Desktop did not become ready' }
+    if (!$ready) {
+        $desktop.Refresh()
+        $evidence.desktopExited=$desktop.HasExited
+        if ($desktop.HasExited) { $evidence.desktopExitCode=$desktop.ExitCode }
+        throw 'Desktop did not become ready'
+    }
     $backend=[int]$ready.Matches[0].Groups[1].Value
     $port=[int]$ready.Matches[0].Groups[2].Value
     $evidence.startupMs=[int]$ready.Matches[0].Groups[3].Value
@@ -48,7 +53,7 @@ try {
     $evidence.secondInstanceExited=$true
     Stop-Process -Id $backend
     $deadline=(Get-Date).AddSeconds(10)
-    do { Start-Sleep -Milliseconds 200; $failure=Get-Content -LiteralPath $log | Select-String -Pattern 'stopped unexpectedly' } while (!$failure -and (Get-Date) -lt $deadline)
+    do { Start-Sleep -Milliseconds 200; $failure=Get-Content -LiteralPath $log | Select-String -Pattern 'DSH 引擎意外退出|stopped unexpectedly' } while (!$failure -and (Get-Date) -lt $deadline)
     if (!$failure) { throw 'Backend crash did not reach supervisor error state' }
     $evidence.backendCrashReported=$true
     $evidence.desktopStayedAliveAfterBackendCrash=!(Get-Process -Id $desktop.Id).HasExited

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {mkdir,mkdtemp,writeFile,readFile,rename,symlink} from 'node:fs/promises';
+import {join,resolve} from 'node:path';
+import {createInventory,verifyInventory,verifyRuntime} from '../runtime-src/runtime-integrity.mjs';
+await mkdir('.build',{recursive:true});const root=await mkdtemp(resolve('.build/runtime-integrity-'));
+const tree=join(root,'tree');await mkdir(join(tree,'nested'),{recursive:true});await writeFile(join(tree,'nested','中文.txt'),'original');await writeFile(join(tree,'root.bin'),Buffer.from([0,1,255]));
+const files=await createInventory(tree);assert.equal(files.length,2);assert.deepEqual(await verifyInventory(tree,files),{files:2,bytes:11});assert.deepEqual(await createInventory(tree),files,'deterministic manifest');
+const fail=code=>error=>error.code===`INTEGRITY_${code}`;
+await writeFile(join(tree,'root.bin'),'bad');await assert.rejects(()=>verifyInventory(tree,files),fail('CHANGED'));await writeFile(join(tree,'root.bin'),Buffer.from([0,1,255]));
+await writeFile(join(tree,'extra.dll'),'extra');await assert.rejects(()=>verifyInventory(tree,files),fail('EXTRA'));await rename(join(tree,'extra.dll'),join(root,'extra.dll'));
+await rename(join(tree,'root.bin'),join(root,'root.bin'));await assert.rejects(()=>verifyInventory(tree,files),fail('MISSING'));await rename(join(root,'root.bin'),join(tree,'root.bin'));
+await assert.rejects(()=>verifyInventory(tree,[...files,{...files[0],path:'../outside'}]),fail('MANIFEST'));await assert.rejects(()=>verifyInventory(tree,[...files,{...files[0],path:files[0].path.toUpperCase()}]),fail('MANIFEST'));
+await assert.rejects(()=>verifyInventory(tree,files.map(f=>({...f,bytes:-1}))),fail('MANIFEST'));
+const signal=AbortSignal.abort();await assert.rejects(()=>verifyInventory(tree,files,{signal}),e=>e.name==='AbortError');
+const outside=join(root,'outside');await mkdir(outside);await writeFile(join(outside,'untouched'),'outside');await symlink(outside,join(tree,'junction'),'junction');await assert.rejects(()=>createInventory(tree),fail('UNSAFE'));assert.equal(await readFile(join(outside,'untouched'),'utf8'),'outside');
+const runtime=join(root,'runtime');await mkdir(join(runtime,'runtime'),{recursive:true});await writeFile(join(runtime,'runtime','node.exe'),'synthetic');const entries=await createInventory(runtime);const manifest={schemaVersion:1,kind:'desktop-runtime',versions:{nodeSha256:entries[0].sha256},files:entries};await writeFile(join(runtime,'runtime-integrity.json'),JSON.stringify(manifest));assert.equal((await verifyRuntime(runtime)).metrics.files,1);
+await writeFile(join(runtime,'runtime-integrity.json'),JSON.stringify({...manifest,versions:{nodeSha256:'bad'}}));await assert.rejects(()=>verifyRuntime(runtime),fail('MANIFEST'));
+console.log('PASS runtime integrity: exact tree, deterministic hashes, modified/missing/extra files, path traversal, duplicate case, links, cancellation, Node pin');

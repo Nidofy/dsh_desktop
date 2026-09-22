@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "buildReceiptId": "9194c42a-86d0-40d9-a0ea-f06af0c8363f",
+  "status": "PASS",
+  "buildLog": ".build/provider-feedback-final-build.log",
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-providers",
+  "executableSha256": "c4152ed020f311436166d8c2a633081a8fca5936c15b6397432866ff9c9d89cc",
+  "stagedOutputsMatchReceipt": true,
+  "runtimeIntegrityFiles": 25768,
+  "rustTestsPassed": 70,
+  "separateNativeSnapshotPassed": true,
+  "nativeProviderCatalog": {"providers": 13, "models": 105},
+  "nativeSessionRoundtrip": "custom -> known ZAI -> custom: PASS, loopback only",
+  "checks": ["OpenAI and Anthropic protocols", "vision tools", "Git and Mercurial", "38 prefix wire cases", "cache keys", "observability", "change review", "settings synchronization"],
+  "browserUi": "provider cards, official preset, known-provider key save, custom settings verified in isolated fixture",
+  "nativeStartupBeforeFinalExecutableReplacement": {"readyMilliseconds": 5955, "workspaceAccessibilityTree": true},
+  "originalExitRootCause": "NOT_CONFIRMED",
+  "remaining": ["final executable user interaction", "native settings clicks after Windows unlock", "real provider gateway validation"],
+  "zipCreated": false
+}

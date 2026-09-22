@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "RELEASE_CANDIDATE_NOT_STABLE",
+  "date": "2026-09-22",
+  "desktopVersion": "0.2.0-rc.2",
+  "buildId": "c9700a6a-853d-4989-85b3-c71a98f342a9",
+  "zip": "DSHDesktop-0.2.0-rc.2-win-x64-portable.zip",
+  "zipBytes": 436783073,
+  "zipSha256": "0ff2b682f6a075cb99dd9537d38d98e8e887b8b3adea8bfd6f26606878b705e1",
+  "zipFilesIncludingManifest": 26790,
+  "extractedFilesExcludingManifest": 26789,
+  "extractedBytesExcludingManifest": 1042914027,
+  "checks": {
+    "fullBuild": "PASS",
+    "actualZipIntegrity": "PASS",
+    "freshChinesePathExtraction": "PASS",
+    "sourceThemeFixesInExtractedPackage": "PASS_BYTE_IDENTICAL",
+    "standaloneVerifierPowerShell7": "PASS",
+    "extractedRuntimeOfflineSmoke": "PASS",
+    "extractedApiFailures": "PASS",
+    "actualDesktopNonAdminProcessSmoke": "PASS",
+    "bundledWebViewObserved": "PASS_153.0.4234.48",
+    "loopbackOnlyListener": "PASS",
+    "secondInstanceExit": "PASS",
+    "backendCrashReported": "PASS",
+    "desktopBackendBrowserCleanup": "PASS_NO_REMAINING_TEST_PROCESSES",
+    "postNativeRunFileIntegrity": "PASS"
+  },
+  "nativeStartupMs": 5139,
+  "licenses": {
+    "npmPackages": 518,
+    "rustPackages": 262,
+    "missingDeclarations": 0,
+    "binaryRedistributionReview": "PENDING"
+  },
+  "nativeClickAndAppearanceAcceptance": "PENDING",
+  "cleanWindowsAndCorporateNetworkAcceptance": "PENDING",
+  "realGatewayCacheEffectiveness": "PENDING",
+  "localEvidence": [
+    ".build/package-020rc2.log",
+    ".build/release-gate-020rc2.log",
+    ".build/candidate-extract-020rc2.json",
+    ".build/extracted-verifier-020rc2.log",
+    ".build/extracted-offline-020rc2.log",
+    ".build/extracted-native-020rc2.log",
+    ".build/post-native-integrity-020rc2.log",
+    ".build/rc2-process-cleanup.json",
+    ".build/desktop-process-6230c4ea50a34e32bb816c2c903a5efd/report.json",
+    ".build/smoke-中文 (space)-mWyfNT",
+    ".build/api-negative-941XMQ"
+  ]
+}

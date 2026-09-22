@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {runInNewContext} from 'node:vm';
+import {mkdtemp, mkdir, readFile} from 'node:fs/promises';
+import {resolve, join} from 'node:path';
+import {appearance, installDesktopTheme} from '../runtime-src/desktop-theme.mjs';
+import {desktopThemeScript, desktopThemeCss} from '../runtime-src/desktop-theme-assets.mjs';
+assert.deepEqual(appearance({preference:'invalid',fontSize:999}),{preference:'system',fontSize:14});
+assert(desktopThemeCss.includes('--dsw-alias-bg-base'));
+assert(desktopThemeCss.includes('body[data-ds-dark-theme]'));
+assert.equal(desktopThemeScript, await readFile('shell-ui/desktop-theme.js','utf8'));
+await mkdir('.build',{recursive:true});const home=await mkdtemp(resolve('.build/theme-'));
+let preference={preference:'dark',fontSize:16};const handlers={},effects=[];
+const ctx={get:name=>name==='settings'?{get:()=>preference}:undefined,on:(name,cb)=>{handlers[name]=cb;},effect:cb=>effects.push(cb())};
+const read=installDesktopTheme(ctx,home);
+assert.deepEqual(read(),preference);
+preference={preference:'light',fontSize:12};handlers['settings/updated']('ui-theme');
+for(const close of effects)await close();
+assert.deepEqual(JSON.parse(await readFile(join(home,'desktop-appearance.json'),'utf8')),preference);
+async function browser(native=false,remote=false){
+ const attributes={},style={},windowEvents={},documentEvents={},mediaEvents={},storage=new Map();
+ const document={documentElement:{style:{},dataset:{}},body:{toggleAttribute:(key,value)=>{attributes[key]=value;},style:{setProperty:(key,value)=>{style[key]=value;}}},visibilityState:'visible',addEventListener:(key,cb)=>{documentEvents[key]=cb;}};
+ const media={matches:false,addEventListener:(key,cb)=>{mediaEvents[key]=cb;}};
+ const window={location:{pathname:remote?'/desktop-diagnostics':'/'},addEventListener:(key,cb)=>{windowEvents[key]=cb;}};
+ let value={preference:'dark',fontSize:16},interval,failed=false;
+ if(native)window.__TAURI__={core:{invoke:async name=>{assert(!remote,'remote webview must not use local IPC');assert.equal(name,'appearance');if(failed)throw Error('restarting');return value;}}};
+ runInNewContext(desktopThemeScript,{document,window,matchMedia:()=>media,localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,v)=>storage.set(key,v)},fetch:async url=>{assert.equal(url,'/desktop-diagnostics/api/appearance');if(failed)throw Error('restarting');return {ok:true,json:async()=>value};},setInterval:cb=>{interval=cb;}});
+ await new Promise(r=>setImmediate(r));
+ assert.equal(attributes['data-ds-dark-theme'],true);assert.equal(style['--dsh-content-font-size'],'16px');
+ value={preference:'light',fontSize:12};interval();await new Promise(r=>setImmediate(r));
+ assert.equal(attributes['data-ds-dark-theme'],false);assert.equal(document.documentElement.style.colorScheme,'light');
+ value={preference:'system',fontSize:14};await windowEvents.focus();media.matches=true;mediaEvents.change();
+ assert.equal(attributes['data-ds-dark-theme'],true);
+ failed=true;await windowEvents.focus();assert.equal(attributes['data-ds-dark-theme'],true,'engine outage preserves current appearance');
+ windowEvents.storage({key:'dsh-desktop-appearance',newValue:JSON.stringify({preference:'light',fontSize:17})});
+ assert.equal(attributes['data-ds-dark-theme'],false);assert.equal(style['--dsh-content-font-size'],'17px');
+}
+await browser();await browser(true);await browser(true,true);
+console.log('PASS desktop appearance: DSH settings mirror, light/dark/system, font size, native/web transport, live changes, restart continuity');

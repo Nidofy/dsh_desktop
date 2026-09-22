@@ -1,0 +1,9 @@
+{
+  "name": "task-concurrency",
+  "mode": "task",
+  "matrix": {"maxConcurrency": [1, 2, 4]},
+  "repeat": 1,
+  "tasksPerCase": 4,
+  "timeoutMs": 60000,
+  "maxRequests": 10
+}

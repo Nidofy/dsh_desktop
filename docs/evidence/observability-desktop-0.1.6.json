@@ -1,0 +1,23 @@
+{
+  "administratorToken": false,
+  "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-win-x64-portable-20260921-110947",
+  "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-675a35896c3f42d482850e66a6730341",
+  "startupMs": 7583,
+  "loopbackOnly": true,
+  "port": 54283,
+  "observedWebViewProcesses": [
+    {
+      "ProcessId": 10628,
+      "ParentProcessId": 33660,
+      "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-win-x64-portable-20260921-110947\\resources\\webview2\\msedgewebview2.exe"
+    }
+  ],
+  "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-win-x64-portable-20260921-110947\\resources\\webview2\\msedgewebview2.exe",
+  "webview2Version": "153.0.4234.48",
+  "inheritedBrowserOverrideIgnored": true,
+  "secondInstanceExited": true,
+  "backendCrashReported": true,
+  "desktopStayedAliveAfterBackendCrash": true,
+  "backendRemains": false,
+  "result": "PASS"
+}

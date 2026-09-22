@@ -1,0 +1,420 @@
+{
+  "version": "0.1.7",
+  "date": "2026-09-21",
+  "offlinePackageProduced": false,
+  "upstreamDshVersion": "0.1.5-rc.2",
+  "upstreamSourcePatches": 0,
+  "releaseBuildPassed": true,
+  "rustTests": {
+    "passed": 9,
+    "total": 9
+  },
+  "unitTests": [
+    "observability",
+    "settings-sync",
+    "experiments"
+  ],
+  "protocolRegression": [
+    "openai-completions",
+    "anthropic-messages"
+  ],
+  "wireEvidence": [
+    {
+      "protocol": "openai",
+      "status": "PASS",
+      "wireBytesIdentical": true,
+      "turns": 2,
+      "nativeRead": true,
+      "usage": true,
+      "error": true,
+      "cancel": true,
+      "auth": true,
+      "exportPrivacy": true,
+      "keyScopeRestart": true,
+      "preferencePersistence": true,
+      "spillRestore": true,
+      "onOffWallMs": [
+        {
+          "enabled": false,
+          "wallMs": 498.8609000000006
+        },
+        {
+          "enabled": true,
+          "wallMs": 277.9287999999997
+        }
+      ]
+    },
+    {
+      "protocol": "anthropic",
+      "status": "PASS",
+      "wireBytesIdentical": true,
+      "turns": 2,
+      "nativeRead": true,
+      "usage": true,
+      "error": true,
+      "cancel": true,
+      "auth": true,
+      "exportPrivacy": true,
+      "keyScopeRestart": true,
+      "preferencePersistence": true,
+      "spillRestore": true,
+      "onOffWallMs": [
+        {
+          "enabled": false,
+          "wallMs": 495.1288999999997
+        },
+        {
+          "enabled": true,
+          "wallMs": 276.15859999999884
+        }
+      ]
+    }
+  ],
+  "experimentIntegration": {
+    "archiveAcrossRestart": true,
+    "archiveMarkdown": true,
+    "comparisonExport": true,
+    "autoTurnArchive": true,
+    "repoToolRegistration": true,
+    "experimentPreferences": true
+  },
+  "browserFixture": {
+    "comparison": true,
+    "waterfall": true,
+    "measurementSettings": true,
+    "nativeDownloadClick": false
+  },
+  "singleFactor": {
+    "workloads": 6,
+    "passed": 6,
+    "batches": [
+      {
+        "round": 1,
+        "caseIndex": 0,
+        "config": {
+          "toolOutputBudget": 50000,
+          "skillDescription": 500
+        },
+        "workloads": 1,
+        "wallMs": 583,
+        "throughputPerSecond": 1.7152658662092624,
+        "durationP50Ms": 583,
+        "durationP95Ms": 583,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 1,
+        "config": {
+          "toolOutputBudget": 24000,
+          "skillDescription": 500
+        },
+        "workloads": 1,
+        "wallMs": 622,
+        "throughputPerSecond": 1.607717041800643,
+        "durationP50Ms": 622,
+        "durationP95Ms": 622,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 2,
+        "config": {
+          "toolOutputBudget": 50000,
+          "skillDescription": 250
+        },
+        "workloads": 1,
+        "wallMs": 573,
+        "throughputPerSecond": 1.7452006980802792,
+        "durationP50Ms": 572,
+        "durationP95Ms": 572,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 1,
+        "config": {
+          "toolOutputBudget": 24000,
+          "skillDescription": 500
+        },
+        "workloads": 1,
+        "wallMs": 573,
+        "throughputPerSecond": 1.7452006980802792,
+        "durationP50Ms": 573,
+        "durationP95Ms": 573,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 2,
+        "config": {
+          "toolOutputBudget": 50000,
+          "skillDescription": 250
+        },
+        "workloads": 1,
+        "wallMs": 572,
+        "throughputPerSecond": 1.7482517482517483,
+        "durationP50Ms": 572,
+        "durationP95Ms": 572,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 0,
+        "config": {
+          "toolOutputBudget": 50000,
+          "skillDescription": 500
+        },
+        "workloads": 1,
+        "wallMs": 590,
+        "throughputPerSecond": 1.694915254237288,
+        "durationP50Ms": 589,
+        "durationP95Ms": 589,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      }
+    ]
+  },
+  "taskConcurrency": {
+    "workloads": 12,
+    "passed": 12,
+    "batches": [
+      {
+        "round": 1,
+        "caseIndex": 0,
+        "config": {
+          "maxConcurrency": 1
+        },
+        "workloads": 4,
+        "wallMs": 1482,
+        "throughputPerSecond": 2.699055330634278,
+        "durationP50Ms": 304,
+        "durationP95Ms": 558,
+        "queueP95Ms": 1163,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 1,
+        "config": {
+          "maxConcurrency": 2
+        },
+        "workloads": 4,
+        "wallMs": 1014,
+        "throughputPerSecond": 3.9447731755424065,
+        "durationP50Ms": 393,
+        "durationP95Ms": 619,
+        "queueP95Ms": 620,
+        "firstByteP50Ms": null,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 2,
+        "config": {
+          "maxConcurrency": 4
+        },
+        "workloads": 4,
+        "wallMs": 1109,
+        "throughputPerSecond": 3.606853020739405,
+        "durationP50Ms": 1089,
+        "durationP95Ms": 1108,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": null,
+        "failures": 0
+      }
+    ]
+  },
+  "requestConcurrency": {
+    "workloads": 24,
+    "passed": 24,
+    "batches": [
+      {
+        "round": 1,
+        "caseIndex": 0,
+        "config": {
+          "maxConcurrency": 1
+        },
+        "workloads": 4,
+        "wallMs": 29,
+        "throughputPerSecond": 137.93103448275863,
+        "durationP50Ms": 3,
+        "durationP95Ms": 19,
+        "queueP95Ms": 26,
+        "firstByteP50Ms": 2,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 1,
+        "config": {
+          "maxConcurrency": 2
+        },
+        "workloads": 4,
+        "wallMs": 9,
+        "throughputPerSecond": 444.44444444444446,
+        "durationP50Ms": 3,
+        "durationP95Ms": 4,
+        "queueP95Ms": 5,
+        "firstByteP50Ms": 3,
+        "failures": 0
+      },
+      {
+        "round": 1,
+        "caseIndex": 2,
+        "config": {
+          "maxConcurrency": 4
+        },
+        "workloads": 4,
+        "wallMs": 9,
+        "throughputPerSecond": 444.44444444444446,
+        "durationP50Ms": 7,
+        "durationP95Ms": 9,
+        "queueP95Ms": 0,
+        "firstByteP50Ms": 7,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 1,
+        "config": {
+          "maxConcurrency": 2
+        },
+        "workloads": 4,
+        "wallMs": 7,
+        "throughputPerSecond": 571.4285714285714,
+        "durationP50Ms": 3,
+        "durationP95Ms": 4,
+        "queueP95Ms": 3,
+        "firstByteP50Ms": 3,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 2,
+        "config": {
+          "maxConcurrency": 4
+        },
+        "workloads": 4,
+        "wallMs": 6,
+        "throughputPerSecond": 666.6666666666666,
+        "durationP50Ms": 5,
+        "durationP95Ms": 5,
+        "queueP95Ms": 1,
+        "firstByteP50Ms": 5,
+        "failures": 0
+      },
+      {
+        "round": 2,
+        "caseIndex": 0,
+        "config": {
+          "maxConcurrency": 1
+        },
+        "workloads": 4,
+        "wallMs": 11,
+        "throughputPerSecond": 363.6363636363636,
+        "durationP50Ms": 2,
+        "durationP95Ms": 2,
+        "queueP95Ms": 8,
+        "firstByteP50Ms": 2,
+        "failures": 0
+      }
+    ]
+  },
+  "taskMetrics": [
+    {
+      "round": 1,
+      "config": {
+        "toolOutputBudget": 50000,
+        "skillDescription": 500
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    },
+    {
+      "round": 1,
+      "config": {
+        "toolOutputBudget": 24000,
+        "skillDescription": 500
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    },
+    {
+      "round": 1,
+      "config": {
+        "toolOutputBudget": 50000,
+        "skillDescription": 250
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    },
+    {
+      "round": 2,
+      "config": {
+        "toolOutputBudget": 24000,
+        "skillDescription": 500
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    },
+    {
+      "round": 2,
+      "config": {
+        "toolOutputBudget": 50000,
+        "skillDescription": 250
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    },
+    {
+      "round": 2,
+      "config": {
+        "toolOutputBudget": 50000,
+        "skillDescription": 500
+      },
+      "status": "PASS",
+      "acceptance": "BUILT_IN",
+      "requests": 4,
+      "tools": 2,
+      "input": 43416
+    }
+  ],
+  "realProviderCalled": false,
+  "realCodingEfficiencyValidated": false,
+  "limitations": [
+    "Synthetic timing is not an efficiency claim.",
+    "Workspace copies and runtime-manifest coverage do not prove full environment equality.",
+    "Adapter zero cache counters are omitted and remain unknown.",
+    "Native WebView file-picker/download click regression remains manual.",
+    "Synthetic token counts use a byte-based approximation, not a real tokenizer."
+  ],
+  "measurementIdSmokePassed": true
+}

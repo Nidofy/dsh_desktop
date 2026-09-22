@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {recoveryInitial,recoveryFold,recoveryView} from '../runtime-src/task-recovery.mjs';
+let seq=0,state=recoveryInitial({createdAt:1});
+const event=(type,data={})=>{state=recoveryFold(state,{type,data,seq:seq++,time:seq*1000});};
+event('turn/start',{turn:1});event('step/start',{turn:1,step:1});
+event('assistant/message',{});event('tool/call',{callId:'a',name:'shell',arguments:'PRIVATE_COMMAND'});
+event('approval/asked',{id:'approve-a',reason:'PRIVATE_REASON'});
+assert.equal(recoveryView(state,true).status,'WAITING_PERMISSION');
+event('approval/decided',{id:'approve-a'});
+assert.equal(recoveryView(state,true).status,'RUNNING');
+event('tool/result',{message:{content:[{toolCallId:'a',text:'PRIVATE_RESULT',isError:false}]}});
+assert.equal(state.lastTool.name,'shell');assert.equal(state.lastTool.status,'COMPLETED');
+event('tool/call',{callId:'q',name:'ask_user_question'});assert.equal(recoveryView(state,true).status,'WAITING_INPUT');
+event('turn/end',{turn:1,reason:{kind:'interrupted'}});
+assert.equal(state.status,'INTERRUPTED');assert.equal(recoveryView(state,false).unconfirmedTools[0].status,'UNKNOWN');
+assert.equal(state.lastTool.name,'shell','retain last confirmed completion, not guessed latest execution');
+assert(!JSON.stringify(state).includes('PRIVATE'),'no command, reasoning, or result body in projection');
+const checkpoint=structuredClone(state);assert.deepEqual(checkpoint,state,'state is durable JSON');
+event('turn/start',{turn:2});event('step/start',{turn:2,step:1});event('turn/end',{turn:2,reason:{kind:'interrupted'}});
+assert.equal(state.lastModel.status,'UNKNOWN');
+event('turn/start',{turn:3});
+for(let i=0;i<70;i++)event('tool/call',{callId:'call-'+i,name:'shell'});
+assert.equal(state.pendingTools.length,64);assert.equal(state.coverage,'PARTIAL');
+for(const [kind,status] of [['completed','COMPLETED'],['aborted','CANCELLED'],['error','FAILED'],['max-tokens','LIMIT_REACHED'],['blocked','BLOCKED'],['future','UNKNOWN']]) {
+  event('turn/end',{reason:{kind}});assert.equal(state.status,status);
+}
+const before=state;event('user/message',{content:'PRIVATE_PROMPT'});assert.equal(state,before,'unrelated events cause no downstream projection work');
+const child=recoveryInitial({createdAt:1},5);
+assert.equal(recoveryFold(child,{seq:4,time:10,type:'turn/start',data:{turn:1}}),child,'inherited parent turns are not child tasks');
+assert.equal(recoveryView({...child,status:'RUNNING'},false).status,'UNKNOWN','stale running hint is never presented as live work');
+console.log('PASS task recovery: native-event fold, interruption/unknown side effects, approval/input, bounded state, fork boundary, metadata-only projection');

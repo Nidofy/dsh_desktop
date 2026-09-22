@@ -1,0 +1,9 @@
+{
+  "name": "read-write-smoke",
+  "mode": "task",
+  "matrix": {"toolOutputBudget": [50000, 24000], "skillDescription": [500, 250]},
+  "repeat": 2,
+  "tasksPerCase": 1,
+  "timeoutMs": 60000,
+  "maxRequests": 10
+}

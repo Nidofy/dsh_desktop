@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "desktopVersion": "0.2.0",
+  "status": "LOCAL_RELEASE_GATES_PASSED",
+  "releaseChannel": "stable",
+  "fieldValidation": "IN_PROGRESS",
+  "releasePolicy": "Per user instruction on 2026-09-22, release proceeds after local gates while field testing continues; fix subsequent bugs from feedback",
+  "buildId": "6c5856b2-d922-45e8-8be4-48483ccda39d",
+  "buildLog": ".build/stable-020-build.log",
+  "directoryLog": ".build/stable-020-directory.log",
+  "nativeLog": ".build/stable-020-native.log",
+  "directory": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.0-win-x64",
+  "zipCreated": false,
+  "exeSha256": "a4dbe88b4f1a8679f9f81680fde1e68c1455e114053110087f7c7e1a7f261940",
+  "checks": {
+    "completeBuild": "PASS",
+    "rustTestsPassed": 70,
+    "separateNativeAutomaticSnapshot": "PASS",
+    "nativePrefixCasesPassed": 38,
+    "openaiAndAnthropic": "PASS",
+    "gitAndHg": "PASS",
+    "providerSwitchAndSharedHistory": "PASS",
+    "proxyAndEnterpriseCA": "PASS",
+    "vision": "PASS",
+    "cacheAndSelfTest": "PASS",
+    "diagnosticsAndChangeReview": "PASS",
+    "directoryIntegrity": "PASS",
+    "offlineRuntimeSmoke": "PASS",
+    "apiNegativeCases": "PASS",
+    "nativeProcess": "PASS"
+  },
+  "nativeProcess": {
+    "evidence": ".build/desktop-process-7eeef90406a248919a8d8cb326b9dc4a/report.json",
+    "administratorToken": false,
+    "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.0-win-x64",
+    "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-7eeef90406a248919a8d8cb326b9dc4a",
+    "startupMs": 5249,
+    "loopbackOnly": true,
+    "port": 58756,
+    "observedWebViewProcesses": [
+      {
+        "ProcessId": 33248,
+        "ParentProcessId": 39096,
+        "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.0-win-x64\\resources\\webview2\\msedgewebview2.exe"
+      }
+    ],
+    "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.0-win-x64\\resources\\webview2\\msedgewebview2.exe",
+    "webview2Version": "153.0.4234.48",
+    "inheritedBrowserOverrideIgnored": true,
+    "secondInstanceExited": true,
+    "backendCrashReported": true,
+    "desktopStayedAliveAfterBackendCrash": true,
+    "backendRemains": false,
+    "result": "PASS"
+  },
+  "licenses": {
+    "npmPackages": 518,
+    "rustPackages": 262,
+    "missingDeclarations": 0,
+    "originalTextsIncluded": true
+  },
+  "knownLimitations": [
+    "Hg write operations and online PR are not implemented",
+    "Source list includes connection and root AGENTS.md/CLAUDE.md",
+    "Changing active connection reloads the backend",
+    "Application is unsigned; fixed dependencies do not auto-update"
+  ],
+  "followUpValidation": [
+    "Real internal/external gateway cache benefit and task quality",
+    "Native notifications, file dialogs and window focus",
+    "Large Git/Hg projects, sleep/shutdown and real disk faults",
+    "Clean Windows 10/11 and enterprise policies/network observations",
+    "Third-party binary redistribution review for intended deployment"
+  ],
+  "userPriorFeedback": {
+    "build": "242b744c-5be4-47dc-b919-93ada7087cb3",
+    "feedback": "已测试，基本正常"
+  },
+  "previousUnexplainedStartup": {
+    "evidence": "docs/evidence/native-theme-2026-09-22.json",
+    "status": "Retained; not claimed fixed; final 0.2.0 native run passed"
+  }
+}

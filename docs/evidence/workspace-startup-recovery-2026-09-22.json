@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "buildReceiptId": "d6e42562-dc4c-493e-a8bd-36d04e87a09b",
+  "status": "PASS",
+  "rootCause": "Duplicate workspace IDs owning the same canonical path; DSH workspace invariant at lib/index.js:684",
+  "fix": "Merge by stored canonical path; preserve current identity and union session membership; back up and repair already-migrated homes before boot",
+  "buildLog": ".build/workspace-recovery-build.log",
+  "nativeRegression": ".build/workspace-recovery-wire-KEKuJM",
+  "rustTestsPassed": 70,
+  "nativeDuplicateFailureReproduced": true,
+  "twoRepairedBootsPassed": true,
+  "originalRegistryBackupVerified": true,
+  "runtimeFilesVerified": 25768,
+  "stagedOutputsMatchReceipt": true,
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-workspace-fix",
+  "userDataRepair": "Runs at next startup; actual user environment acceptance pending",
+  "zipCreated": false
+}

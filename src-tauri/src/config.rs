@@ -6,7 +6,39 @@ use windows_sys::Win32::Security::Credentials::*;
 const TARGET: &str = "DSHDesktop/InternalLLM";
 #[cfg(test)]
 const TARGET: &str = "DSHDesktop/IsolatedCredentialTest";
+// Native save/activation is serialized by Engine::save_lock. Keep the two
+// integration fixtures using the same OS credential store serialized as well.
+#[cfg(test)]
+pub static CREDENTIAL_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 pub const KEY_ENV: &str = "DSH_DESKTOP_LLM_KEY";
+// A separate credential from model API keys, stable across portable ZIP locations.
+const DIAGNOSTIC_CREDENTIAL: &str = "desktop-diagnostics-v1";
+pub fn diagnostic_key(reset: bool) -> Result<String, String> {
+    if !reset {
+        let saved = read_key(DIAGNOSTIC_CREDENTIAL)?;
+        if saved.len() == 64 && saved.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Ok(saved);
+        }
+    }
+    let mut bytes = [0u8; 32];
+    unsafe {
+        use windows_sys::Win32::Security::Cryptography::{
+            BCryptGenRandom, BCRYPT_USE_SYSTEM_PREFERRED_RNG,
+        };
+        if BCryptGenRandom(
+            std::ptr::null_mut(),
+            bytes.as_mut_ptr(),
+            32,
+            BCRYPT_USE_SYSTEM_PREFERRED_RNG,
+        ) != 0
+        {
+            return Err("Diagnostic random key unavailable".into());
+        }
+    }
+    let key: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    write_key(DIAGNOSTIC_CREDENTIAL, &key)?;
+    Ok(key)
+}
 #[derive(Clone, Copy, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub enum ApiFormat {
     #[default]
@@ -14,6 +46,82 @@ pub enum ApiFormat {
     OpenAi,
     #[serde(rename = "anthropic-messages")]
     Anthropic,
+}
+#[derive(Clone, Copy, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CacheRetention {
+    #[default]
+    Native,
+    Automatic,
+    Short,
+    Long,
+}
+#[derive(Clone, Copy, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CacheKeyMode {
+    #[default]
+    Native,
+    Off,
+    Session,
+}
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CacheSettings {
+    #[serde(default)]
+    pub retention: CacheRetention,
+    #[serde(default)]
+    pub anthropic_markers: bool,
+    #[serde(default)]
+    pub key_mode: CacheKeyMode,
+    #[serde(default)]
+    pub key_models: Vec<String>,
+}
+impl CacheSettings {
+    fn validate(&self, api: ApiFormat) -> Result<(), String> {
+        if self.key_mode == CacheKeyMode::Session
+            && (api != ApiFormat::OpenAi || self.key_models.is_empty())
+        {
+            return Err("独立缓存键仅支持 OpenAI 格式，请至少勾选一个已确认支持的模型。".into());
+        }
+        if self.key_models.len() > 100
+            || self
+                .key_models
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+                != self.key_models.len()
+        {
+            return Err("缓存键模型列表过长或有重复。".into());
+        }
+        if self.anthropic_markers && api != ApiFormat::OpenAi {
+            return Err("Anthropic 协议已使用原生缓存标记，无需额外开启。".into());
+        }
+        if self.anthropic_markers
+            && matches!(
+                self.retention,
+                CacheRetention::Automatic | CacheRetention::Long
+            )
+        {
+            return Err("OpenAI 格式的 Anthropic 标记仅支持短期保留。".into());
+        }
+        Ok(())
+    }
+    fn apply(&self, provider: &mut serde_json::Value) {
+        if provider["api"] == "openai-completions" && self.key_mode != CacheKeyMode::Native {
+            provider["desktopCacheKey"] =
+                serde_json::json!({"mode":self.key_mode,"models":self.key_models});
+        }
+        // Pin the native default to short, so ambient PI_CACHE_RETENTION or
+        // home.env cannot silently enable long retention on a custom gateway.
+        provider["cacheRetention"] = serde_json::json!(match self.retention {
+            CacheRetention::Automatic => "none",
+            CacheRetention::Long => "long",
+            CacheRetention::Native | CacheRetention::Short => "short",
+        });
+        if self.anthropic_markers {
+            provider["compat"] = serde_json::json!({"cacheControlFormat":"anthropic", "supportsLongCacheRetention":false});
+        }
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,6 +142,8 @@ impl Default for ModelLimits {
 #[serde(rename_all = "camelCase")]
 pub struct Connection {
     pub provider_name: String,
+    #[serde(default)]
+    pub builtin_provider: Option<String>,
     pub base_url: String,
     pub model: String,
     #[serde(default)]
@@ -43,16 +153,29 @@ pub struct Connection {
     pub models: Option<Vec<String>>,
     #[serde(default)]
     pub model_limits: std::collections::BTreeMap<String, ModelLimits>,
+    #[serde(default = "default_timeout")]
+    pub timeout_ms: u32,
+    #[serde(default = "default_timeout")]
+    pub stream_idle_timeout_ms: u32,
+    #[serde(default)]
+    pub cache: CacheSettings,
+}
+fn default_timeout() -> u32 {
+    300000
 }
 impl Default for Connection {
     fn default() -> Self {
         Self {
             provider_name: "Internal LLM".into(),
+            builtin_provider: None,
             base_url: String::new(),
             model: String::new(),
             api: ApiFormat::default(),
             models: None,
             model_limits: Default::default(),
+            timeout_ms: default_timeout(),
+            stream_idle_timeout_ms: default_timeout(),
+            cache: CacheSettings::default(),
         }
     }
 }
@@ -130,7 +253,7 @@ pub fn read_key(base_url: &str) -> Result<String, String> {
         result
     }
 }
-fn write_key(base_url: &str, key: &str) -> Result<(), String> {
+pub fn write_key(base_url: &str, key: &str) -> Result<(), String> {
     if key.len() > 2400 || key.contains(['\0', '\n', '\r']) {
         return Err("Invalid API key length or characters".into());
     }
@@ -152,6 +275,56 @@ fn write_key(base_url: &str, key: &str) -> Result<(), String> {
     }
     Ok(())
 }
+pub fn delete_key(id: &str) {
+    unsafe {
+        CredDeleteW(credential_target(id).as_ptr(), CRED_TYPE_GENERIC, 0);
+    }
+}
+#[derive(Clone, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all="camelCase")]
+pub(crate) struct CredentialMetadata {
+    pub id: String,
+    pub written: u64,
+}
+// Enumerate only immutable profile references, never legacy URL credentials or
+// the diagnostic HMAC key. No CredentialBlob is read or returned.
+pub(crate) fn profile_credentials() -> Result<Vec<CredentialMetadata>,String> {
+    let prefix=format!("{TARGET}/connection-profile-v1/");
+    let filter=wide(&format!("{prefix}*"));
+    unsafe {
+        let mut count=0u32;let mut pointer=std::ptr::null_mut();
+        if CredEnumerateW(filter.as_ptr(),0,&mut count,&mut pointer)==0 {
+            return if std::io::Error::last_os_error().raw_os_error()==Some(1168) {Ok(Vec::new())} else {Err("无法枚举本应用的连接凭据".into())};
+        }
+        struct Allocation(*mut *mut CREDENTIALW);
+        impl Drop for Allocation {fn drop(&mut self){unsafe{CredFree(self.0 as _);}}}
+        let _allocation=Allocation(pointer);
+        if count>4096 {return Err("连接凭据数量超过检查上限".into());}
+        let mut rows=Vec::new();
+        for credential in std::slice::from_raw_parts(pointer,count as usize) {
+            let value=&**credential;
+            if value.Type!=CRED_TYPE_GENERIC || value.TargetName.is_null() {continue;}
+            let mut len=0;while len<32768 && *value.TargetName.add(len)!=0 {len+=1;}
+            if len==32768 {return Err("连接凭据名称无效".into());}
+            let name=String::from_utf16(std::slice::from_raw_parts(value.TargetName,len)).map_err(|_| "连接凭据名称编码无效")?;
+            let Some(id)=name.strip_prefix(&prefix) else {continue;};
+            if id.len()!=34 || !id.starts_with("p-") || !id[2..].bytes().all(|b|b.is_ascii_digit()||(b'a'..=b'f').contains(&b)) {continue;}
+            rows.push(CredentialMetadata{id:id.into(),written:((value.LastWritten.dwHighDateTime as u64)<<32)|value.LastWritten.dwLowDateTime as u64});
+        }
+        rows.sort_by(|a,b|a.id.cmp(&b.id));Ok(rows)
+    }
+}
+pub(crate) fn delete_profile_credential(id: &str) -> Result<bool,String> {
+    if id.len()!=34 || !id.starts_with("p-") || !id[2..].bytes().all(|b|b.is_ascii_digit()||(b'a'..=b'f').contains(&b)) {return Err("连接凭据编号无效".into());}
+    unsafe {
+        if CredDeleteW(credential_target(&crate::profiles::credential_id(id)).as_ptr(),CRED_TYPE_GENERIC,0)!=0 {return Ok(true);}
+    }
+    if std::io::Error::last_os_error().raw_os_error()==Some(1168) {Ok(false)} else {Err("Windows 拒绝删除此凭据".into())}
+}
+#[cfg(test)]
+pub fn delete_test_key(id: &str) {
+    delete_key(id);
+}
 pub fn load(root: &Path) -> Result<Connection, String> {
     let path = root.join("connection.json");
     if !path.exists() {
@@ -161,6 +334,12 @@ pub fn load(root: &Path) -> Result<Connection, String> {
         .map_err(|_| "Invalid connection configuration".into())
 }
 pub fn validate(c: &Connection) -> Result<(), String> {
+    c.cache.validate(c.api)?;
+    if !(1000..=7200000).contains(&c.timeout_ms)
+        || !(1000..=7200000).contains(&c.stream_idle_timeout_ms)
+    {
+        return Err("请求与流空闲超时须为 1 秒至 2 小时。".into());
+    }
     if c.base_url.len() > 2048 {
         return Err("Base URL is too long".into());
     }
@@ -184,6 +363,9 @@ pub fn validate(c: &Connection) -> Result<(), String> {
         return Err("Enter a provider name and model (maximum 128/256 characters)".into());
     }
     let models = c.model_ids();
+    if c.cache.key_models.iter().any(|id| !models.contains(id)) {
+        return Err("缓存键只能勾选当前连接中存在的模型。".into());
+    }
     if models.is_empty() || models.len() > 100 {
         return Err("请配置 1–100 个模型。".into());
     }
@@ -240,25 +422,48 @@ pub fn save(root: &Path, c: &Connection, key: &str) -> Result<(), String> {
 }
 pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), String> {
     // JSON is YAML-compatible; no string interpolation into executable YAML tags.
+    let presets: Vec<serde_json::Value> = serde_json::from_str(include_str!("../generated/provider-catalog.json"))
+        .map_err(|_| "内置提供方目录无效")?;
+    let preset = c.builtin_provider.as_ref().and_then(|id| presets.iter().find(|p| p["id"] == *id && p["api"] == serde_json::to_value(c.api).unwrap()));
+    let route = preset.and_then(|p| p["id"].as_str()).unwrap_or("desktop-internal");
     let mut overlay = vec![serde_json::json!({"id":"session-telemetry-otel","disabled":true})];
     if !c.base_url.is_empty() {
         validate(c)?;
-        overlay.push(serde_json::json!({"id":"llm-pi-ai","config":{"providers":{"desktop-internal":{
+        overlay.push(serde_json::json!({"id":"llm-pi-ai","config":{"providers":{(route):{
             "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":c.api,
             "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| {
                 let limits = c.limits(id);
-                let mut model = serde_json::json!({"id":id,"name":id,"contextWindow":limits.context_window,"maxTokens":limits.max_tokens});
-                model["reasoningEfforts"] = serde_json::json!({"off":null,"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"});
+                let mut model = preset.and_then(|p| p["models"].as_array()).and_then(|models| models.iter().find(|m|m["id"] == *id)).cloned().unwrap_or_else(||serde_json::json!({"id":id,"name":id,"reasoningEfforts":{"off":null,"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}));
+                model["contextWindow"] = limits.context_window.into();
+                model["maxTokens"] = limits.max_tokens.into();
                 model
             }).collect::<Vec<_>>(),
-            "retryPolicy":{"mode":"normal","maxRetries":0}
+            "retryPolicy":{"mode":"normal","maxRetries":0},
+            "timeoutMs":c.timeout_ms,"streamIdleTimeoutMs":c.stream_idle_timeout_ms
         }}}}));
-        let selection = serde_json::json!({"provider":"desktop-internal","model":c.model});
+        c.cache
+            .apply(&mut overlay.last_mut().unwrap()["config"]["providers"][route]);
+        let selection = serde_json::json!({"provider":route,"model":c.model});
         overlay.push(serde_json::json!({"id":"agent-default-model","config":selection}));
         let plugin = url::Url::from_file_path(runtime.join("model-defaults.mjs"))
             .map_err(|_| "Invalid model defaults runtime path")?;
-        overlay.push(serde_json::json!({"insert":[{"id":"desktop-model-defaults","name":plugin.as_str(),"config":{"models":c.model_ids(),"defaultModel":c.model}}]}));
+        overlay.push(serde_json::json!({"insert":[{"id":"desktop-model-defaults","name":plugin.as_str(),"config":{"provider":route,"models":c.model_ids(),"defaultModel":c.model}}]}));
     }
+    let observer = url::Url::from_file_path(runtime.join("desktop-observability.mjs"))
+        .map_err(|_| "Invalid diagnostics runtime path")?;
+    overlay.push(
+        serde_json::json!({"insert":[{"id":"desktop-observability","name":observer.as_str(),
+        "config":{"desktopVersion":env!("CARGO_PKG_VERSION"),"api":c.api,"providerName":c.provider_name,"connectionConfigured":!c.base_url.is_empty(),"managedProvider":if c.base_url.is_empty(){""}else{route}}}]}),
+    );
+    let client = url::Url::from_file_path(runtime.join("desktop-client/index.mjs"))
+        .map_err(|_| "Invalid desktop client runtime path")?;
+    overlay.push(serde_json::json!({"insert":[{"id":"desktop-client","name":client.as_str()}]}));
+    let environment = url::Url::from_file_path(runtime.join("desktop-environment/index.mjs"))
+        .map_err(|_| "Invalid environment plugin path")?;
+    overlay.push(serde_json::json!({"insert":[{"id":"desktop-environment","name":environment.as_str()}]}));
+    let vision = url::Url::from_file_path(runtime.join("desktop-vision.mjs"))
+        .map_err(|_| "Invalid vision plugin path")?;
+    overlay.push(serde_json::json!({"insert":[{"id":"desktop-vision","name":vision.as_str()}]}));
     fs::write(
         root.join("desktop.patch.json"),
         serde_json::to_vec_pretty(&overlay).unwrap(),
@@ -268,6 +473,148 @@ pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn bundled_provider_presets_keep_model_capabilities() {
+        let presets: Vec<serde_json::Value> = serde_json::from_str(include_str!("../generated/provider-catalog.json")).unwrap();
+        let repo=Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        for preset in presets {
+            let models=preset["models"].as_array().unwrap();
+            let c=Connection {
+                builtin_provider: Some(preset["id"].as_str().unwrap().into()),
+                provider_name:preset["name"].as_str().unwrap().into(),
+                api:serde_json::from_value(preset["api"].clone()).unwrap(),
+                base_url:preset["baseUrl"].as_str().unwrap().into(),
+                model:preset["model"].as_str().unwrap().into(),
+                models:Some(models.iter().map(|m|m["id"].as_str().unwrap().into()).collect()),
+                model_limits:models.iter().map(|m|(m["id"].as_str().unwrap().into(),ModelLimits{context_window:m["contextWindow"].as_u64().unwrap() as u32,max_tokens:m["maxTokens"].as_u64().unwrap() as u32})).collect(),
+                cache:CacheSettings{retention:CacheRetention::Automatic,key_mode:CacheKeyMode::Off,..Default::default()},
+                ..Default::default()
+            };
+            let dir=repo.join(".build/provider-presets").join(c.builtin_provider.as_ref().unwrap());
+            fs::create_dir_all(&dir).unwrap();write_overlay(&dir,&c,&repo.join("runtime")).unwrap();
+            let overlay:serde_json::Value=serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap()).unwrap();
+            assert_eq!(&overlay[1]["config"]["providers"][preset["id"].as_str().unwrap()]["models"],&preset["models"]);
+            assert!(!serde_json::to_string(&overlay).unwrap().contains("fixture-secret"));
+        }
+    }
+    #[test]
+    fn cache_settings_migrate_and_emit_only_native_supported_combinations() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let legacy: Connection = serde_json::from_str(r#"{"providerName":"Cache fixture","baseUrl":"http://localhost:9000/v1","model":"glm-5.3"}"#).unwrap();
+        assert_eq!(legacy.cache.retention, CacheRetention::Native);
+        for api in [ApiFormat::OpenAi, ApiFormat::Anthropic] {
+            for (label, retention, markers, wire) in [
+                ("native", CacheRetention::Native, false, "short"),
+                ("automatic", CacheRetention::Automatic, false, "none"),
+                ("short", CacheRetention::Short, false, "short"),
+                ("long", CacheRetention::Long, false, "long"),
+                ("short-markers", CacheRetention::Short, true, "short"),
+            ] {
+                if markers && api == ApiFormat::Anthropic {
+                    continue;
+                }
+                let c = Connection {
+                    api,
+                    models: Some(vec!["glm-5.3-flash".into(), "glm-5.3".into()]),
+                    cache: CacheSettings {
+                        retention,
+                        anthropic_markers: markers,
+                        ..Default::default()
+                    },
+                    ..legacy.clone()
+                };
+                let dir = root
+                    .join(".build/cache-profile-fixtures")
+                    .join(if api == ApiFormat::OpenAi {
+                        "openai"
+                    } else {
+                        "anthropic"
+                    })
+                    .join(label);
+                fs::create_dir_all(&dir).unwrap();
+                write_overlay(&dir, &c, &root.join("runtime")).unwrap();
+                let value: serde_json::Value =
+                    serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap())
+                        .unwrap();
+                let provider = &value[1]["config"]["providers"]["desktop-internal"];
+                assert_eq!(provider["cacheRetention"], wire);
+                assert_eq!(provider["compat"].is_object(), markers);
+                if markers {
+                    assert_eq!(provider["compat"]["cacheControlFormat"], "anthropic");
+                }
+            }
+        }
+        for (api, retention) in [
+            (ApiFormat::OpenAi, CacheRetention::Long),
+            (ApiFormat::OpenAi, CacheRetention::Automatic),
+            (ApiFormat::Anthropic, CacheRetention::Short),
+        ] {
+            assert!(CacheSettings {
+                retention,
+                anthropic_markers: true,
+                ..Default::default()
+            }
+            .validate(api)
+            .is_err());
+        }
+    }
+    #[test]
+    fn independent_cache_key_is_explicit_and_model_scoped() {
+        let mut c: Connection = serde_json::from_str(r#"{"providerName":"Cache fixture","baseUrl":"http://localhost:9000/v1","model":"glm-5.3","models":["glm-5.3-flash","glm-5.3"]}"#).unwrap();
+        assert_eq!(c.cache.key_mode, CacheKeyMode::Native);
+        c.cache.key_mode = CacheKeyMode::Session;
+        assert!(validate(&c).is_err());
+        c.cache.key_models = vec!["missing".into()];
+        assert!(validate(&c).is_err());
+        c.cache.key_models = vec!["glm-5.3-flash".into()];
+        validate(&c).unwrap();
+        c.api = ApiFormat::Anthropic;
+        assert!(validate(&c).is_err());
+        c.api = ApiFormat::OpenAi;
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        for (label, mode, retention, markers) in [
+            (
+                "key-only",
+                CacheKeyMode::Session,
+                CacheRetention::Automatic,
+                false,
+            ),
+            (
+                "key-long",
+                CacheKeyMode::Session,
+                CacheRetention::Long,
+                false,
+            ),
+            (
+                "key-markers",
+                CacheKeyMode::Session,
+                CacheRetention::Short,
+                true,
+            ),
+            ("off-long", CacheKeyMode::Off, CacheRetention::Long, false),
+        ] {
+            c.cache.key_mode = mode;
+            c.cache.retention = retention;
+            c.cache.anthropic_markers = markers;
+            validate(&c).unwrap();
+            let dir = root
+                .join(".build/cache-profile-fixtures/openai")
+                .join(label);
+            fs::create_dir_all(&dir).unwrap();
+            write_overlay(&dir, &c, &root.join("runtime")).unwrap();
+            let value: serde_json::Value =
+                serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap()).unwrap();
+            let provider = &value[1]["config"]["providers"]["desktop-internal"];
+            assert_eq!(
+                provider["desktopCacheKey"]["mode"],
+                serde_json::to_value(mode).unwrap()
+            );
+            assert_eq!(
+                provider["desktopCacheKey"]["models"],
+                serde_json::json!(["glm-5.3-flash"])
+            );
+        }
+    }
     #[test]
     fn legacy_connection_and_multiple_models_use_native_protocols() {
         let legacy: Connection = serde_json::from_str(
@@ -426,10 +773,16 @@ mod tests {
     }
     #[test]
     fn windows_credential_bridge_keeps_key_out_of_config() {
+        let _credential_lock = CREDENTIAL_TEST_LOCK.lock().unwrap();
         struct Cleanup;
         impl Drop for Cleanup {
             fn drop(&mut self) {
                 unsafe {
+                    CredDeleteW(
+                        credential_target(DIAGNOSTIC_CREDENTIAL).as_ptr(),
+                        CRED_TYPE_GENERIC,
+                        0,
+                    );
                     CredDeleteW(
                         credential_target("http://127.0.0.1:12345/v1").as_ptr(),
                         CRED_TYPE_GENERIC,
@@ -451,6 +804,11 @@ mod tests {
             ..Default::default()
         };
         save(&dir, &c, "desktop-credential-fixture").unwrap();
+        let fingerprint_key = diagnostic_key(true).unwrap();
+        assert_eq!(fingerprint_key.len(), 64);
+        assert_eq!(fingerprint_key, diagnostic_key(false).unwrap());
+        assert_ne!(fingerprint_key, diagnostic_key(true).unwrap());
+        assert_eq!(read_key(&c.base_url).unwrap(), "desktop-credential-fixture");
         write_overlay(&dir, &c, &std::env::current_dir().unwrap()).unwrap();
         assert_eq!(read_key(&c.base_url).unwrap(), "desktop-credential-fixture");
         assert_eq!(read_key("http://127.0.0.1:12346/v1").unwrap(), "");

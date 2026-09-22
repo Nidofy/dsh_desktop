@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync,existsSync} from 'node:fs';
+import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync,existsSync,renameSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {zstdDecompressSync} from 'node:zlib';
@@ -62,6 +62,10 @@ for(const protocol of ['openai','anthropic']){
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const patch=JSON.parse(readFileSync(`.build/config-protocol-fixtures/${protocol}/desktop.patch.json`,'utf8'));
+ for(const row of patch)for(const plugin of row.insert??[]) {
+  const file={'desktop-observability':'desktop-observability.mjs','desktop-model-defaults':'model-defaults.mjs','desktop-client':'desktop-client/index.mjs','desktop-vision':'desktop-vision.mjs'}[plugin.id];
+  if(file)plugin.name=pathToFileURL(join(resources,file)).href;
+ }
  patch[1].config.providers['desktop-internal'].baseURL=`http://127.0.0.1:${server.address().port}/gateway${protocol==='openai'?'/v1':''}`;
  const overlay=join(home,'desktop.patch.json');writeFileSync(overlay,JSON.stringify(patch));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'desktop-test-key',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
@@ -79,7 +83,7 @@ for(const protocol of ['openai','anthropic']){
   const response=await fetch(launch,{redirect:'manual'});cookie=response.headers.get('set-cookie').split(';')[0];origin=new URL(launch).origin;
  }
  async function stop(){if(!child||child.exitCode!==null)return;child.stdin.write('stop\n');const end=Date.now()+10000;while(child.exitCode===null&&Date.now()<end)await pause();if(child.exitCode===null)child.kill();}
- async function rpc(method,request){const response=await fetch(`${origin}/api/${method}`,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args:request===undefined?{}:{request}}})});const data=await response.json();assert(data.result?.ok,JSON.stringify(data));return data.result.value;}
+ async function rpc(method,request){const response=await fetch(`${origin}/api/${method}`,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args:request===undefined?{}:method==='session/list'?{_request:request}:{request}}})});const data=await response.json();assert(data.result?.ok,JSON.stringify(data));return data.result.value;}
  try{
   await start(false);
   const stale=await rpc('session/modelCatalog');
@@ -120,9 +124,31 @@ for(const protocol of ['openai','anthropic']){
   overrideEffort='medium';
   await rpc('session/selectModel',{sessionId,provider:'desktop-internal',model:'glm-5.3-flash',reasoningEffort:'medium'});
   await prompt(4);
+  // Connections share the same DSH home. Switching transport configuration
+  // must preserve native session history and never replay a prompt.
+  await stop();const requestCount=requests.length;
+  // Migrate an actual compressed DSH log, not just opaque fixture bytes.
+  const legacyHome=join(home,'profiles','p-'+'a'.repeat(32),'dsh');
+  mkdirSync(join(home,'profiles','p-'+'a'.repeat(32)),{recursive:true});
+  assert(env.DSH_HOME.startsWith(root),'only relocate this test home');
+  renameSync(env.DSH_HOME,legacyHome);mkdirSync(env.DSH_HOME,{recursive:true});
+  env.DSH_DESKTOP_ROOT=home;
+  const previousName=patch[1].config.providers['desktop-internal'].name;
+  patch[1].config.providers['desktop-internal'].name='Connection B';
+  writeFileSync(overlay,JSON.stringify(patch));await start();
+  assert((await rpc('session/list',{})).items.some(s=>s.sessionId===sessionId),'connection B retains original history');
+  assert(existsSync(join(legacyHome,'sessions')),'migration retains original native logs');
+  const other=await rpc('session/create',{cwd:home});
+  await stop();patch[1].config.providers['desktop-internal'].name=previousName;
+  writeFileSync(overlay,JSON.stringify(patch));await start();
+  const restored=(await rpc('session/list',{})).items;
+  assert(restored.some(s=>s.sessionId===sessionId),'connection A retains original session');
+  assert(restored.some(s=>s.sessionId===other.sessionId),'new session remains visible after switching back');
+  assert.equal(requests.length,requestCount,'connection switching never replays prompts');
   assert.deepEqual(failures,[],'no mock request validation failures, including auxiliary requests');
   results.push({protocol,status:'PASS',staleNativeSettingsReproduced:true,fixedOnFirstRestart:true,oldSessionModelRepaired:true,nativeThinkingSelector:true,nativeEffortSelection:true,nativeThinkingOverride:true,models:['glm-5.3-flash','glm-5.3'],defaultModel:'glm-5.3',switchedModel:'glm-5.3-flash',contextWindows:[131072,1000000],maxOutputTokens:[8192,128000],nativeContextCapacityVerified:true,nativeReadTool:true,streamedReply:true,selectionPersistsAfterRestart:true,requests:requests.map(({toolResults,...r})=>r)});
-  console.log(`PASS ${protocol}: catalog, default, model switch, auth, streaming, read tool, restart persistence`);
+  results.at(-1).sharedProfileHistory=true;results.at(-1).profileSwitchDoesNotReplay=true;
+  console.log(`PASS ${protocol}: catalog, default, model switch, auth, streaming, read tool, restart persistence, shared workspace history without replay`);
  }finally{await stop();writeFileSync(join(home,'backend-test.log'),output);server.closeAllConnections();server.close();writeFileSync(join(root,'report.json'),JSON.stringify(results,null,2));}
 }
 console.log('Evidence directory:',root);

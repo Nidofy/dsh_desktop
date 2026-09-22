@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,readdirSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {createRequire} from 'node:module';
+import {diagnosticState} from '../runtime-src/diagnostic-state.mjs';
 import {synchronizeDesktopSettings} from '../runtime-src/settings-sync.mjs';
 const runtimeRoot=resolve('runtime');
 const require=createRequire(join(runtimeRoot,'dsh/package.json'));
@@ -33,6 +34,24 @@ await sync();assert.equal(parse(readFileSync(file,'utf8'))['agent-default-model'
 current=parse(readFileSync(file,'utf8'));current['agent-default-model'].reasoningEffort='high';writeFileSync(file,stringify(current));
 provider.models[1].maxTokens=128000;writeFileSync(patchFile,JSON.stringify(patch));
 await sync();assert.equal(parse(readFileSync(file,'utf8'))['agent-default-model'].reasoningEffort,'high','capacity changes preserve native effort for the same model');
+writeFileSync(patchFile,'[]');await sync();
+current=parse(readFileSync(file,'utf8'));
+assert.equal(current['llm-pi-ai'].providers['desktop-internal'],undefined,'last connection removal clears stale managed provider');
+assert.equal(current['agent-default-model'],undefined,'removed provider cannot remain the default');
+assert(current['llm-pi-ai'].providers.other,'native providers remain available');
+assert.equal(current['ui-theme'].mode,'light');
+// Known-provider ownership restores pre-existing native configuration.
+const nativeZai={apiKeyEnv:'NATIVE_ZAI_KEY',models:[{id:'glm-4.7'}]};
+current['llm-pi-ai'].providers.zai=nativeZai;
+current['agent-default-model']={provider:'other',model:'other'};
+writeFileSync(file,stringify(current));
+writeFileSync(patchFile,JSON.stringify([{id:'llm-pi-ai',config:{providers:{zai:provider}}},{id:'agent-default-model',config:{provider:'zai',model:'glm-5.3'}}]));
+await sync();assert.deepEqual(parse(readFileSync(file,'utf8'))['llm-pi-ai'].providers.zai,provider);assert(diagnosticState.retiredManagedProviders.includes('desktop-internal'),'retired route retained across restarts');
+await sync();assert.deepEqual(parse(readFileSync(file,'utf8'))['llm-pi-ai'].providers.zai,provider);assert(diagnosticState.retiredManagedProviders.includes('desktop-internal'),'retired route retained across restarts');
+writeFileSync(patchFile,JSON.stringify(patch));await sync();
+current=parse(readFileSync(file,'utf8'));assert.deepEqual(current['llm-pi-ai'].providers.zai,nativeZai,'switching back restores native provider, including credential reference');
+writeFileSync(patchFile,'[]');await sync();
+current=parse(readFileSync(file,'utf8'));assert.deepEqual(current['agent-default-model'],{provider:'other',model:'other'},'last connection removal restores native default');
 for(const bad of ['bad: [','- not-a-map','llm-pi-ai: bad']){
  writeFileSync(file,bad);await assert.rejects(sync());assert.equal(readFileSync(file,'utf8'),bad);
 }

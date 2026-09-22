@@ -1,18 +1,78 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DSHDesktop</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DSHDesktop</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="dsh-tokens.css"><link rel="stylesheet" href="desktop-theme.css"><script src="desktop-theme.js" defer></script><script src="settings-navigation.js" defer></script><script src="provider-catalog.js" defer></script><script src="app.js" defer></script></head>
 <body><main><header><img class="mark" src="icon.png" alt="DSH"><div><h1>DeepSeek Harness Desktop</h1><p>原生 Harness · 本机运行</p></div></header>
 <section class="status"><strong id="health">Starting DSH…</strong><p id="detail">正在启动内置引擎</p></section>
-<section><h2>连接设置</h2><p>选择服务的 API 格式并配置模型。此连接中的模型共享地址与密钥；密钥保存至 Windows 凭据管理器。</p>
-<form id="settings"><fieldset id="connection-fields" disabled>
+<nav id="settings-tabs" class="settings-tabs" role="tablist" aria-label="设置分类"></nav><div id="settings-panels"></div>
+<section id="connection-section"><h2>连接与模型</h2><p>连接保存 API、模型和网络配置。切换连接保留工作区及会话；请在任务结束后切换。</p>
+<div class="actions provider-entry-actions"><button id="deepseek-preset" type="button" disabled>DeepSeek 官方连接</button><button id="add-provider" type="button" disabled>＋ 添加提供方</button><button id="new-profile" type="button" disabled>＋ 添加自定义提供方</button></div>
+<div id="provider-rows" class="provider-rows"></div>
+<label hidden>已保存的连接<select id="profile-select" disabled></select></label>
+<p id="profile-status" role="status"></p>
+<div class="actions"><button id="delete-profile" hidden type="button" disabled>删除连接</button><button id="reload-profiles" type="button">重新载入</button><button id="activate-profile" hidden type="button" disabled>切换到此连接并重启</button></div>
+<dialog id="delete-profile-dialog" aria-labelledby="delete-profile-title"><h2 id="delete-profile-title">删除连接</h2><p id="delete-profile-summary"></p><label id="delete-replacement-label">删除后使用的连接<select id="delete-replacement"></select></label><div class="actions"><button id="delete-profile-cancel" type="button">取消</button><button id="delete-profile-confirm" type="button">删除连接</button></div></dialog>
+<form id="settings" class="provider-editor" hidden><div class="provider-editor-heading"><h3 id="provider-editor-title">添加自定义提供方</h3><button id="close-provider" type="button" aria-label="关闭提供方编辑">×</button></div><fieldset id="connection-fields" disabled>
+<label id="known-provider-label" hidden>提供方<select id="known-provider"></select></label>
+<label>API Key<input id="key" type="password" autocomplete="off" placeholder="已保存时留空以保留原密钥"></label>
+<p id="provider-preset-summary" class="model-help" hidden></p>
+<details id="provider-custom-settings" open><summary>自定义设置</summary><div class="provider-fields">
 <label>连接名称<input id="provider" required maxlength="128" value="Internal LLM"></label>
 <label>API 格式<select id="api"><option value="openai-completions">OpenAI · Chat Completions</option><option value="anthropic-messages">Anthropic · Messages</option></select></label>
 <label>Base URL<input id="url" type="url" placeholder="http://your-server/v1" aria-describedby="url-help endpoint" required></label><small id="url-help"></small><small id="endpoint"></small>
-<label>API Key<input id="key" type="password" autocomplete="off" placeholder="已保存时留空以保留原密钥"></label>
+<details><summary>网络与超时</summary>
+<label>代理模式<select id="proxy-mode"><option value="inherit">继承启动环境的代理</option><option value="direct">直连</option><option value="explicit">自定义 HTTP(S) 代理</option></select></label>
+<label>代理地址<input id="proxy-url" type="url" placeholder="http://127.0.0.1:7890" maxlength="2048"></label>
+<label>绕过代理的主机<input id="no-proxy" placeholder=".corp.example,10.0.0.1" maxlength="4096"></label>
+<small>本机回环地址始终直连。自定义代理不支持在 URL 中保存用户名或密码。</small>
+<label>企业 CA 文件（可选，PEM）<input id="ca-file" placeholder="C:\certificates\company-ca.pem" maxlength="4096"></label>
+<small>使用系统和内置 CA；此文件额外添加信任。无效证书会阻止启动，TLS 校验始终开启。</small>
+<label>请求超时（秒）<input id="request-timeout" type="number" min="1" max="7200" step="1" value="300" required></label>
+<label>流空闲超时（秒）<input id="idle-timeout" type="number" min="1" max="7200" step="1" value="300" required></label>
+</details>
+<details><summary>缓存请求设置</summary>
+<label>保留策略<select id="cache-retention"><option value="native">原生默认 · 固定 short</option><option value="automatic">自动缓存 · 不请求显式保留或标记</option><option value="short">短期显式提示 · 依协议支持</option><option value="long">长期保留 · 已确认服务支持时使用</option></select></label>
+<label>OpenAI 缓存路由键<select id="cache-key-mode"><option value="native">保持原生行为（兼容旧连接）</option><option value="off">关闭显式缓存键</option><option value="session">按会话生成 · 仅用于下方勾选的模型</option></select></label>
+<label class="checkbox-label"><input id="cache-markers" type="checkbox">OpenAI 格式使用 Anthropic 缓存标记（需网关明确支持）</label>
+<p>缓存键与保留时间独立：仅需键时选择「自动缓存」和「按会话生成」，并勾选已确认支持的模型。新连接默认关闭显式键；旧连接的原生 long 仍可能同时发送键和 24h。Anthropic 使用原生 cache_control，不注入 OpenAI 键。可在缓存验证页检查服务支持情况。</p>
+</details>
 <div class="models-heading"><h3>模型列表</h3><button id="add-model" type="button" class="secondary">＋ 添加模型</button></div>
-<p class="model-help" id="models-help">填写服务提供的模型 ID，选中圆点设为默认模型。保存后可在对话中的模型选择器切换。</p>
-<p class="model-help">此处管理的连接以本页为准，保存后同步至 DSH 原生设置。GLM 使用 glm-5.3 / glm-5.3-flash 等实际模型 ID，不用 [1m] 后缀表示容量。旧对话的容量统计在下一轮请求刷新。</p>
+<p class="model-help" id="models-help">填写服务提供的模型 ID，选中圆点设为默认模型。应用连接后可在对话中的模型选择器切换。</p>
+<p class="model-help">保存后点击提供方旁的“应用”。上下文容量与输出上限可按模型分别设置。</p>
 <div id="models" aria-describedby="models-help"></div>
-<button type="submit">保存并重启引擎</button>
-</fieldset><span id="message" role="status" aria-live="polite">正在读取配置…</span></form></section>
-<section><h2>Diagnostics</h2><pre id="diagnostics"></pre><div class="actions"><button id="copy">Copy diagnostics</button><button id="logs">Open Logs</button><button id="restart">Restart Engine</button><button id="quit">Quit</button></div></section>
-<footer>DSHDesktop 0.1.5 · 原生 DSH Web UI 在引擎就绪后打开。Help 菜单可随时返回此页。</footer></main></body></html>
+</div></details><div class="actions"><button id="save-provider" type="submit">保存连接</button><button id="cancel-provider" type="button" class="secondary">取消</button></div>
+</fieldset></form><span id="message" role="status" aria-live="polite">正在读取配置…</span></section>
+<section id="profile-recovery"><h2>连接配置恢复</h2><p>预览本机保留的配置，在保存错误或配置损坏时手动回退。会话与项目文件保留在原目录，凭据只显示可用状态。</p>
+<button id="recovery-load" type="button">预览配置备份</button><p id="recovery-status" role="status" aria-live="polite">回退会先保留当前配置，不会重启引擎或自动发送任务。</p>
+<p id="recovery-unsaved" hidden role="status">连接表单有未保存修改，请先保存，或点击重新载入放弃修改，再回退配置。</p>
+<label>备份来源<select id="recovery-source" disabled></select></label><div id="recovery-preview"></div>
+<label class="checkbox-label"><input id="recovery-confirm" type="checkbox" disabled>确认恢复此配置，并保留当前配置作为回退前备份</label>
+<button id="recovery-restore" type="button" disabled>恢复预览中的配置</button></section>
+<script src="profile-recovery.js" defer></script>
+<section id="task-snapshots"><h2>文件快照与恢复</h2><p>保护指定文件的原始内容。可手动记录，也可为工作区启用每轮自动快照，再按文件预览恢复。在下方选择要保护的文件。</p>
+<p id="snap-navigation-note" role="status" hidden></p><button id="snap-navigation-load" type="button" hidden>载入来自变更面板的任务快照</button><button id="snap-load" type="button">载入文件快照</button><p id="snap-message" role="status" aria-live="polite">快照保存在本机，可跨连接使用。</p><p id="snap-storage"></p>
+<fieldset id="snap-fields" disabled><details><summary>设置文件范围 / 新建快照</summary><label>工作区绝对路径<input id="snap-workspace" placeholder="D:\projects\example" maxlength="4096"></label><label>相对文件路径（每行一个，使用 /）<textarea id="snap-paths" rows="5" maxlength="131200" placeholder="src/main.cpp&#10;README.md"></textarea></label><p>1–128 个文件，每个最多 8 MiB，合计 32 MiB；二进制可保存。可预先列出尚不存在的文件，但父目录必须已存在。自动范围仅匹配会话的同一工作区，不递归包含其他工作区；变更从下一轮生效。</p><div class="actions"><button id="snap-capture" type="button">手动保存开始快照</button><button id="snap-arm" type="button">为此工作区启用 / 更新自动快照</button></div></details>
+<details><summary>浏览工作区并选择文件</summary><p>使用上方填写的工作区。按目录浏览并勾选后加入范围；不会递归选择，也不会自动启用快照。链接、Git/Hg 元数据和不可读项目不列出。</p><div class="actions"><button id="snap-browse" type="button">浏览根目录</button><button id="snap-parent" type="button" disabled>上一级</button><button id="snap-add-files" type="button" disabled>将勾选文件加入范围</button></div><p id="snap-browse-info"></p><div id="snap-file-list"></div></details>
+<p>自动快照默认关闭。每轮开始前采集，结束后封存；失败或超时不阻止任务，也不自动重试。最多保留 20 份 / 256 MiB，达到上限后需自行归档或清理。</p><label>已启用自动快照的工作区<select id="snap-scope-select"><option value="">尚未载入</option></select></label><div class="actions"><button id="snap-scope-edit" type="button">载入文件范围</button><button id="snap-disarm" type="button">停止此工作区的自动快照</button></div><p id="snap-scope-info"></p><p id="snap-automatic-status" role="status"></p>
+<label>已保存快照<select id="snap-select"><option value="">请选择快照</option></select></label><div class="actions"><button id="snap-seal" type="button" disabled>任务结束：固定结束状态</button><button id="snap-details" type="button" disabled>查看备份与恢复记录</button><button id="snap-preview" type="button" disabled>刷新恢复预览</button></div><p id="snap-info"></p><div id="snap-rows"></div><button id="snap-restore" type="button" disabled>恢复选中文件（先保存恢复前备份）</button>
+<details><summary>归档 / 校验 / 导回快照</summary><p>归档包含原始源码、工作区路径和恢复前备份，仅保存到本机固定磁盘。导出后原快照保留；导回不会修改工程，仍需单独预览并恢复。</p><label>导出到已有目录（工程和快照库之外）<input id="snap-export-parent" placeholder="D:\DSH-backups" maxlength="4096"></label><button id="snap-export" type="button" disabled>导出选中快照并校验</button><label>归档目录<input id="snap-archive-path" placeholder="导出后自动填入，也可粘贴已有归档路径" maxlength="4096"></label><div class="actions"><button id="snap-verify-archive" type="button">校验归档</button><button id="snap-import-archive" type="button">导回本机快照库</button></div><p id="snap-archive-result" role="status"></p></details>
+</fieldset></section>
+<section id="snap-records-section" hidden><h2>快照备份与恢复记录</h2><p>查看历史备份和恢复记录。恢复文件前请刷新预览。</p><p id="snap-records-info"></p><div id="snap-records"></div></section><script src="snapshots.js" defer></script>
+<section id="desktop-storage"><h2>本机存储管理</h2><p>查看共享工作区与旧版目录中的诊断、操作记录、比较基线、导出文件和快照。原生会话、项目文件、连接凭据与操作信任不在清理范围。</p>
+<details><summary>本机存储总览</summary><p>统计桌面受管目录，包含配置回退后隐藏的旧连接和临时文件。不包含原生会话、工程文件或系统日志。</p><button id="storage-global" type="button">扫描所有连接总占用</button><p id="storage-global-status" role="status"></p><div id="storage-global-rows"></div><label>桌面记录总配额（MiB）<input id="storage-quota-limit" type="number" min="256" max="65536" step="1" required disabled></label><p>默认 2048 MiB（2 GiB），可设 256–65536 MiB。降低上限不会删除已有记录或撤销运行中任务的预留；额度不足时，新操作需等待释放、归档清理或提高上限。</p><button id="storage-quota-save" type="button" disabled>保存总配额</button><p id="storage-quota-status" role="status"></p></details><button id="storage-load" type="button">载入连接列表</button>
+<label>记录来源<select id="storage-profile" disabled></select></label>
+<label>预览时间范围<select id="storage-days"><option value="30">30 天以前</option><option value="7">7 天以前</option><option value="90">90 天以前</option><option value="1">1 天以前</option><option value="0">不过滤时间 · 包含全部记录</option></select></label><p>时间范围只用于本次扫描，不会自动定期清理。</p>
+<button id="storage-scan" type="button" disabled>扫描可清理记录</button><p id="storage-status" role="status" aria-live="polite">扫描只读取本机元数据，不发送模型请求。</p>
+<label>类别<select id="storage-category" disabled><option value="">全部类别</option></select></label>
+<div class="actions"><button id="storage-select" type="button" disabled>选择本页记录（不含恢复备份）</button><button id="storage-clear" type="button" disabled>取消选择</button></div>
+<div id="storage-rows"></div><p id="storage-summary"></p>
+<label class="checkbox-label"><input id="storage-backups" type="checkbox">允许清理文件恢复快照与备份（将失去对应恢复能力）</label>
+<label class="checkbox-label"><input id="storage-confirm" type="checkbox" disabled>已结束运行中的任务，确认永久删除选中记录；清理会重启引擎，无法撤销</label>
+<button id="storage-clean" type="button" disabled>清理选中记录并重启引擎</button><div id="storage-receipts" role="status"></div></section>
+<script src="storage.js" defer></script>
+<section id="credential-cleanup"><h2>未引用的连接凭据</h2><p>检查 Windows 凭据管理器中本应用创建的连接凭据。当前配置、回退备份、暂存配置和正在运行的连接所引用的凭据，以及最近 24 小时写入的凭据均保留。只显示编号和写入时间。</p>
+<button id="credential-scan" type="button">扫描未引用凭据</button><p id="credential-status" role="status" aria-live="polite">扫描在本机完成，不读取或显示密钥内容。</p>
+<div id="credential-rows"></div><p id="credential-summary"></p>
+<label class="checkbox-label"><input id="credential-confirm" type="checkbox" disabled>确认永久删除选中凭据，无法撤销；删除后如需使用须重新填写密钥</label>
+<button id="credential-clean" type="button" disabled>删除选中凭据</button><div id="credential-receipts" role="status"></div></section>
+<script src="credentials.js" defer></script>
+<section id="runtime-status-section"><h2>运行状态</h2><button id="session-diagnostics">打开会话诊断</button><pre id="diagnostics"></pre><div class="actions"><button id="copy">复制诊断信息</button><button id="logs">打开日志</button><button id="restart">重启引擎</button><button id="quit">退出</button></div></section>
+<footer>DSHDesktop 0.2.0 · 原生 DSH Web UI 在引擎就绪后打开。工作区右上角可打开桌面设置。</footer></main></body></html>

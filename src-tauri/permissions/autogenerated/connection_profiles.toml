@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-connection-profiles"
+description = "Enables the connection_profiles command without any pre-configured scope."
+commands.allow = ["connection_profiles"]
+
+[[permission]]
+identifier = "deny-connection-profiles"
+description = "Denies the connection_profiles command without any pre-configured scope."
+commands.deny = ["connection_profiles"]

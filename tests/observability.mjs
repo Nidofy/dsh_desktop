@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import {Capture,fingerprintRequest,classify,usageMetadata,observeStream} from '../runtime-src/diagnostic-capture.mjs';
+import {diagnosticState,loadDiagnosticPreferences,saveDiagnosticPreferences,receiveDiagnosticKey} from '../runtime-src/diagnostic-state.mjs';
+import {synchronizeDesktopSettings} from '../runtime-src/settings-sync.mjs';
+import {mkdirSync,mkdtempSync,writeFileSync,readFileSync} from 'node:fs';
+import {join,resolve} from 'node:path';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+const key=Buffer.alloc(32,7);
+const options={provider:'fixture',model:'mock',sessionId:'secret-session',messages:[{role:'system',content:'PRIVATE_SYSTEM'},{role:'user',content:[{type:'text',text:'PRIVATE_PROMPT'}]}],tools:[{name:'read',parameters:{b:2,a:1}},{name:'write',parameters:{}}]};
+const fp=o=>fingerprintRequest(o,key,{}, {maxMs:1000});
+const first=fp(options);assert(first.complete);
+const reordered=structuredClone(options);reordered.tools[0].parameters={a:1,b:2};
+assert.equal(first.tools,fp(reordered).tools);
+assert.notEqual(first.toolsSerializationOrder,fp(reordered).toolsSerializationOrder);
+assert.notEqual(first.tools,fp({...options,tools:options.tools.toReversed()}).tools);
+assert.notEqual(first.messages[1],fp({...options,messages:[options.messages[0],{role:'user',content:[{type:'text',text:'PRIVATE_PROMPT '}]}]}).messages[1]);
+assert.equal(fingerprintRequest({...options,system:'x'.repeat(10000)},key,{}, {maxBytes:1024}).complete,false);
+assert.equal(usageMetadata({inputTokens:100,outputTokens:20,cacheReadTokens:400,totalTokens:520}).aggregateInputTokens,500);
+assert.equal(usageMetadata({inputTokens:100,outputTokens:20}).cacheReadTokens,null);
+assert.equal(usageMetadata({cacheReadTokens:0}).cacheReporting,'reported');
+assert.deepEqual(classify({fingerprint:first},{purpose:'conversation',fingerprint:first}).facts,['NO_LOCAL_CHANGE']);
+const c=new Capture({key,maxRecords:2});
+const chunks=[{type:'text-delta',text:'PRIVATE_REPLY',index:0},{type:'usage',usage:{inputTokens:100,outputTokens:20,cacheReadTokens:400,totalTokens:520}},{type:'finish',reason:{kind:'stop'}}];
+let closed=0;
+async function* source(){try{yield* chunks;}finally{closed++;}}
+let observed=[];for await(const chunk of observeStream(c,options,source))observed.push(chunk);
+assert.equal(observed[0],chunks[0]);assert.equal(closed,1);assert.equal(c.records[0].status,'stop');
+const controller=new AbortController();
+for await(const chunk of observeStream(c,{...options,signal:controller.signal},source)){controller.abort();break;}
+assert.equal(closed,2);assert.equal(c.records.at(-1).status,'aborted');
+const failure=new Error('PRIVATE_ERROR');
+await assert.rejects(async()=>{for await(const chunk of observeStream(c,options,async function*(){throw failure;})){}},e=>e===failure);
+assert.equal(c.records.at(-1).status,'error');assert.equal(c.records.length,2);assert.equal(c.dropped,1);
+const broken=new Capture({key});broken.begin=()=>{throw Error('observer failure');};
+observed=[];for await(const chunk of observeStream(broken,options,source))observed.push(chunk);
+assert.deepEqual(observed,chunks);assert.equal(broken.failures,1);
+const tiny=new Capture({key,maxBytes:1});for await(const chunk of observeStream(tiny,options,source)){}assert.equal(tiny.records.length,0);
+const report=JSON.stringify(c.snapshot());for(const secret of ['PRIVATE_SYSTEM','PRIVATE_PROMPT','PRIVATE_REPLY','PRIVATE_ERROR','secret-session'])assert(!report.includes(secret));
+assert.equal(new Capture({key}).keyScopeId,c.keyScopeId);assert.notEqual(new Capture({key:Buffer.alloc(32,8)}).keyScopeId,c.keyScopeId);
+receiveDiagnosticKey(key.toString('hex'));assert.equal(diagnosticState.keyPersistence,'windows-credential-manager');
+mkdirSync('.build',{recursive:true});const home=mkdtempSync(resolve('.build/observability-unit-'));
+await loadDiagnosticPreferences(home);await saveDiagnosticPreferences({enabled:false,spillMode:'compact'});
+await loadDiagnosticPreferences(home);assert.equal(diagnosticState.preferences.enabled,false);
+const patchFile=join(home,'patch.json');writeFileSync(patchFile,'[]');
+writeFileSync(join(home,'settings.yaml'),'unrelated:\n  enabled: true\nspill-policy:\n  maxInlineBytes: 50000\n');
+const sync=()=>synchronizeDesktopSettings({home,patchFile,runtimeRoot:resolve('runtime')});
+await sync();assert.equal(diagnosticState.effectiveSpillBytes,24000);
+await saveDiagnosticPreferences({spillMode:'native'});await sync();assert.equal(diagnosticState.effectiveSpillBytes,50000);
+assert(readFileSync(join(home,'settings.yaml'),'utf8').includes('enabled: true'));
+// Real upstream policy: different preview size, identical full saved artifact.
+const require=createRequire(resolve('runtime/dsh/package.json'));
+const {apply:spill}=await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-spill-policy')).href);
+const text='PREVIEW_'.repeat(9000),decision={kind:'accept'};
+for(const cap of [24000,50000]) {
+ const listeners={};let saved;
+ spill({on:(name,handler)=>listeners[name]=handler,get:()=>({saveText:async value=>{saved=value;return {locator:'fixture/full.txt',retrievalHint:'read the complete log'};}}),logger:{warn:()=>{}}},{maxInlineBytes:cap});
+ const result=await listeners['tools/post-execute']({name:'pwsh',callId:'test',agent:{session:{header:{id:'s'}}}},{content:[{type:'text',text}]},async()=>decision);
+ assert.equal(saved.content,text);assert(Buffer.byteLength(result.content[0].text)<=cap);assert(result.content[0].text.includes('fixture/full.txt'));
+ assert.equal(await listeners['tools/post-execute']({name:'read'},{content:[{type:'text',text}]},async()=>decision),decision);
+}
+console.log('PASS observer: identity passthrough, cancellation, errors, fail-open, bounds, privacy, fingerprints, preferences and official spill policy');

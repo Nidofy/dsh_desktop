@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "kind": "rc2-feedback-corrections",
+  "buildId": "fbbb7198-080d-4e00-a399-91c72af8d74a",
+  "desktopVersion": "0.2.0-rc.2",
+  "buildStatus": "PASS",
+  "buildLog": ".build/feedback-build.log",
+  "offlinePackageCreated": false,
+  "checks": {
+    "rust": 68,
+    "nativeSnapshotProtocols": 2,
+    "prefixRegression": 38,
+    "sharedHistoryNativeProtocols": 2,
+    "visionNativeProtocols": 2,
+    "gitHg": "PASS",
+    "settingsTabsAndKeyboard": "BROWSER_PASS",
+    "connectionEditDelete": "BROWSER_FIXTURE_PASS",
+    "nativePluginVisionSettings": "BROWSER_PASS",
+    "nativeWorkspaceSidebar": "BROWSER_PASS",
+    "diagnosticsLightDarkLive": "BROWSER_PASS"
+  },
+  "pending": [
+    "Native Tauri window/menu interaction on target machine",
+    "Existing user history migration on target machine",
+    "Vision response against actual gateway"
+  ],
+  "outputs": [
+    {
+      "path": "src-tauri/target/x86_64-pc-windows-msvc/release/DSHDesktop.exe",
+      "bytes": 8790016,
+      "sha256": "3223ff604d0039df2dbdfa51d312c65ecfe9cb4420d733cd196c533553f1713b"
+    },
+    {
+      "path": "runtime/desktop-runtime-manifest.json",
+      "bytes": 8712,
+      "sha256": "5ef20049fa9dc09fbf5e528eb7ee6052b00131ece51ddae337b37398d48e3c8c"
+    },
+    {
+      "path": "runtime/runtime-integrity.json",
+      "bytes": 5286701,
+      "sha256": "cf46fca9d8f8ee573a2d4904c23e3ec3ca95da0dde85c181b1968465e31a103c"
+    },
+    {
+      "path": "runtime/dsh-integrity.json",
+      "bytes": 5131268,
+      "sha256": "1fa9380c251e07bebfa6d8cfb88b8d341ea6fda1045f51871bc0186519903a09"
+    },
+    {
+      "path": "runtime/webview2-manifest.json",
+      "bytes": 43603,
+      "sha256": "9aaeb53d847198e0659e71c520d9a21b0c639d108e1a233a15008d6c8980797f"
+    }
+  ]
+}

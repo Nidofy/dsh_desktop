@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "buildLog": ".build/environment-apply-final-build.log",
+  "changes": [
+    "Apply state follows actual backend profile and saved configuration",
+    "Unchanged current profile activation is a native no-op",
+    "Workspace root floating environment card available on blank and existing sessions",
+    "Git untracked directories counted as files; branch preserved when status cannot be counted"
+  ],
+  "browserChecks": {
+    "syntheticProfilesAToBToA": "PASS",
+    "activeApplyDisabled": "PASS",
+    "newAndExistingSessionCard": "PASS",
+    "cardCollapse": "PASS",
+    "realGitBranch": "desktop-ui-check",
+    "realGitChangedFiles": 4,
+    "workspaceInstructionSource": "AGENTS.md"
+  },
+  "unitCheck": "tests/desktop-workspace.mjs: blank session header, query disposal, Git branch/status, nested untracked directory, instruction sources, environment allowlist",
+  "connectionReloadBoundary": "Different connection or changed configuration reloads backend; desktop process remains open. Full hot switching is not implemented.",
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-environment",
+  "nativeDesktopInteraction": "Pending user validation of final executable",
+  "zipCreated": false,
+  "buildReceiptId": "3d690d67-93da-4800-b3f7-4df65d6bae55",
+  "rustTestsPassed": 70,
+  "runtimeFilesVerified": 25768,
+  "stagedOutputsMatchReceipt": true
+}

@@ -706,10 +706,11 @@ dependencies = [
 
 [[package]]
 name = "dsh-desktop"
-version = "0.1.5"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "ureq",

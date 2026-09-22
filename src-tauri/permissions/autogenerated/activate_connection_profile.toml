@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-activate-connection-profile"
+description = "Enables the activate_connection_profile command without any pre-configured scope."
+commands.allow = ["activate_connection_profile"]
+
+[[permission]]
+identifier = "deny-activate-connection-profile"
+description = "Denies the activate_connection_profile command without any pre-configured scope."
+commands.deny = ["activate_connection_profile"]

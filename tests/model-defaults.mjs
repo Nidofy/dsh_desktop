@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {apply} from '../runtime-src/model-defaults.mjs';
+import {diagnosticState} from '../runtime-src/diagnostic-state.mjs';
+let created,requestHook;const selections=[];
+const ctx={on:(_event,callback)=>created=callback,sessionProjections:{stateOf:()=>({pending:null})},sessionController:{selectModel:async value=>selections.push(value)}};
+apply(ctx,{provider:'zai',models:['glm-5.3'],defaultModel:'glm-5.3'});
+await created({agent:{session:{id:'synthetic-session',requestHeader:()=>undefined},ctx:{on:(_event,callback)=>requestHook=callback}}});
+diagnosticState.retiredManagedProviders=['desktop-internal'];
+const result=await requestHook({},async()=>({provider:'desktop-internal',model:'old-model'}));
+assert.equal(result.provider,'zai');assert.equal(result.model,'glm-5.3');assert.equal(selections.length,1);
+const native={provider:'anthropic',model:'native-model'};
+assert.deepEqual(await requestHook({},async()=>native),native);assert.equal(selections.length,1);
+console.log('PASS model selection: retired desktop route repaired; independent native selection retained');

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "buildId": "242b744c-5be4-47dc-b919-93ada7087cb3",
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-theme",
+  "status": "PASS_WITH_UNEXPLAINED_INITIAL_ATTEMPT",
+  "userFeedback": {
+    "quote": "已测试，基本正常",
+    "scope": "Basic experience with the latest theme verification build; no per-feature or network matrix supplied"
+  },
+  "nativeProcessRuns": [
+    {
+      "evidence": ".build/desktop-process-4895f36bae174bf38ed73b00b3bbde5e/report.json",
+      "administratorToken": false,
+      "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme",
+      "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-4895f36bae174bf38ed73b00b3bbde5e",
+      "startupMs": 4740,
+      "loopbackOnly": true,
+      "port": 64367,
+      "observedWebViewProcesses": [
+        {
+          "ProcessId": 26728,
+          "ParentProcessId": 22052,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme\\resources\\webview2\\msedgewebview2.exe"
+        }
+      ],
+      "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme\\resources\\webview2\\msedgewebview2.exe",
+      "webview2Version": "153.0.4234.48",
+      "inheritedBrowserOverrideIgnored": true,
+      "secondInstanceExited": true,
+      "backendCrashReported": true,
+      "desktopStayedAliveAfterBackendCrash": true,
+      "backendRemains": false,
+      "result": "PASS"
+    },
+    {
+      "evidence": ".build/desktop-process-2e82aeb2dad64a4e8a4ca0ad8411e5fe/report.json",
+      "administratorToken": false,
+      "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme",
+      "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-2e82aeb2dad64a4e8a4ca0ad8411e5fe",
+      "startupMs": 4843,
+      "loopbackOnly": true,
+      "port": 63130,
+      "observedWebViewProcesses": [
+        {
+          "ProcessId": 8132,
+          "ParentProcessId": 24088,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme\\resources\\webview2\\msedgewebview2.exe"
+        }
+      ],
+      "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-verify-20260922-theme\\resources\\webview2\\msedgewebview2.exe",
+      "webview2Version": "153.0.4234.48",
+      "inheritedBrowserOverrideIgnored": true,
+      "secondInstanceExited": true,
+      "backendCrashReported": true,
+      "desktopStayedAliveAfterBackendCrash": true,
+      "backendRemains": false,
+      "result": "PASS"
+    }
+  ],
+  "initialAttempt": {
+    "evidence": ".build/desktop-process-89102baa28324085b850b093ce60cd2e/report.json",
+    "result": "EXITED_BEFORE_READY_NO_LOG",
+    "rootCause": "UNKNOWN",
+    "reproducedInNextTwoRuns": false
+  },
+  "postRunRuntimeIntegrity": {
+    "status": "PASS",
+    "files": 25772,
+    "bytes": 1022256762
+  },
+  "sourceDeltaSinceBuild": [
+    "tests/desktop-process-smoke.ps1"
+  ],
+  "productCodeChanged": false,
+  "scriptChange": "Accept current Chinese crash message and record exit state/code when startup fails",
+  "nextFullBuildRequiredBeforeNewRelease": true,
+  "notCovered": [
+    "Windows notification clicks and native file dialogs",
+    "Full per-feature desktop interaction matrix",
+    "Clean Windows 10/11 images and enterprise policies",
+    "Real internal/external gateway cache efficiency",
+    "Large real Git/Hg projects, sleep/disk failure and redistribution review"
+  ]
+}

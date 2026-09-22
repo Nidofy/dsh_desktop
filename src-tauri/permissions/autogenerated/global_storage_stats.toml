@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-global-storage-stats"
+description = "Enables the global_storage_stats command without any pre-configured scope."
+commands.allow = ["global_storage_stats"]
+
+[[permission]]
+identifier = "deny-global-storage-stats"
+description = "Denies the global_storage_stats command without any pre-configured scope."
+commands.deny = ["global_storage_stats"]

@@ -1,0 +1,36 @@
+{
+  "status": "RELEASE_CANDIDATE_NOT_STABLE",
+  "date": "2026-09-22",
+  "desktopVersion": "0.2.0-rc.2",
+  "buildId": "c9700a6a-853d-4989-85b3-c71a98f342a9",
+  "buildReceiptSha256": "679034da6d1127ec637809978a7b9d39eb825883559764ef55c555be5ecca8d1",
+  "releaseExeSha256": "1c93b10722619d3d287803b3583d37cbef849660a984dcb409e16a17ff2c7df2",
+  "completeBuildGate": "PASS",
+  "rustTestsPassed": 68,
+  "nativePrefixCases": 38,
+  "realGitHg": "PASS_MANDATORY_GATE",
+  "selfTestWithAndWithoutVcs": "PASS_BOTH_PROTOCOLS",
+  "runtimeFiles": 25763,
+  "runtimeBytes": 1022190368,
+  "runtimeManifestSha256": "42161dd402e9cc7a998cad50fcdbd32f7fe186fdafc037b3be1b44561bf42d78",
+  "localEvidence": [
+    ".build/release-gate-020rc2.log",
+    ".build/changes-spx97W",
+    ".build/artifacts-5mItiZ",
+    ".build/profile-network-9pZLwq",
+    ".build/protocol-models-g7Skio",
+    ".build/prefix-wire-N2i1t8",
+    ".build/observability-wire-njqel6",
+    ".build/observability-wire-s5hMxt",
+    ".build/observability-wire-gMczQf",
+    ".build/observability-wire-LWsHAB",
+    ".build/change-wire-e2omci"
+  ],
+  "changesSinceRc1": [
+    "Replace undefined DSH theme aliases in changes/artifacts pages with defined semantic colors.",
+    "Update version labels to RC2."
+  ],
+  "themeVisualEvidence": "docs/evidence/theme-audit-after-rc1.json",
+  "distributionValidation": "PASS_SEE_distribution-0.2.0-rc.2.json",
+  "fieldAcceptance": "PENDING"
+}

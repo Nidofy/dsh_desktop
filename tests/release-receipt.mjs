@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {mkdir,mkdtemp,writeFile,readFile,rename} from 'node:fs/promises';
+import {join,dirname,resolve} from 'node:path';
+import {inputDirectories,inputFiles,outputFiles,beginBuild,completeBuild,verifyBuild} from '../scripts/release-receipt.mjs';
+await mkdir('.build',{recursive:true});const root=await mkdtemp(resolve('.build/release-receipt-'));
+const put=async(path,value)=>{await mkdir(dirname(join(root,path)),{recursive:true});await writeFile(join(root,path),value);};
+for(const path of [...inputFiles,...outputFiles])await put(path,'fixture');
+for(const dir of inputDirectories){await mkdir(join(root,dir),{recursive:true});await put(dir+'/fixture','unchanged');}
+await put('versions.json',JSON.stringify({desktop:'0.2.0-rc.1'}));await put('src-tauri/tauri.conf.json',JSON.stringify({version:'0.2.0-rc.1'}));await put('src-tauri/Cargo.toml','[package]\nname = "fixture"\nversion = "0.2.0-rc.1"\n');
+await assert.rejects(verifyBuild(root));await beginBuild(root);await assert.rejects(verifyBuild(root));await completeBuild(root);assert.equal((await verifyBuild(root)).status,'PASS');
+await put('shell-ui/fixture','changed');await assert.rejects(verifyBuild(root));await put('shell-ui/fixture','unchanged');
+await put('runtime-src/extra.mjs','extra');await assert.rejects(verifyBuild(root));await rename(join(root,'runtime-src/extra.mjs'),join(root,'outside.mjs'));
+await put(outputFiles[0],'old exe');await assert.rejects(verifyBuild(root));await put(outputFiles[0],'fixture');
+await put('runtime/runtime-integrity.json','different manifest');await assert.rejects(verifyBuild(root));await put('runtime/runtime-integrity.json','fixture');
+await beginBuild(root);await assert.rejects(verifyBuild(root),'a started/failed new build cannot reuse the older receipt');
+await put('src-tauri/src/fixture','late edit');await assert.rejects(completeBuild(root));
+await put('src-tauri/src/fixture','unchanged');await beginBuild(root);await completeBuild(root);
+await put('versions.json',JSON.stringify({desktop:'0.2.0'}));await assert.rejects(verifyBuild(root));
+assert.equal(JSON.parse(await readFile(join(root,'.build/release-build-receipt.json'),'utf8')).targetAcceptance,'NOT_IMPLIED');
+console.log('PASS release receipt: complete build identity, source/UI drift, added inputs, stale EXE/runtime, failed new run, mid-build edits and version mismatch');

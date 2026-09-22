@@ -1,10 +1,22 @@
-# Test report — Windows x64 candidate
+# Historical test report — Windows x64
+
+> Current release: [DSHDesktop 0.2.0](RELEASE-0.2.0.md). The statuses below are dated historical records, not the current release status.
 
 Status: **DSH_DESKTOP_MVP_BLOCKED** (acceptance evidence incomplete, not a confirmed upstream hard stop).
 
 Date: 2026-09-20. Windows 11 build 26200, ordinary non-elevated token (`AdministratorToken=False`). Installed system developer tools exist on this host; runtime smoke removes them from child PATH and uses the bundled Node. This is not a clean VM.
 
 ## Executed evidence
+
+### 0.1.7 experiment workflow — 2026-09-21
+
+Release compilation and all 9 Rust tests passed. Existing observer/settings/model regressions passed. New comparison, weighted coverage, v1/v2 import, continuity, native/PTC correlation, bounded archive, matrix scheduling, subprocess timeout and custom-setting restoration checks passed. OpenAI and Anthropic integration retained identical ON/OFF wire bytes, and passed archive/restart/export, automatic turn archive and opt-in repo tool registration.
+
+The synthetic task runner completed 6 single-factor tasks and 12 task-concurrency workloads (1/2/4), all with independent file acceptance PASS. Request mode completed 24 transport workloads (1/2/4). Browser fixture interaction verified A/B comparison, links, statistics and overlapping request/tool lanes, and the measurement/settings page. Native WebView file-picker/download interactions have not been reverified in this round. No offline package was made; no real provider was called. See [details and boundaries](EXPERIMENTS-0.1.7.md) and [machine-readable evidence](evidence/experiments-0.1.7.json).
+
+### 0.1.6 metadata observability and independent spill experiment
+
+See [release evidence and limitations](OBSERVABILITY-0.1.6.md). Both adapter paths passed byte-identical final HTTP body checks with collection ON/OFF, two turns and native read, usage, provider failure/cancellation, authentication, export privacy, stable fingerprint scope and persisted experiment reset. Existing model/settings regressions and nine Rust release tests passed. Browser rendering used synthetic data; the real desktop started with an isolated profile. Native Help/download click checks remain unverified because native UI automation authorization timed out. No real provider performance benefit is claimed.
 
 ### 0.1.5 settings precedence and native reasoning selection
 

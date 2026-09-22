@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "buildLog": ".build/codex-panel-final-build.log",
+  "goalPlan": "docs/PLAN-0.2.0.md",
+  "design": "Codex-reference floating card and menus; no right-sidebar registration or control",
+  "plugin": "dsh-desktop-environment",
+  "browserChecks": {
+    "defaultClosed": "PASS",
+    "nativeSettingsEnableDisable": "PASS",
+    "disabledSurvivesReload": "PASS",
+    "reenable": "PASS",
+    "darkAndLightTheme": "PASS",
+    "newAndExistingSessions": "PASS",
+    "branchPopover": "PASS",
+    "fullWidthHeaderAndContentClearance": "PASS",
+    "narrow900pxCardClosedAndClearanceRemoved": "PASS"
+  },
+  "gitOperations": "PASS: real synthetic repositories; branch create, dirty-workspace refusal, stale preview refusal, single-use confirmation, staged-only commit, merge-base comparison, local bare-remote push",
+  "targetUserRepositoryModifiedByGitTests": false,
+  "validationDirectory": "dist/DSHDesktop-verify-20260922-codex-panel",
+  "nativeDesktopInteraction": "Pending final executable user validation",
+  "limitations": [
+    "Hg write operations not implemented",
+    "Pull Request integration not implemented",
+    "Sources show desktop connection and root AGENTS.md/CLAUDE.md only"
+  ],
+  "zipCreated": false,
+  "selfTestFinalizationFix": "PASS: deferred final-save unit test and both native protocols; public terminal status waits for final persistence/release",
+  "buildReceiptId": "ff6f06f4-c9a6-4422-b80c-5388ef72190f",
+  "rustTestsPassed": 70,
+  "runtimeFilesVerified": 25772,
+  "stagedOutputsMatchReceipt": true
+}

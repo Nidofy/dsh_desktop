@@ -1,0 +1,18 @@
+{
+  "result": "PASS",
+  "desktop": "0.1.6",
+  "dsh": "0.1.5-rc.2",
+  "entryCount": 26891,
+  "sourceMatchedModules": [
+    "desktop-observability.mjs",
+    "diagnostic-capture.mjs",
+    "diagnostic-page.mjs",
+    "diagnostic-state.mjs",
+    "host.mjs",
+    "model-defaults.mjs",
+    "settings-sync.mjs"
+  ],
+  "executableMatchesBuild": true,
+  "sha256": "bc6fb482431ece6c40a15f4e0c281e0018442314c87750cc36b302957c7c1cc4",
+  "bytes": 432452446
+}
