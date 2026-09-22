@@ -1,0 +1,90 @@
+{
+  "reviewer": "blind3",
+  "context": "isolated; only unlabeled A/B sheet",
+  "pairs": [
+    {
+      "pair": "horizontal-1",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "A muzzle/pupils left; B face/pupils right."
+    },
+    {
+      "pair": "horizontal-2",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A nose/eyes right; B nose/eyes left."
+    },
+    {
+      "pair": "horizontal-3",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "A face projects left; B right."
+    },
+    {
+      "pair": "horizontal-4",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "A cheek/nose left; B nose/pupils right."
+    },
+    {
+      "pair": "horizontal-5",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A nose/face right; B lowered face left."
+    },
+    {
+      "pair": "horizontal-6",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A lowered nose/eyes slightly right; B left."
+    },
+    {
+      "pair": "horizontal-7",
+      "A": "ambiguous",
+      "B": "screen-left",
+      "reason": "A lowered face nearly centered; B nose/eye line left."
+    },
+    {
+      "pair": "vertical-1",
+      "A": "up",
+      "B": "down",
+      "reason": "A chin/high pupils raised; B tucked chin/lowered lids."
+    },
+    {
+      "pair": "vertical-2",
+      "A": "down",
+      "B": "up",
+      "reason": "A eyes low and chin tucked; B lifted pupils/chin."
+    },
+    {
+      "pair": "vertical-3",
+      "A": "down",
+      "B": "up",
+      "reason": "A bowed head/lids low; B raised face/pupils."
+    },
+    {
+      "pair": "vertical-4",
+      "A": "ambiguous",
+      "B": "up",
+      "reason": "A close to level; B chin/pupils upward."
+    },
+    {
+      "pair": "vertical-5",
+      "A": "up",
+      "B": "down",
+      "reason": "A lifted chin/gaze; B low lids/tucked chin."
+    },
+    {
+      "pair": "vertical-6",
+      "A": "up",
+      "B": "down",
+      "reason": "A high pupils/tilt; B bowed head/low eyes."
+    },
+    {
+      "pair": "vertical-7",
+      "A": "ambiguous",
+      "B": "down",
+      "reason": "A side face nearly level; B lowered face/lids."
+    }
+  ]
+}

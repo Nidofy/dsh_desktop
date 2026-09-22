@@ -1,0 +1,15 @@
+import {readPackage,validatePackage,packageCommand,encodeZip,parseZip,LIMITS} from '../runtime-src/pet-packages.mjs';
+import {mkdir,mkdtemp,writeFile,readFile,symlink} from 'node:fs/promises';import {resolve,join} from 'node:path';import {createRequire} from 'node:module';import assert from 'node:assert/strict';
+const root=await mkdtemp(resolve('.build/pet-package-tests-')),resources=resolve('runtime'),require=createRequire(join(resources,'dsh/package.json')),sharp=require('sharp');
+const legacy=await readPackage(resolve('tests/fixtures/pets/standard-8x9'));
+const v1=await validatePackage(legacy,resources);assert.equal(v1.version,1);assert.equal(v1.manifest.rows,9);
+const source=join(root,'input.zip');await writeFile(source,encodeZip(legacy));const call=(action,extra={})=>packageCommand({home:root,resources,action,...extra});
+const preview=await call('preview',{source});assert(!preview.duplicate);await assert.rejects(()=>call('import',{source,expected:'wrong'}));await call('import',{source,expected:preview.digest});await assert.rejects(()=>call('import',{source,expected:preview.digest}));await call('import',{source,expected:preview.digest,replace:true});
+const asset=await call('asset',{resourceId:preview.id});assert.equal(asset.manifest.rows,9);assert.equal(asset.interactions,null);
+await writeFile(source,Buffer.from('broken'));await assert.rejects(()=>call('import',{source,expected:preview.digest,replace:true}));assert.equal((await call('asset',{resourceId:preview.id})).id,preview.id,'failed replacement retains old installed resource');
+const exported=await call('export',{resourceId:preview.id,destination:root});const data=parseZip(await readFile(exported.path));assert(![...data.keys()].some(k=>/session|connection|settings/i.test(k)));await validatePackage(data,resources);
+await call('delete',{resourceId:preview.id});assert.equal((await call('list')).items.length,1);await assert.rejects(()=>call('delete',{resourceId:'xiaojing'}));
+assert.throws(()=>parseZip(Buffer.alloc(LIMITS.archive+1)));const oversized=new Map([['pet.json',Buffer.alloc(LIMITS.json+1)]]);await assert.rejects(()=>validatePackage(oversized,resources));
+const linked=join(root,'linked');await symlink(resolve('assets/pets/xiaojing/package'),linked,'junction');await assert.rejects(()=>readPackage(linked));
+await writeFile(join(root,'pet-resources/catalog.json'),'{broken');const recovered=await call('list');assert.equal(recovered.items[0].id,'xiaojing');assert(recovered.warning);await assert.rejects(()=>call('delete',{resourceId:'other'}));assert.equal(await readFile(join(root,'pet-resources/catalog.json'),'utf8'),'{broken');
+console.log('PASS v1 fixture; preview/import/replace/export/delete; built-in protection; no private export; bounded ZIP/JSON; junction rejection; root='+root);

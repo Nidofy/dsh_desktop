@@ -531,13 +531,14 @@ fn run(
             last_ui_poll = Instant::now();
             if let Some(u) = &url {
                 let endpoint = format!(
-                    "{}/desktop-diagnostics/api/recovery/desktop-events",
-                    u.origin().ascii_serialization()
+                    "{}/desktop-diagnostics/api/recovery/desktop-events?pets={}{}",
+                    u.origin().ascii_serialization(),if crate::pets::enabled(app){1}else{0},crate::pets::cursor(app)
                 );
                 if let Ok(response) = agent.get(&endpoint).call() {
                     if let Ok(value) = serde_json::from_reader::<_, serde_json::Value>(
-                        response.into_reader().take(16384),
+                        response.into_reader().take(32768),
                     ) {
+                        if let Some(pets)=value.get("pets"){if let Some(port)=u.port(){crate::pets::update(app,port,pets.clone());}}
                         if let Some(revision) = value["desktop"]["revision"].as_u64() {
                             if revision > last_desktop_revision {
                                 last_desktop_revision = revision;

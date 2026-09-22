@@ -54,6 +54,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Shared storage admission and completion persis
 if ($LASTEXITCODE -ne 0) { throw 'Task snapshot private pipe and admission contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/desktop-notifications.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Desktop notification tests failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') --test tests/pet-animation.test.mjs tests/pet-state.test.mjs tests/pet-interaction.test.mjs tests/pet-extension.test.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Pet regression failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/pet-packages.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Pet package validation failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/pet-package-manager.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Pet package lifecycle failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/desktop-client.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Desktop navigation tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/desktop-workspace.mjs

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>吃白饭的大肥鱼 · 动作资源预览</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef3fb;color:#22334f;font:15px/1.6 system-ui,sans-serif}main{max-width:960px;margin:48px auto;padding:24px}h1{font-size:30px;margin:0}p{color:#5c6f8a}.layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}.stage{min-height:400px;border-radius:24px;display:grid;place-items:center;background:#fff;box-shadow:0 12px 36px #233b6012;overflow:hidden}.stage.dark{background:#192437}.stage.checker{background:conic-gradient(#dde4ed 25%,#fff 0 50%,#dde4ed 0 75%,#fff 0) 0 0/24px 24px}canvas{width:288px;height:312px}aside{padding:12px}button,select{font:inherit;border:1px solid #c8d4e5;border-radius:10px;background:#fff;color:#22334f;padding:8px 12px;cursor:pointer}button.active{background:#244db6;color:white;border-color:#244db6}.buttons{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 24px}.note{font-size:13px}label{display:block;margin:14px 0}a{color:#234fae}@media(max-width:640px){main{margin:12px auto}.layout{grid-template-columns:1fr}.stage{min-height:340px}}
+</style>
+<main>
+<h1>吃白饭的大肥鱼</h1>
+<p>独立桌宠美术资源预览 · 不连接模型、不执行任务</p>
+<div class="layout"><div class="stage checker" id="stage"><canvas id="pet" width="192" height="208" aria-label="宠物动作预览"></canvas></div>
+<aside><strong id="state">资源载入中</strong><div class="buttons" id="actions"></div>
+<label>背景 <select id="background"><option value="checker">透明棋盘格</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
+<label>显示大小 <select id="size"><option value="1">原始尺寸 192 × 208</option><option value="1.5" selected>1.5 倍</option><option value="2">2 倍</option></select></label>
+<button id="pause">暂停</button><p class="note" id="status">最终资源完成后会自动载入。预览中的动作名称不表示已与 DSH 任务状态绑定。</p>
+</aside></div>
+<p class="note">资源规格：8 × 11，192 × 208 / 格。方向序列按顺时针排列，0° 朝上，90° 朝右，180° 朝下，270° 朝左。</p>
+<a href="README.md">查看资源说明</a>
+</main>
+<script>
+const animations=[
+['待机',0,[280,110,110,140,140,320]],['向右移动',1,[120,120,120,120,120,120,120,220]],['向左移动',2,[120,120,120,120,120,120,120,220]],['挥手',3,[140,140,140,280]],['跳跃',4,[140,140,140,140,280]],['失落',5,[140,140,140,140,140,140,140,240]],['等待',6,[150,150,150,150,150,260]],['工作',7,[120,120,120,120,120,220]],['思考检查',8,[150,150,150,150,150,280]],['环顾',9,Array(16).fill(200)]
+];
+const canvas=document.getElementById('pet'),ctx=canvas.getContext('2d'),atlas=new Image();
+let selection=0,frame=0,last=0,paused=false,ready=false;
+const buttons=animations.map(([name],index)=>{const b=document.createElement('button');b.textContent=name;b.onclick=()=>{selection=index;frame=0;last=performance.now();update();draw()};document.getElementById('actions').append(b);return b});
+function update(){buttons.forEach((b,i)=>b.classList.toggle('active',i===selection));document.getElementById('state').textContent=animations[selection][0]}
+function draw(){if(!ready)return;const a=animations[selection],row=a[1]+(selection===9?Math.floor(frame/8):0),column=frame%8;ctx.clearRect(0,0,192,208);ctx.drawImage(atlas,column*192,row*208,192,208,0,0,192,208)}
+function tick(now){if(ready&&!paused&&!document.hidden){const durations=animations[selection][2];if(now-last>=durations[frame]){frame=(frame+1)%durations.length;last=now;draw()}}else last=now;requestAnimationFrame(tick)}
+atlas.onload=()=>{if(atlas.width!==1536||atlas.height!==2288){document.getElementById('status').textContent='尺寸不符合完整 v2 图集，未开始播放。';return}ready=true;update();draw();document.getElementById('status').textContent='正在播放本地 v2 图集。预览循环播放一次性动作，便于检查。'};
+atlas.onerror=()=>{document.getElementById('status').textContent='最终图集尚未就绪。当前仅显示角色母版，不代表动画已完成。';const base=new Image();base.onload=()=>{ctx.clearRect(0,0,192,208);const scale=Math.min(192/base.width,208/base.height),w=base.width*scale,h=base.height*scale;ctx.drawImage(base,(192-w)/2,(208-h)/2,w,h)};base.src='portrait.png'};
+atlas.src='spritesheet.webp';
+document.getElementById('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'继续':'暂停'};
+document.getElementById('background').onchange=e=>document.getElementById('stage').className='stage '+e.target.value;
+document.getElementById('size').onchange=e=>{canvas.style.width=192*Number(e.target.value)+'px';canvas.style.height=208*Number(e.target.value)+'px'};
+update();requestAnimationFrame(tick);
+</script>
+</html>

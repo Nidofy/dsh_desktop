@@ -1,0 +1,123 @@
+{
+  "generationMode": "built-in image_gen",
+  "sourceReferenceManifest": "../references/manifest.json",
+  "jobs": [
+    {
+      "id": "base",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c495-9d93-7f91-8fda-ec5f4516d8b3\\exec-0aa2ed0b-ce3e-4acd-907a-580b4d964ea0.png",
+      "completed_at": "2026-09-21T15:33:55.795645Z",
+      "qa_note": "Worker approved whole-body identity with full tail, ahoge, shoes, correct bow side and no text/scenery/effects. Generated alpha preserved.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "idle",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c49a-6ed3-7053-8fd7-86fd1029b81e\\exec-f500301f-94a3-4802-9506-14a1c15d1c24.png",
+      "completed_at": "2026-09-21T15:42:43.6609829Z",
+      "qa_note": "Worker visual check and immediate component extraction/frame inspection passed without errors or warnings.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "running-right",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c49a-a46d-7e91-8cc4-bf45b9eee5f0\\exec-dafa2985-2cac-40f0-9083-ba06777c1542.png",
+      "completed_at": "2026-09-21T15:43:19.1472709Z",
+      "qa_note": "Eight separated right-facing gait poses; canonical far-side bow occluded rather than flipped. Frame inspection no errors/warnings.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "running-left",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a3-0182-7ac3-814f-c0e37e38df9e\\exec-a2d31571-c58a-447e-865e-c8494bb12e08.png",
+      "completed_at": "2026-09-21T15:49:51.7672774Z",
+      "qa_note": "Worker visual QA and immediate component extraction/frame inspection pass; all silhouettes complete and accessory side retained.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "waving",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c49a-dc1f-7853-abae-4389bd90e963\\exec-76b33b47-f7c4-4d2e-804f-7f1eb2d409bd.png",
+      "completed_at": "2026-09-21T15:42:43.6663159Z",
+      "qa_note": "Worker visual check and immediate component extraction/frame inspection passed without errors or warnings.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "jumping",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a1-a62f-7182-a712-1a314de80a6b\\exec-bd9f6a2b-cbae-4736-b1ab-78446b3c227f.png",
+      "completed_at": "2026-09-21T16:06:20.1077312Z",
+      "qa_note": "Low-hop whole row refinement reduces travel to approximately5-6%body height, consistent identity and complete tails. Stable extraction passes.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "failed",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a6-56e5-7de0-9c9d-1549bdf47308\\exec-fde0d7ad-5dc0-4a2f-bb4d-d4b545f9e41b.png",
+      "completed_at": "2026-09-21T15:52:21.5766517Z",
+      "qa_note": "Eight complete separated sad progression poses; worker accepted advisory spacing variance. Extraction/frame inspection passed.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "waiting",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a1-fce1-7ae3-9c35-365ca563bc92\\exec-2b2a0ab4-e305-4660-8cda-5955d776150a.png",
+      "completed_at": "2026-09-21T15:49:51.7733013Z",
+      "qa_note": "Worker visual QA and immediate component extraction/frame inspection pass; all silhouettes complete and accessory side retained.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "running",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a7-f70a-7a70-a9bc-f3ddce8c580b\\exec-8404401f-25d2-4f2b-9ba4-764274477f30.png",
+      "completed_at": "2026-09-21T15:56:22.7264555Z",
+      "qa_note": "Six stationary active work poses distinct from running feet, hand alternation; all-row extraction/inspection passes no errors or warnings.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "review",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4a8-2a52-7461-a54c-438b49db916c\\exec-5f89f9e5-e107-4820-8514-139e9d010653.png",
+      "completed_at": "2026-09-21T15:54:27.6250808Z",
+      "qa_note": "Six thoughtful chin/tilt/blink poses complete and separated. Worker visual and extraction inspection passed.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "look-cardinals",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4b3-5c2d-7d21-9ec0-b20c1a7dc9b4\\exec-558ffa87-2e4c-4585-b292-4c7292660efb.png",
+      "completed_at": "2026-09-21T16:08:14.2079818Z",
+      "qa_note": "Four extracted192x208anchors pass edges and visible up/right/down/left head/gaze semantics. Parent normal-size strip review confirms raised chin/up eyes, rightward nose, tucked down face, leftward nose. Bow on anatomical left.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "look-row-9",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4b9-f084-75f3-8971-57eb890c4de8\\exec-139bcc0d-0a6e-4dab-a997-8de766cee3e8.png",
+      "completed_at": "2026-09-21T16:17:10.9971175Z",
+      "qa_note": "Deterministic registration/edges pass. Parent labeled review passes with subtle intermediate-axis warnings recorded in qa/look-row-9-review.json; no wrong cardinal or reversal.",
+      "repair_edit_target": null,
+      "repair_grounding": null
+    },
+    {
+      "id": "look-row-10",
+      "status": "complete",
+      "source_path": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4c2-165a-7f71-a6d6-d47949f4e6bd\\exec-b5dde75b-3577-4c28-8bc6-34db9a538875.png",
+      "completed_at": "2026-09-21T16:29:44.1440367Z",
+      "qa_note": "Shared-scale assembly and edges passed. Parent labeled review recorded; narrow downcast lids and157.5to180 step require final independent review.",
+      "repair_edit_target": "C:\\Users\\enxi1\\.codex\\generated_images\\01a0c4c2-165a-7f71-a6d6-d47949f4e6bd\\exec-6691f0de-c3a2-4ca9-81b4-9a4369427cdd.png",
+      "repair_grounding": "Final whole-row edit replaced redundant standard contact with prior coherent row target; kept canonical, guide, approved cardinals and row9."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "visual_qa": "pass",
+  "reviewer": "final_visual_qa",
+  "qa_note": "Both contact sheets, all9GIFs decoded as ordered frame sequences with timing metadata, all16look poses and reports reviewed. All9state semantics pass; character complete and consistent, no visible accidental holes, gross identity drift, forbidden effects, hard direction or continuity failures.",
+  "review_warnings": [
+    "Intermediate112.5vertical,157.5horizontal,292.5vertical blind uncertainties accepted by labeled ordered review.",
+    "067.5 and247.5 have shallow vertical cues.",
+    "157.5to180 metric outlier is a deeper bow, not conspicuous registration snap, identity change or reversal.",
+    "Directional gait simplified but extended/tucked phases alternate.",
+    "Low hop approximately6%smaller than idle without gross popping.",
+    "GIF review used ordered decoded frames/durations, not realtime playback."
+  ],
+  "repair_rows": [],
+  "runtimeValidation": "not performed"
+}

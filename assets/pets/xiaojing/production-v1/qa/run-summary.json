@@ -1,0 +1,41 @@
+{
+  "chroma_despill": "qa/chroma-despill-extended.json",
+  "archiveEntries": [
+    "asset-manifest.json",
+    "atlas-layout.json",
+    "checksums.json",
+    "DEVELOPMENT-PROMPT.md",
+    "INTEGRATION.md",
+    "pet.json",
+    "portrait.png",
+    "preview.html",
+    "README.md",
+    "spritesheet.png",
+    "spritesheet.webp"
+  ],
+  "contact_sheet": "qa/contact-sheet-extended.png",
+  "visual_review": "qa/final-visual-review.json",
+  "standardAnimations": 9,
+  "spriteVersionNumber": 2,
+  "validation": "final/validation-extended.json",
+  "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\package",
+  "direction_semantics": "qa/direction-semantics.json",
+  "blind_direction_validation": "qa/direction-blind-validation.json",
+  "lookDirections": 16,
+  "run_dir": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1",
+  "archive": "xiaojing-assets-v1.zip",
+  "neutralFrames": 1,
+  "installed": false,
+  "archiveBytes": 8331308,
+  "ok": true,
+  "runtimeIntegration": false,
+  "archiveSha256": "e155c72d6bcfa57421f63e74b95bef5a1375562e9cc26990023e7c513b57e816",
+  "displayName": "吃白饭的大肥鱼",
+  "handoff": "package/DEVELOPMENT-PROMPT.md",
+  "metadataUpdatedAt": "2026-09-22T08:27:22.8055539Z",
+  "handoffMilestones": [
+    "0.2.1",
+    "0.2.2",
+    "0.2.3"
+  ]
+}

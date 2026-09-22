@@ -30,8 +30,11 @@ struct Frame {
 fn foreground(app: &tauri::AppHandle) -> bool {
     app.webview_windows()
         .values()
+        .filter(|w| notification_foreground_label(w.label()))
         .any(|w| w.is_focused().unwrap_or(true))
 }
+fn notification_foreground_label(label:&str)->bool{!label.starts_with("pet-")}
+#[cfg(test)]mod pet_focus_tests{use super::*;#[test]fn pet_focus_does_not_suppress_background_notifications(){assert!(!notification_foreground_label("pet-1"));assert!(!notification_foreground_label("pet-3"));assert!(notification_foreground_label("main"));assert!(notification_foreground_label("shell"));}}
 fn consume(feed: &Feed, watermark: &mut u64, suppressed: bool) -> Vec<Notice> {
     let items = feed
         .items

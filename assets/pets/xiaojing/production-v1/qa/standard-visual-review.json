@@ -1,0 +1,22 @@
+{
+  "reviewer": "standard_qa",
+  "updatedAt": "2026-09-21T16:08:14.2281918Z",
+  "status": "pass",
+  "evidence": "qa/contact-sheet.png, qa/previews, qa/review.json",
+  "changes": [
+    "stable-slots on jumping, running-right, running-left, failed"
+  ],
+  "warnings": [
+    "Directional gait uses a simplified repeated four-pose rhythm; opposite-leg lead is not emphatic.",
+    "Low hop is approximately6%smaller than idle, visually accepted after refinement."
+  ],
+  "passed": [
+    "identity",
+    "frame counts",
+    "silhouette completeness",
+    "idle blink",
+    "state semantics",
+    "jump vertical trajectory restored",
+    "directional running scale pops corrected"
+  ]
+}

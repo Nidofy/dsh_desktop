@@ -1,0 +1,90 @@
+{
+  "reviewer": "blind1",
+  "context": "isolated; only unlabeled A/B sheet",
+  "pairs": [
+    {
+      "pair": "horizontal-1",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "A nose and pupils turn left; B nose and pupils turn right."
+    },
+    {
+      "pair": "horizontal-2",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A face projects right with far eye narrowed; B reversed orientation."
+    },
+    {
+      "pair": "horizontal-3",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "A nose and cheek point left; B right."
+    },
+    {
+      "pair": "horizontal-4",
+      "A": "screen-left",
+      "B": "screen-right",
+      "reason": "Opposed left and right facial profiles."
+    },
+    {
+      "pair": "horizontal-5",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A nose shifts right; B shifts left."
+    },
+    {
+      "pair": "horizontal-6",
+      "A": "screen-right",
+      "B": "screen-left",
+      "reason": "A slight right nose/eye offset; B clearer left offset."
+    },
+    {
+      "pair": "horizontal-7",
+      "A": "ambiguous",
+      "B": "screen-left",
+      "reason": "A lowered face nearly frontal; B face left."
+    },
+    {
+      "pair": "vertical-1",
+      "A": "up",
+      "B": "down",
+      "reason": "A raised eyes/exposed chin; B lowered lids/tucked chin."
+    },
+    {
+      "pair": "vertical-2",
+      "A": "down",
+      "B": "up",
+      "reason": "A eyes low and chin tucked; B eyes/chin lifted."
+    },
+    {
+      "pair": "vertical-3",
+      "A": "down",
+      "B": "up",
+      "reason": "A lowered lids and forehead-heavy; B raised pupils."
+    },
+    {
+      "pair": "vertical-4",
+      "A": "ambiguous",
+      "B": "up",
+      "reason": "A roughly level; B slight upward eyes/chin."
+    },
+    {
+      "pair": "vertical-5",
+      "A": "up",
+      "B": "down",
+      "reason": "A lifted pupils; B lowered eyes/tucked chin."
+    },
+    {
+      "pair": "vertical-6",
+      "A": "up",
+      "B": "down",
+      "reason": "A lifted face; B lowered eyes and tucked chin."
+    },
+    {
+      "pair": "vertical-7",
+      "A": "ambiguous",
+      "B": "down",
+      "reason": "A roughly level left face; B lower lids/tucked chin."
+    }
+  ]
+}

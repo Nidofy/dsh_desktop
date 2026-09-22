@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "animations": [
+    {
+      "id": "pat",
+      "atlasPath": "pat.webp",
+      "cellWidth": 192,
+      "cellHeight": 208,
+      "frames": [
+        {
+          "column": 0,
+          "row": 0
+        },
+        {
+          "column": 1,
+          "row": 0
+        },
+        {
+          "column": 2,
+          "row": 0
+        },
+        {
+          "column": 3,
+          "row": 0
+        }
+      ],
+      "durationsMs": [
+        140,
+        180,
+        220,
+        180
+      ],
+      "loop": false
+    },
+    {
+      "id": "happy",
+      "atlasPath": "happy.webp",
+      "cellWidth": 192,
+      "cellHeight": 208,
+      "frames": [
+        {
+          "column": 0,
+          "row": 0
+        },
+        {
+          "column": 1,
+          "row": 0
+        },
+        {
+          "column": 2,
+          "row": 0
+        },
+        {
+          "column": 3,
+          "row": 0
+        }
+      ],
+      "durationsMs": [
+        140,
+        160,
+        180,
+        220
+      ],
+      "loop": false
+    },
+    {
+      "id": "dragged",
+      "atlasPath": "dragged.webp",
+      "cellWidth": 192,
+      "cellHeight": 208,
+      "frames": [
+        {
+          "column": 0,
+          "row": 0
+        },
+        {
+          "column": 1,
+          "row": 0
+        },
+        {
+          "column": 2,
+          "row": 0
+        }
+      ],
+      "durationsMs": [
+        180,
+        180,
+        220
+      ],
+      "loop": true
+    }
+  ],
+  "triggers": {
+    "head-tap": "pat",
+    "long-press": "pat",
+    "body-tap": "happy",
+    "drag": "dragged"
+  },
+  "fallbacks": {
+    "pat": "waving",
+    "happy": "jumping",
+    "dragged": "running-right"
+  },
+  "idleVariants": []
+}

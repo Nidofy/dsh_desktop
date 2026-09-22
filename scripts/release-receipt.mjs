@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {createInventory,hashFile} from '../runtime-src/runtime-integrity.mjs';
 
-export const inputDirectories=['src-tauri/src','src-tauri/icons','src-tauri/generated','src-tauri/capabilities','src-tauri/permissions','shell-ui','runtime-src','scripts','tests','desktop-theme'];
+export const inputDirectories=['src-tauri/src','src-tauri/icons','src-tauri/generated','src-tauri/capabilities','src-tauri/permissions','shell-ui','runtime-src','scripts','tests','desktop-theme','assets/pets/xiaojing/package','assets/pets/xiaojing/extensions'];
 export const inputFiles=['versions.json','src-tauri/Cargo.toml','src-tauri/Cargo.lock','src-tauri/tauri.conf.json','src-tauri/build.rs','.cargo/config.toml','build-deps/package.json','build-deps/package-lock.json','assets/icon-source.png','assets/wallpaper-transparent.png'];
 export const outputFiles=['src-tauri/target/x86_64-pc-windows-msvc/release/DSHDesktop.exe','runtime/desktop-runtime-manifest.json','runtime/runtime-integrity.json','runtime/dsh-integrity.json','runtime/webview2-manifest.json'];
 const startPath='.build/release-build-start.json',receiptPath='.build/release-build-receipt.json';

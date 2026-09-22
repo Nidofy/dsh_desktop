@@ -1,0 +1,22 @@
+{
+  "remaining": [
+    "row9 registration and semantics",
+    "row10 generation and registration",
+    "final despill and atlas validation",
+    "three blind direction reviewers",
+    "independent final visual QA",
+    "resource package and documentation"
+  ],
+  "updatedAt": "2026-09-21T16:13:24.6031674Z",
+  "scope": "No runtime or user-level installation changes",
+  "decisions": [
+    "Reduced non-base input references to canonical+guide to fit five-image tool maximum.",
+    "Generated left separately because bow and clips are asymmetric.",
+    "Accepted real-alpha outputs without forcing chroma.",
+    "Fixed clipping through generation, not local sprite drawing.",
+    "Re-extracted running and failed using stable-slot method.",
+    "Regenerated jumping as low hop to reduce cross-state scale difference.",
+    "Rejected row9 directional reversal and requested coherent full-row correction."
+  ],
+  "stage": "row9 coherent repair"
+}

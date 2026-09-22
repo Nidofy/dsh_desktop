@@ -1,0 +1,139 @@
+{
+  "generator": "built-in imagegen",
+  "deterministicAssembly": "shared-scale crop only; no generated or duplicated pose pixels",
+  "excluded": [
+    "pat.png: frame boundary crossing",
+    "happy.png: frame boundary crossing",
+    "dragged.png: top-right mirrored accessories"
+  ],
+  "frames": [
+    {
+      "animation": "pat",
+      "sourceIndex": 0,
+      "bounds": [
+        21,
+        19,
+        171,
+        203
+      ],
+      "sha256": "bf6eff3ac9c44556d6402cecf89ab68b9e46019434a0a3d0616196b1ba8dc5d5"
+    },
+    {
+      "animation": "pat",
+      "sourceIndex": 1,
+      "bounds": [
+        19,
+        30,
+        173,
+        203
+      ],
+      "sha256": "7e0083e8fdd3d6c93b48f94d6debc8a18cb94f5ac838ecbc7709fcb01fcd612c"
+    },
+    {
+      "animation": "pat",
+      "sourceIndex": 2,
+      "bounds": [
+        19,
+        28,
+        173,
+        203
+      ],
+      "sha256": "0684faf0eb77742f92bd5e4beab6b7aabfa6e5ea71285cf8203d45403fe810ba"
+    },
+    {
+      "animation": "pat",
+      "sourceIndex": 3,
+      "bounds": [
+        20,
+        25,
+        171,
+        203
+      ],
+      "sha256": "33c31221da61ddde522057b9acbe92c716d53171a2162bb42f468decb97d86ed"
+    },
+    {
+      "animation": "happy",
+      "sourceIndex": 0,
+      "bounds": [
+        19,
+        12,
+        173,
+        203
+      ],
+      "sha256": "8026d28a6376b190dbdd059e535b3a4010900a606164918490a6dbac0b05576a"
+    },
+    {
+      "animation": "happy",
+      "sourceIndex": 1,
+      "bounds": [
+        19,
+        17,
+        173,
+        203
+      ],
+      "sha256": "25ba3a6dbdec6c204df59e76887238dd67e940e4c017cc6d74bea5bd6803dd95"
+    },
+    {
+      "animation": "happy",
+      "sourceIndex": 2,
+      "bounds": [
+        19,
+        17,
+        172,
+        203
+      ],
+      "sha256": "da8df9b4e48cbe1690943d62cb731b9a2a13dcc850a5137d80a749d42c1dee8a"
+    },
+    {
+      "animation": "happy",
+      "sourceIndex": 3,
+      "bounds": [
+        20,
+        14,
+        171,
+        203
+      ],
+      "sha256": "5cba7b5d4cf8f40bed9bb3f8046b8e587ee28cad72e71cc9f2713feb9b4a3a92"
+    },
+    {
+      "animation": "dragged",
+      "sourceIndex": 0,
+      "bounds": [
+        23,
+        26,
+        168,
+        203
+      ],
+      "sha256": "60ddb05bd719ec9aed6ab1c684e2cd6b1609f04a72d63ea7d63e253c0a536635"
+    },
+    {
+      "animation": "dragged",
+      "sourceIndex": 2,
+      "bounds": [
+        19,
+        32,
+        173,
+        203
+      ],
+      "sha256": "8faa4fc25a56d68af55a58172361c32dee9fe54b8a85e14c4369802aa6f61d3f"
+    },
+    {
+      "animation": "dragged",
+      "sourceIndex": 3,
+      "bounds": [
+        24,
+        35,
+        167,
+        203
+      ],
+      "sha256": "12c4e11bf9fa2fc7ee27b9d99b643d63f2b5ea5b5c3b39bb3cec59e3b424beb7"
+    }
+  ],
+  "visualAcceptance": "PASS_CONTACT_SHEET_WITH_NOTES",
+  "notes": [
+    "Normal-size 192x208 contact sheet inspected: identity, bow/tail side, opaque dress whites, separated frames and complete silhouettes retained.",
+    "Pat lowers head and closes eyes; happy raises hands and smiles; dragged uses three seated/suspended poses; mirrored source cell omitted.",
+    "Drag poses are shorter than standing art by design; animation/native integration inspection remains separate.",
+    "Crop bounds ignore alpha <=32 source haze; no pose redraw, mirroring or repeated frames."
+  ]
+}

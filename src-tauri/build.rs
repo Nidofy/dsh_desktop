@@ -1,6 +1,13 @@
 fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "pet_ready",
+            "pet_settings",
+            "pet_snapshot",
+            "pet_action",
+            "pet_packages",
+            "pet_resource",
+            "pet_pick",
             "diagnostics",
             "connection",
             "connection_profiles",

@@ -1,0 +1,174 @@
+{
+  "cellHeight": 208,
+  "spriteVersionNumber": 2,
+  "cellWidth": 192,
+  "columns": 8,
+  "dshNotes": [
+    "Completion celebration does not mean tests passed.",
+    "Review art has no automatic mapping until a structured DSH signal is available.",
+    "Cancelled is neutral idle, not failed.",
+    "Keep task and interaction state independent."
+  ],
+  "lookDirections": {
+    "row10": [
+      180,
+      202.5,
+      225,
+      247.5,
+      270,
+      292.5,
+      315,
+      337.5
+    ],
+    "neutral": "row0 column6; equivalent to idle frame0",
+    "row9": [
+      0,
+      22.5,
+      45,
+      67.5,
+      90,
+      112.5,
+      135,
+      157.5
+    ],
+    "coordinateSystem": "clockwise; 0=screen up,90=screen right,180=screen down,270=screen left"
+  },
+  "animations": [
+    {
+      "frameCount": 6,
+      "id": "idle",
+      "durationsMs": [
+        280,
+        110,
+        110,
+        140,
+        140,
+        320
+      ],
+      "row": 0,
+      "loop": true
+    },
+    {
+      "frameCount": 8,
+      "id": "running-right",
+      "durationsMs": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ],
+      "row": 1,
+      "loop": true
+    },
+    {
+      "frameCount": 8,
+      "id": "running-left",
+      "durationsMs": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ],
+      "row": 2,
+      "loop": true
+    },
+    {
+      "frameCount": 4,
+      "id": "waving",
+      "durationsMs": [
+        140,
+        140,
+        140,
+        280
+      ],
+      "row": 3,
+      "loop": false
+    },
+    {
+      "frameCount": 5,
+      "id": "jumping",
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140,
+        280
+      ],
+      "row": 4,
+      "loop": false
+    },
+    {
+      "frameCount": 8,
+      "id": "failed",
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        240
+      ],
+      "row": 5,
+      "loop": false
+    },
+    {
+      "frameCount": 6,
+      "id": "waiting",
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        260
+      ],
+      "row": 6,
+      "loop": true
+    },
+    {
+      "frameCount": 6,
+      "id": "running",
+      "durationsMs": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        220
+      ],
+      "row": 7,
+      "loop": true
+    },
+    {
+      "frameCount": 6,
+      "id": "review",
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        280
+      ],
+      "row": 8,
+      "loop": true
+    }
+  ],
+  "rows": 11,
+  "schemaVersion": 1,
+  "status": "validated-assets-not-runtime-integrated",
+  "atlasPath": "spritesheet.webp",
+  "petId": "xiaojing",
+  "displayName": "吃白饭的大肥鱼",
+  "assetVersion": "1.0.0"
+}

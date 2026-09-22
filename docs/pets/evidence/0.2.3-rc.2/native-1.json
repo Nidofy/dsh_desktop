@@ -1,0 +1,42 @@
+{
+  "administratorToken": false,
+  "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+  "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-ddfff861ce9947dc97ab2c1e4523d51d",
+  "petNativeAtlasDecoded": true,
+  "petCount": 1,
+  "petVisualAndHardwareAcceptance": "NOT_MEASURED",
+  "startupMs": 5165,
+  "loopbackOnly": true,
+  "port": 57945,
+  "observedWebViewProcesses": [
+    {
+      "ProcessId": 32512,
+      "ParentProcessId": 39288,
+      "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+    },
+    {
+      "ProcessId": 39192,
+      "ParentProcessId": 39288,
+      "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+    }
+  ],
+  "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe",
+  "webview2Version": "153.0.4234.48",
+  "inheritedBrowserOverrideIgnored": true,
+  "idle": {
+    "petCount": 1,
+    "sampleMs": 10015.0,
+    "processes": 18,
+    "cpuMs": 484.0,
+    "oneCorePercent": 4.83,
+    "privateMiB": 876.3,
+    "workingSetMiB": 1399.4,
+    "scope": "Desktop and current child process tree; visible pet windows, no running task",
+    "wakeups": "NOT_MEASURED"
+  },
+  "secondInstanceExited": true,
+  "backendCrashReported": true,
+  "desktopStayedAliveAfterBackendCrash": true,
+  "backendRemains": false,
+  "result": "PASS"
+}

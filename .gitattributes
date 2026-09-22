@@ -12,3 +12,5 @@
 *.ico binary
 # Preserve third-party license bytes, including upstream whitespace.
 licenses/* -text -whitespace
+# Preserve checksummed pet package and source asset bytes across Git checkouts.
+assets/pets/** -text -whitespace

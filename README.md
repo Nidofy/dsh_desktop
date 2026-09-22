@@ -58,3 +58,9 @@ OpenAI 使用 Chat Completions，Anthropic 使用 Messages。填写服务基础�
 - [构建](docs/BUILD.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md) / [离线部署](docs/OFFLINE_DEPLOYMENT.md)
 - [0.2.0 发布记录](docs/RELEASE-0.2.0.md) / [后续现场检查](docs/ACCEPTANCE-0.2.0.md)
 - [第三方许可](docs/THIRD_PARTY_LICENSES.md) / [完整性校验](docs/RUNTIME_INTEGRITY.md)
+
+## 桌宠候选版本
+
+在 0.2.0 正式版基线上连续开发 0.2.1/0.2.2/0.2.3，首只内置宠物为「吃白饭的大肥鱼」（资源 ID：xiaojing）。默认关闭，可在桌面设置的「桌面宠物」页启用。0.2.3 支持最多三个实例、资源导入与导出、独立外观和固定目标。宠物仅显示任务状态，不参与模型请求。
+
+阶段交付与实际检查见 [桌宠里程碑](docs/PETS-MILESTONES.md)，资源子集与边界见 [兼容说明](docs/pets/compatibility/README.md)。候选版本不覆盖 0.2.0 正式版目录；现场视觉和硬件检查的完成情况单独列明。

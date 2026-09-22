@@ -1,0 +1,78 @@
+{
+  "windows": [
+    {
+      "Handle": 6360802,
+      "Menu": 0,
+      "Title": "标准格式样例",
+      "Style": 348848128,
+      "ExStyle": 262424,
+      "Dpi": 168,
+      "Visible": true,
+      "Bounds": {
+        "Left": 980,
+        "Top": 210,
+        "Right": 1400,
+        "Bottom": 574
+      },
+      "Client": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 420,
+        "Bottom": 364
+      }
+    },
+    {
+      "Handle": 11799648,
+      "Menu": 0,
+      "Title": "吃白饭的大肥鱼",
+      "Style": 348848128,
+      "ExStyle": 262424,
+      "Dpi": 168,
+      "Visible": true,
+      "Bounds": {
+        "Left": 542,
+        "Top": 210,
+        "Right": 962,
+        "Bottom": 574
+      },
+      "Client": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 420,
+        "Bottom": 364
+      }
+    },
+    {
+      "Handle": 64163418,
+      "Menu": 0,
+      "Title": "吃白饭的大肥鱼",
+      "Style": 348848128,
+      "ExStyle": 262424,
+      "Dpi": 168,
+      "Visible": true,
+      "Bounds": {
+        "Left": 105,
+        "Top": 210,
+        "Right": 525,
+        "Bottom": 574
+      },
+      "Client": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 420,
+        "Bottom": 364
+      }
+    }
+  ],
+  "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\pet-native-inspect-ea1dce533b824bd08e0a1a4e9f942a2a",
+  "nativeCloseDisabledOne": true,
+  "resources": [
+    "xiaojing-v2",
+    "xiaojing-v2",
+    "compat-standard-v1-without-interactions"
+  ],
+  "hardwareInput": "NOT_MEASURED",
+  "capture": "PrintWindow; visually inspect PNG separately",
+  "status": "PASS",
+  "remainingWindows": 2
+}

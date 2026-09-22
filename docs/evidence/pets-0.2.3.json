@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "desktopVersion": "0.2.3-rc.2",
+  "status": "CANDIDATE_LOCAL_GATES_PASSED",
+  "buildId": "910e369d-212f-491a-b7f6-8ce8b101b4e4",
+  "buildLog": ".build/pet-023-rc2-final-gate.log",
+  "petLogicTestsPassed": 18,
+  "rustTestsPassed": 80,
+  "separateNativeSnapshot": "PASS",
+  "prefixCasesPassed": 38,
+  "petOnOffFinalWireBytes": {
+    "openai": "IDENTICAL",
+    "anthropic": "IDENTICAL"
+  },
+  "wireEvidence": ".build/observability-wire-HGkpDW",
+  "assets": "BASE_UNCHANGED_AND_PAT_HAPPY_DRAGGED_COMPLETE",
+  "nativeChecks": "PASS",
+  "fieldAcceptance": "PARTIAL",
+  "published": false,
+  "previousCandidate": {
+    "desktopVersion": "0.2.3-rc.1",
+    "buildId": "a337f75e-a1a1-473c-a21c-e39eb52bf9ec",
+    "status": "SUPERSEDED_NATIVE_MENU_INSET",
+    "directory": "dist/DSHDesktop-0.2.3-rc.1-win-x64"
+  },
+  "nativeFixProbe": ".build/pet-native-inspect-55192a6093334ba8bf5f866ecc4c98b2/report.json",
+  "directory": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+  "nativeProcessReports": [
+    {
+      "administratorToken": false,
+      "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+      "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-488007c1f53d45eb9bfde3898f9429da",
+      "startupMs": 4952,
+      "loopbackOnly": true,
+      "port": 55490,
+      "observedWebViewProcesses": [
+        {
+          "ProcessId": 3432,
+          "ParentProcessId": 40640,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+        }
+      ],
+      "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe",
+      "webview2Version": "153.0.4234.48",
+      "inheritedBrowserOverrideIgnored": true,
+      "idle": {
+        "petCount": 0,
+        "sampleMs": 10005.0,
+        "processes": 13,
+        "cpuMs": 391.0,
+        "oneCorePercent": 3.91,
+        "privateMiB": 664.2,
+        "workingSetMiB": 961.9,
+        "scope": "Desktop and current child process tree; visible pet windows, no running task",
+        "wakeups": "NOT_MEASURED"
+      },
+      "secondInstanceExited": true,
+      "backendCrashReported": true,
+      "desktopStayedAliveAfterBackendCrash": true,
+      "backendRemains": false,
+      "result": "PASS"
+    },
+    {
+      "administratorToken": false,
+      "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+      "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-ddfff861ce9947dc97ab2c1e4523d51d",
+      "petNativeAtlasDecoded": true,
+      "petCount": 1,
+      "petVisualAndHardwareAcceptance": "NOT_MEASURED",
+      "startupMs": 5165,
+      "loopbackOnly": true,
+      "port": 57945,
+      "observedWebViewProcesses": [
+        {
+          "ProcessId": 32512,
+          "ParentProcessId": 39288,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+        },
+        {
+          "ProcessId": 39192,
+          "ParentProcessId": 39288,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+        }
+      ],
+      "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe",
+      "webview2Version": "153.0.4234.48",
+      "inheritedBrowserOverrideIgnored": true,
+      "idle": {
+        "petCount": 1,
+        "sampleMs": 10015.0,
+        "processes": 18,
+        "cpuMs": 484.0,
+        "oneCorePercent": 4.83,
+        "privateMiB": 876.3,
+        "workingSetMiB": 1399.4,
+        "scope": "Desktop and current child process tree; visible pet windows, no running task",
+        "wakeups": "NOT_MEASURED"
+      },
+      "secondInstanceExited": true,
+      "backendCrashReported": true,
+      "desktopStayedAliveAfterBackendCrash": true,
+      "backendRemains": false,
+      "result": "PASS"
+    },
+    {
+      "administratorToken": false,
+      "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+      "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-b72aff9893d645bcbb3dc7e2a4539286",
+      "petNativeAtlasDecoded": true,
+      "petCount": 3,
+      "petVisualAndHardwareAcceptance": "NOT_MEASURED",
+      "startupMs": 5768,
+      "loopbackOnly": true,
+      "port": 59734,
+      "observedWebViewProcesses": [
+        {
+          "ProcessId": 13336,
+          "ParentProcessId": 17224,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+        },
+        {
+          "ProcessId": 44932,
+          "ParentProcessId": 17224,
+          "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe"
+        }
+      ],
+      "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64\\resources\\webview2\\msedgewebview2.exe",
+      "webview2Version": "153.0.4234.48",
+      "inheritedBrowserOverrideIgnored": true,
+      "idle": {
+        "petCount": 3,
+        "sampleMs": 10012.0,
+        "processes": 21,
+        "cpuMs": 1437.0,
+        "oneCorePercent": 14.35,
+        "privateMiB": 943.5,
+        "workingSetMiB": 1648.7,
+        "scope": "Desktop and current child process tree; visible pet windows, no running task",
+        "wakeups": "NOT_MEASURED"
+      },
+      "secondInstanceExited": true,
+      "backendCrashReported": true,
+      "desktopStayedAliveAfterBackendCrash": true,
+      "backendRemains": false,
+      "result": "PASS"
+    }
+  ],
+  "nativeWindow": {
+    "windows": [
+      {
+        "Handle": 6360802,
+        "Menu": 0,
+        "Title": "标准格式样例",
+        "Style": 348848128,
+        "ExStyle": 262424,
+        "Dpi": 168,
+        "Visible": true,
+        "Bounds": {
+          "Left": 980,
+          "Top": 210,
+          "Right": 1400,
+          "Bottom": 574
+        },
+        "Client": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 420,
+          "Bottom": 364
+        }
+      },
+      {
+        "Handle": 11799648,
+        "Menu": 0,
+        "Title": "吃白饭的大肥鱼",
+        "Style": 348848128,
+        "ExStyle": 262424,
+        "Dpi": 168,
+        "Visible": true,
+        "Bounds": {
+          "Left": 542,
+          "Top": 210,
+          "Right": 962,
+          "Bottom": 574
+        },
+        "Client": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 420,
+          "Bottom": 364
+        }
+      },
+      {
+        "Handle": 64163418,
+        "Menu": 0,
+        "Title": "吃白饭的大肥鱼",
+        "Style": 348848128,
+        "ExStyle": 262424,
+        "Dpi": 168,
+        "Visible": true,
+        "Bounds": {
+          "Left": 105,
+          "Top": 210,
+          "Right": 525,
+          "Bottom": 574
+        },
+        "Client": {
+          "Left": 0,
+          "Top": 0,
+          "Right": 420,
+          "Bottom": 364
+        }
+      }
+    ],
+    "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\pet-native-inspect-ea1dce533b824bd08e0a1a4e9f942a2a",
+    "nativeCloseDisabledOne": true,
+    "resources": [
+      "xiaojing-v2",
+      "xiaojing-v2",
+      "compat-standard-v1-without-interactions"
+    ],
+    "hardwareInput": "NOT_MEASURED",
+    "capture": "PrintWindow; visually inspect PNG separately",
+    "status": "PASS",
+    "remainingWindows": 2
+  },
+  "transparency": [
+    {
+      "before": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        16777215
+      ],
+      "result": "PASS",
+      "after": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        10178121
+      ]
+    },
+    {
+      "before": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        16777215
+      ],
+      "result": "PASS",
+      "after": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        10178121
+      ]
+    },
+    {
+      "before": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        16777215
+      ],
+      "result": "PASS",
+      "after": [
+        16777215,
+        16777215,
+        16777215,
+        16777215,
+        10113099
+      ]
+    }
+  ],
+  "logicalProcessors": 16,
+  "performanceScope": "10-second post-startup sample of Desktop and child processes; not steady-state or pet-only memory",
+  "functionalImplementation": "IMPLEMENTED",
+  "assetStatus": "COMPLETE_WITH_VISUAL_NOTES",
+  "knownLimits": [
+    "Real touch and pen hardware",
+    "Mixed DPI, monitor removal and cross-monitor drag recovery",
+    "Actual OS notification delivery while pet has focus",
+    "Long-running and hidden-window wakeups",
+    "No claim of all Codex pet format compatibility"
+  ],
+  "exeSha256": "b263573815bbc971e2208bf3fc22279b4d954d5c29781ba601e78a2ee7490894",
+  "nativeVisualReview": "PASS: inspected all three final-package PrintWindow captures; full character silhouette, no clipping or extra menu inset. Transparency separately verified against white backplate."
+}

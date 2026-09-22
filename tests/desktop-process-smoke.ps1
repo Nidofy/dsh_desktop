@@ -1,9 +1,11 @@
-param([Parameter(Mandatory=$true)][string]$PackagePath)
+param([Parameter(Mandatory=$true)][string]$PackagePath,[switch]$Pet,[ValidateRange(0,3)][int]$PetCount=0,[switch]$MeasureIdle)
 $ErrorActionPreference='Stop'
 $package=(Resolve-Path -LiteralPath $PackagePath).Path
 $root=Split-Path $PSScriptRoot -Parent
 $profile=Join-Path $root ('.build/desktop-process-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $profile | Out-Null
+if($Pet -and !$PetCount){$PetCount=1}
+if($PetCount){New-Item -ItemType Directory -Force (Join-Path $profile 'DSHDesktop')|Out-Null; @{schemaVersion=3;enabled=$true;instances=@(1..$PetCount|ForEach-Object {@{id="$_";x=60+($_-1)*250;y=120}})} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $profile 'DSHDesktop/pets.json') -Encoding utf8}
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 $principal=[Security.Principal.WindowsPrincipal]::new($identity)
 if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run this acceptance check as a non-administrator' }
@@ -35,6 +37,14 @@ try {
         throw 'Desktop did not become ready'
     }
     $backend=[int]$ready.Matches[0].Groups[1].Value
+    if($PetCount){
+        $petDeadline=(Get-Date).AddSeconds(15)
+        do {$petReady=@(Get-Content -LiteralPath $log | Select-String 'pet production atlas decoded in native window');if($petReady.Count -ge $PetCount){break};Start-Sleep -Milliseconds 200}while((Get-Date)-lt $petDeadline)
+        if($petReady.Count -lt $PetCount){throw 'Native pets did not decode packaged production atlases'}
+        $evidence.petNativeAtlasDecoded=$true
+        $evidence.petCount=$PetCount
+        $evidence.petVisualAndHardwareAcceptance='NOT_MEASURED'
+    }
     $port=[int]$ready.Matches[0].Groups[2].Value
     $evidence.startupMs=[int]$ready.Matches[0].Groups[3].Value
     $listener=@(Get-NetTCPConnection -State Listen -OwningProcess $backend)
@@ -48,6 +58,15 @@ try {
     $evidence.webview2Executable=$bundledBrowser
     $evidence.webview2Version=(Get-Item -LiteralPath $bundledBrowser).VersionInfo.FileVersion
     $evidence.inheritedBrowserOverrideIgnored=$true
+    if($MeasureIdle){
+        $all=@(Get-CimInstance Win32_Process);$ids=[System.Collections.Generic.HashSet[int]]::new();[void]$ids.Add($desktop.Id)
+        do{$added=0;foreach($p in $all){if($ids.Contains([int]$p.ParentProcessId)-and $ids.Add([int]$p.ProcessId)){$added++}}}while($added)
+        $before=@{};foreach($processId in $ids){$p=Get-Process -Id $processId -ErrorAction SilentlyContinue;if($p){$before[$processId]=$p.TotalProcessorTime.TotalMilliseconds}}
+        $watch=[Diagnostics.Stopwatch]::StartNew();Start-Sleep -Seconds 10;$elapsed=$watch.Elapsed.TotalMilliseconds;$cpu=0;$private=0;$working=0
+        foreach($processId in $before.Keys){$p=Get-Process -Id $processId -ErrorAction SilentlyContinue;if($p){$cpu+=[Math]::Max(0,$p.TotalProcessorTime.TotalMilliseconds-$before[$processId]);$private+=$p.PrivateMemorySize64;$working+=$p.WorkingSet64}}
+        $evidence.idle=[ordered]@{petCount=$PetCount;sampleMs=[Math]::Round($elapsed);processes=$before.Count;cpuMs=[Math]::Round($cpu);oneCorePercent=[Math]::Round(100*$cpu/$elapsed,2);privateMiB=[Math]::Round($private/1MB,1);workingSetMiB=[Math]::Round($working/1MB,1);scope='Desktop and current child process tree; visible pet windows, no running task';wakeups='NOT_MEASURED'}
+        if(!$PetCount -and (Get-Content -LiteralPath $log | Select-String 'pet local window created')){throw 'Disabled pets created a native window'}
+    }
     $second=Start-Process -FilePath (Join-Path $package 'DSHDesktop.exe') -WindowStyle Hidden -PassThru
     if (!$second.WaitForExit(5000)) { Stop-Process -Id $second.Id; throw 'Second instance did not exit' }
     $evidence.secondInstanceExited=$true

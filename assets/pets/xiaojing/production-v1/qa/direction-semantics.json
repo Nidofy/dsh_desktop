@@ -1,0 +1,150 @@
+{
+  "reviewer": "independent final_visual_qa",
+  "status": "pass",
+  "directions": [
+    {
+      "degree": "000",
+      "verdict": "pass",
+      "expected": "up",
+      "observed": "up",
+      "reason": "Centered face, lifted chin.",
+      "horizontalEvidence": "Centered nose.",
+      "verticalEvidence": "High pupils, shortened forehead, exposed chin."
+    },
+    {
+      "degree": "022.5",
+      "verdict": "pass",
+      "expected": "up-right",
+      "observed": "up-right",
+      "reason": "Raised face turns right.",
+      "horizontalEvidence": "Nose/face right.",
+      "verticalEvidence": "High pupils, chin lifted."
+    },
+    {
+      "degree": "045",
+      "verdict": "pass",
+      "expected": "up-right",
+      "observed": "up-right",
+      "reason": "Readable yaw and pitch.",
+      "horizontalEvidence": "Nose right; far eye narrows.",
+      "verticalEvidence": "High pupils and lower face raised."
+    },
+    {
+      "degree": "067.5",
+      "verdict": "warning",
+      "expected": "up-right",
+      "observed": "up-right with shallow upward pitch",
+      "reason": "Vertical difference small, sequence consistent.",
+      "horizontalEvidence": "Profile/nose/pupils right.",
+      "verticalEvidence": "Chin/gaze slightly above090."
+    },
+    {
+      "degree": "090",
+      "verdict": "pass",
+      "expected": "right",
+      "observed": "right",
+      "reason": "Clear screen-right cardinal.",
+      "horizontalEvidence": "Nose right of head center, pupils right.",
+      "verticalEvidence": "Level chin/eye line."
+    },
+    {
+      "degree": "112.5",
+      "verdict": "warning",
+      "expected": "down-right",
+      "observed": "down-right with subtle downward pitch",
+      "reason": "Blind vertical uncertainty accepted by labeled review.",
+      "horizontalEvidence": "Nose/eyes right.",
+      "verticalEvidence": "Chin lowers and lids settle from090."
+    },
+    {
+      "degree": "135",
+      "verdict": "pass",
+      "expected": "down-right",
+      "observed": "down-right",
+      "reason": "Down pitch and right yaw readable.",
+      "horizontalEvidence": "Nose/face right.",
+      "verticalEvidence": "Low lids, downcast iris, crown exposed."
+    },
+    {
+      "degree": "157.5",
+      "verdict": "warning",
+      "expected": "down-right",
+      "observed": "predominantly down with slight right yaw",
+      "reason": "Blind horizontal uncertainty accepted; no left reversal.",
+      "horizontalEvidence": "Small right face bias.",
+      "verticalEvidence": "Lowered lids/tucked chin."
+    },
+    {
+      "degree": "180",
+      "verdict": "pass",
+      "expected": "down",
+      "observed": "down",
+      "reason": "Clear down cardinal despite narrow eyes.",
+      "horizontalEvidence": "Centered nose/chin under crown.",
+      "verticalEvidence": "Crown exposed, chin folds to collar, eye slivers low."
+    },
+    {
+      "degree": "202.5",
+      "verdict": "pass",
+      "expected": "down-left",
+      "observed": "down-left",
+      "reason": "Tucked face begins left turn.",
+      "horizontalEvidence": "Nose/face/iris left.",
+      "verticalEvidence": "Low lids, chin near collar."
+    },
+    {
+      "degree": "225",
+      "verdict": "pass",
+      "expected": "down-left",
+      "observed": "down-left",
+      "reason": "Left yaw and down pitch readable.",
+      "horizontalEvidence": "Left nose/face, unequal apertures.",
+      "verticalEvidence": "Down iris and compressed chin/collar gap."
+    },
+    {
+      "degree": "247.5",
+      "verdict": "warning",
+      "expected": "down-left",
+      "observed": "down-left with shallow downward pitch",
+      "reason": "Mild down component consistent with approach to270.",
+      "horizontalEvidence": "Nose/pupils left.",
+      "verticalEvidence": "Chin/lids slightly below270."
+    },
+    {
+      "degree": "270",
+      "verdict": "pass",
+      "expected": "left",
+      "observed": "left",
+      "reason": "Clear screen-left cardinal.",
+      "horizontalEvidence": "Nose left of head center, pupils left.",
+      "verticalEvidence": "Approximately level eye line/chin."
+    },
+    {
+      "degree": "292.5",
+      "verdict": "warning",
+      "expected": "up-left",
+      "observed": "up-left with subtle upward pitch",
+      "reason": "Blind vertical uncertainty accepted in ordered upward arc.",
+      "horizontalEvidence": "Nose/profile/pupils left.",
+      "verticalEvidence": "Aperture opens, chin rises from270 toward315."
+    },
+    {
+      "degree": "315",
+      "verdict": "pass",
+      "expected": "up-left",
+      "observed": "up-left",
+      "reason": "Left turn and raised gaze readable.",
+      "horizontalEvidence": "Nose/face displaced left.",
+      "verticalEvidence": "Raised chin/high pupils."
+    },
+    {
+      "degree": "337.5",
+      "verdict": "pass",
+      "expected": "up-left",
+      "observed": "up-left",
+      "reason": "Upward pitch with reduced left yaw returns toward000.",
+      "horizontalEvidence": "Mild left face offset/gaze.",
+      "verticalEvidence": "High pupils, raised chin, shorter forehead."
+    }
+  ]
+}

@@ -7,6 +7,7 @@ node_modules/
 *.log
 src-tauri/generated/
 src-tauri/gen/schemas/
+shell-ui/pet/assets/
 
 # Local credentials and machine-specific configuration
 .env

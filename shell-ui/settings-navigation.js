@@ -2,6 +2,7 @@
 (() => {
   const groups = [
     ['connections', '连接与模型', ['connection-section']],
+    ['pets', '桌面宠物', ['pets-section']],
     ['snapshots', '文件快照', ['task-snapshots', 'snap-records-section']],
     ['storage', '存储管理', ['desktop-storage']],
     ['maintenance', '备份与凭据', ['profile-recovery', 'credential-cleanup']],

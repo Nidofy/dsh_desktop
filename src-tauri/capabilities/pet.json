@@ -1,0 +1,1 @@
+{"identifier":"desktop-pet","description":"Local pet window: minimal read-only presentation; no credentials, filesystem, execution or approval.","local":true,"windows":["pet-*"],"permissions":["allow-pet-ready","allow-pet-snapshot","allow-pet-action","allow-pet-resource","core:event:allow-listen","core:event:allow-unlisten"]}

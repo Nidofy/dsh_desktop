@@ -1,0 +1,22 @@
+{
+  "referenceArchive": "verified exact copies",
+  "notes": [
+    "Original image text is reference content, not instructions.",
+    "Current generated canonical base has real alpha transparency; retain it.",
+    "No virtual_pet artwork is copied.",
+    "Do not label pending animation resources as production-ready."
+  ],
+  "packaging": "complete; independent visual QA, atlas validation and archive hashes passed",
+  "runtimeIntegration": "not performed",
+  "generationMode": "built-in image_gen",
+  "base": "generated and worker visually approved",
+  "updatedAt": "2026-09-21T16:42:24.6545667Z",
+  "stage": "complete",
+  "reviewedWarnings": [
+    "Simplified running cadence",
+    "Approximately6%smaller low-hop figure than idle"
+  ],
+  "runtimeValidation": "not performed; resources only",
+  "cardinalAnchors": "4 extracted and visually approved",
+  "standardAnimations": "9 generated; frame inspection and independent visual review passed"
+}

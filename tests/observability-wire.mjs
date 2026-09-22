@@ -151,14 +151,23 @@ for(const protocol of ['openai','anthropic']) {
   const runs=[];
   for(const enabled of [false,true]){
    await api('preferences',{enabled});await api('clear',{});
+   let petPoll;if(enabled){await api('recovery/desktop-events?pets=1');petPoll=setInterval(()=>api('recovery/desktop-events?pets=1').catch(()=>{}),500);}
    const boundary=requests.length,begin=performance.now();const {sessionId}=await rpc('session/create',{cwd:home});
-   await prompt(sessionId,1);await prompt(sessionId,2);
+   try{await prompt(sessionId,1);await prompt(sessionId,2);}finally{clearInterval(petPoll);}
+   if(enabled){
+    const frame=(await api('recovery/desktop-events?pets=1')).pets;
+    assert(frame.items.some(r=>r.sessionId===sessionId&&r.status==='COMPLETED'));
+    assert(!JSON.stringify(frame).includes('PRIVATE_'),'pet projection contains no prompt, path, title or output');
+    const delta=(await api(`recovery/desktop-events?pets=1&petAfter=${frame.revision}&petGeneration=${frame.generation}`)).pets;
+    assert.equal(delta.full,false);assert.equal(delta.items.length,0);
+   }
    const recovery=await api('recovery/session?id='+encodeURIComponent(sessionId));
    assert.equal(recovery.status,'COMPLETED');assert.equal(recovery.lastModel.status,'COMPLETED');
    const notices=(await api('recovery/desktop-events')).notifications;
    assert(notices.items.some(n=>n.sessionId===sessionId&&n.kind==='completed'),'native turn end notifies independently of collection');
    assert(!JSON.stringify(notices).includes('PRIVATE_'),'OS notification feed contains no user content');
    assert.equal((await api('recovery/desktop-events?after='+notices.revision)).notifications.items.length,0);
+   if(enabled){await api('recovery/notifications',{enabled:false});const independent=await api('recovery/desktop-events?pets=1');assert.equal(independent.notifications.items.length,0);assert(independent.pets.items.some(r=>r.sessionId===sessionId));await api('recovery/notifications',{enabled:true});}
    const {title,...recoveryMetadata}=recovery;
    assert(!JSON.stringify(recoveryMetadata).includes('PRIVATE_'),'recovery state excludes message bodies, even with diagnostics disabled; title is local UI data');
    const run=requests.slice(boundary).filter(r=>!r.isTitle);
@@ -178,7 +187,7 @@ for(const protocol of ['openai','anthropic']) {
   }
   writeFileSync(join(home,'synthetic-wire.json'),JSON.stringify(runs,null,2));
   assert.deepEqual(runs[0].requests.map(r=>r.body),runs[1].requests.map(r=>r.body),'final parsed wire body unchanged with observer');
-  assert.deepEqual(runs[0].requests.map(r=>r.raw),runs[1].requests.map(r=>r.raw),'final wire bytes unchanged with observer');
+  assert.deepEqual(runs[0].requests.map(r=>r.raw),runs[1].requests.map(r=>r.raw),'final wire bytes unchanged with observer and pet feed enabled');
   mode='error';const errorSession=await rpc('session/create',{cwd:home});await prompt(errorSession.sessionId,1);
   const afterError=await api('snapshot');writeFileSync(join(home,'after-error.json'),JSON.stringify(afterError,null,2));
   assert(afterError.records.some(r=>r.status==='error'),'provider error preserved at logical boundary');

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "file": "asset-manifest.json",
+      "bytes": 3047,
+      "sha256": "5619d511ff55b6eb21c6fb249a19ed8cbdb0f54d2591fd3e246d483a79346dec"
+    },
+    {
+      "file": "atlas-layout.json",
+      "bytes": 1679,
+      "sha256": "ea22a67962bb6bdfde42455c20893ee8093c3be18e4a716178bf4977638908c8"
+    },
+    {
+      "file": "DEVELOPMENT-PROMPT.md",
+      "bytes": 7450,
+      "sha256": "a5788150d66d1bc36953ac3668bdc3fb944c0c55b2ab9e47352624b483820da4"
+    },
+    {
+      "file": "INTEGRATION.md",
+      "bytes": 22883,
+      "sha256": "23e0dfc1904ccc8b6a2dd51de3f59fc46f2a3fa3549a65950d93fefb2e47536f"
+    },
+    {
+      "file": "pet.json",
+      "bytes": 224,
+      "sha256": "c5e599227d0515c8b90fef36a5f7805f30acf89b18f5a62cc6f77e409df351a2"
+    },
+    {
+      "file": "portrait.png",
+      "bytes": 1363244,
+      "sha256": "bbe2562f7cb74ded65b64a84cc14e4960043ff0a98f1f7251732e31b80ab6380"
+    },
+    {
+      "file": "preview.html",
+      "bytes": 4945,
+      "sha256": "e642c17f2ead99b01a540dcec2d5ba5aef29d62eb5321dd055f2a9a4cef2053a"
+    },
+    {
+      "file": "README.md",
+      "bytes": 2631,
+      "sha256": "23bc7cd40bd13ebcba22ebfed2aef90d786b383a6364baf2dda002efa139a034"
+    },
+    {
+      "file": "spritesheet.png",
+      "bytes": 3971684,
+      "sha256": "a80974ed54560d8277ab5a98dd905790c03bc68eecd1ede0b439d8224d1e747c"
+    },
+    {
+      "file": "spritesheet.webp",
+      "bytes": 2991256,
+      "sha256": "be2917666223cb692fcf62fc9bc1df33aca3cb5a5d53165fb46aa98d364a65bd"
+    }
+  ]
+}

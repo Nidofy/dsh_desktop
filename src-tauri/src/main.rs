@@ -7,6 +7,9 @@ mod desktop_theme;
 mod engine;
 mod logging;
 mod notifications;
+mod pets;
+mod pet_config;
+mod pet_packages;
 mod process;
 mod profile_recovery;
 mod profiles;
@@ -319,6 +322,13 @@ fn main() {
     let app = tauri::Builder::default()
         .manage(browser)
         .invoke_handler(tauri::generate_handler![
+            pets::pet_ready,
+            pets::pet_settings,
+            pets::pet_snapshot,
+            pets::pet_action,
+            pet_packages::pet_packages,
+            pet_packages::pet_resource,
+            pet_packages::pet_pick,
             diagnostics,
             connection,
             connection_profiles,
@@ -421,7 +431,11 @@ fn main() {
                 "desktop.log",
                 "system tray initialized; window close hides to tray",
             );
+            app.manage(pets::Controller::new(root.clone()));
             app.manage(Engine::start(app.handle().clone(), root, runtime, logs));
+            if pets::enabled(app.handle()){if let Err(e)=pets::open(app.handle()){browser_runtime::write_startup_log(&e);}}
+            // Explicit process-local smoke mode; ordinary installs remain off.
+            if std::env::var("DSH_DESKTOP_PET_SMOKE").as_deref()==Ok("1") { if let Err(e)=pets::open(app.handle()){browser_runtime::write_startup_log(&e);} }
             Ok(())
         })
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -438,6 +452,7 @@ fn main() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label().starts_with("pet-"){pets::closed(window.app_handle(),window.label());return;}
                 api.prevent_close();
                 let _ = window.hide();
                 // Closing the main window also hides its companion settings window.

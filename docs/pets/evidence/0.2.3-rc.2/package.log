@@ -1,0 +1,41 @@
+{"kind":"desktop-build-receipt","status":"PASS","id":"910e369d-212f-491a-b7f6-8ce8b101b4e4","desktopVersion":"0.2.3-rc.2","inputs":269}
+{"kind":"RUNTIME_VERIFIED","files":25782,"bytes":1025692460}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+Unified Explorer icon: D:\Documents\FeiyangChen\devApps\dshWinUi\dist\DSHDesktop-0.2.3-rc.2-win-x64
+{"kind":"desktop-build-receipt","status":"PASS","id":"910e369d-212f-491a-b7f6-8ce8b101b4e4","desktopVersion":"0.2.3-rc.2","inputs":269}
+{"kind":"PACKAGE_BASELINE_CREATED","files":26830}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+{"kind":"PACKAGE_VERIFIED","files":26830,"bytes":1050172469}
+Runtime probe child PID 22432
+PASS bundled Node / no Node,npm,pnpm in PATH / HTTP UI
+PASS upstream UI assets served locally 4 assets
+workspace result {"type":"server-response","rpcId":"fa786b62-f7c3-49db-9372-d6c575eb22ed","result":{"ok":true,"value":{"workspace":{"workspaceId":"6189bf29-dc33-44cc-bbc6-4f248aba7a97","path":"D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-YfaTOE\\测试项目\\Solver Test (a-b_c)","title":"Solver Test (a-b_c)","sessionIds":[],"createdAt":"2026-09-22T15:41:35.261Z","updatedAt":"2026-09-22T15:41:35.261Z"},"created":true}}}
+PASS workspace creation, Chinese/space/parenthesis paths
+session result {"type":"server-response","rpcId":"1daf745f-3fd0-468c-a873-f021d6edb901","result":{"ok":true,"value":{"sessionId":"session-b0cf28c9-9bbd-46b6-a2df-316ac51e102e","agentPreset":"standard"}}}
+PASS native session creation
+PASS custom Base URL + API Key + Model reaches mock
+Native tool names: ask_user_question, create_goal, edit, exit_plan_mode, get_goal, glob, grep, interrupt_agent, job_kill, job_list, job_output, list_agents, present, pwsh, ralph, read, read_image, send_message, skill, subagent, subagent_fork, todo_write, update_goal, web_fetch, web_search, workflow, write
+PASS native file read tool
+PASS native file edit tool
+PASS native PowerShell tool
+PASS no denied public internet/package-manager calls
+PASS graceful backend stop
+Runtime probe child PID 31732
+PASS session persists across restart
+Evidence directory: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\smoke-中文 (space)-YfaTOE
+PASS T42 invalid API key
+PASS T43 unreachable Base URL
+PASS T44 model error
+PASS T45 stream idle timeout
+Evidence directory: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\api-negative-vGgBq0
+PASS: bundled runtime + restricted PATH + loopback-only test transport. Clean VM and WebView egress require separate acceptance evidence.
+{"kind":"desktop-build-receipt","status":"PASS","id":"910e369d-212f-491a-b7f6-8ce8b101b4e4","desktopVersion":"0.2.3-rc.2","inputs":269}
+{"kind":"PACKAGE_VERIFIED","files":26830,"bytes":1050172469}
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "desktopVersion": "0.2.3-rc.2",
+  "buildId": "910e369d-212f-491a-b7f6-8ce8b101b4e4",
+  "directory": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.3-rc.2-win-x64",
+  "archiveCreated": false
+}

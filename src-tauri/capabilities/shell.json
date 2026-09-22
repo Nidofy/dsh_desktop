@@ -2,6 +2,31 @@
   "identifier": "desktop-shell",
   "description": "Only the packaged local settings/diagnostics page may use desktop commands.",
   "local": true,
-  "windows": ["shell"],
-  "permissions": ["allow-diagnostics", "allow-connection", "allow-connection-profiles", "allow-desktop-storage", "allow-global-storage-stats", "allow-set-storage-quota", "allow-credential-cleanup", "allow-connection-recovery", "allow-save-connection-profile", "allow-delete-connection-profile", "allow-activate-connection-profile", "allow-appearance", "allow-task-snapshots", "allow-save-connection", "allow-open-session-diagnostics", "allow-reset-diagnostic-key", "allow-restart-engine", "allow-open-logs", "allow-quit-app"]
+  "windows": [
+    "shell"
+  ],
+  "permissions": [
+    "allow-diagnostics",
+    "allow-connection",
+    "allow-connection-profiles",
+    "allow-desktop-storage",
+    "allow-global-storage-stats",
+    "allow-set-storage-quota",
+    "allow-credential-cleanup",
+    "allow-connection-recovery",
+    "allow-save-connection-profile",
+    "allow-delete-connection-profile",
+    "allow-activate-connection-profile",
+    "allow-appearance",
+    "allow-task-snapshots",
+    "allow-save-connection",
+    "allow-open-session-diagnostics",
+    "allow-reset-diagnostic-key",
+    "allow-restart-engine",
+    "allow-open-logs",
+    "allow-quit-app",
+    "allow-pet-settings",
+    "allow-pet-packages",
+    "allow-pet-pick"
+  ]
 }

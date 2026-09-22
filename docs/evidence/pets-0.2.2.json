@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "desktopVersion": "0.2.2-rc.1",
+  "status": "CANDIDATE_LOCAL_GATES_PASSED",
+  "displayName": "吃白饭的大肥鱼",
+  "resourceId": "xiaojing",
+  "directory": "dist/DSHDesktop-0.2.2-rc.1-win-x64",
+  "buildId": "4df3a6a5-69a6-4f93-9867-4f0b9b987aae",
+  "functionalImplementation": "IMPLEMENTED",
+  "assetStatus": "BASE_AND_INDEPENDENT_EXTENSIONS_VERIFIED",
+  "petLogicTestsPassed": 11,
+  "packageFiles": 26816,
+  "nativeProcessReport": ".build/desktop-process-4fafc73380684f7db36d553facd17dec/report.json",
+  "nativeProcess": {
+    "administratorToken": false,
+    "package": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.2-rc.1-win-x64",
+    "profile": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\desktop-process-4fafc73380684f7db36d553facd17dec",
+    "petNativeAtlasDecoded": true,
+    "petVisualAndHardwareAcceptance": "NOT_MEASURED",
+    "startupMs": 5463,
+    "loopbackOnly": true,
+    "port": 50793,
+    "observedWebViewProcesses": [
+      {
+        "ProcessId": 36940,
+        "ParentProcessId": 32696,
+        "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.2-rc.1-win-x64\\resources\\webview2\\msedgewebview2.exe"
+      },
+      {
+        "ProcessId": 36480,
+        "ParentProcessId": 32696,
+        "ExecutablePath": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.2-rc.1-win-x64\\resources\\webview2\\msedgewebview2.exe"
+      }
+    ],
+    "webview2Executable": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.2-rc.1-win-x64\\resources\\webview2\\msedgewebview2.exe",
+    "webview2Version": "153.0.4234.48",
+    "inheritedBrowserOverrideIgnored": true,
+    "secondInstanceExited": true,
+    "backendCrashReported": true,
+    "desktopStayedAliveAfterBackendCrash": true,
+    "backendRemains": false,
+    "result": "PASS"
+  },
+  "fieldAcceptance": "PARTIAL_NOT_ALL_HARDWARE_TESTED",
+  "limitations": [
+    "True touch and pen interaction",
+    "Mixed DPI and monitor topology changes",
+    "System notification delivery while pet is foreground",
+    "Long-running and hidden wakeup performance"
+  ],
+  "published": false
+}

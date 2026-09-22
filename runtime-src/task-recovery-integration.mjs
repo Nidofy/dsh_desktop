@@ -4,9 +4,11 @@ import {fileURLToPath} from 'node:url';
 import {recoveryKey,recoveryInitial,recoveryFold,recoveryView} from './task-recovery.mjs';
 import {recoveryHtml,recoveryScript} from './task-recovery-page.mjs';
 import {installNotifications} from './desktop-notifications.mjs';
+import {installPetState} from './pet-state.mjs';
 
 export function installTaskRecovery(ctx,home,desktopEvents=()=>null) {
   const notifications=installNotifications(ctx,home);
+  const pets=installPetState(ctx);
   const require=createRequire(join(dirname(fileURLToPath(import.meta.url)),'dsh/package.json'));
   const {z}=require('zod');
   const fact=z.object({status:z.enum(['UNCONFIRMED','INTERRUPTED','COMPLETED','NO_MESSAGE','UNKNOWN']),time:z.number(),seq:z.number().int()}).strict();
@@ -36,7 +38,7 @@ export function installTaskRecovery(ctx,home,desktopEvents=()=>null) {
     if(req.method==='GET'&&url.pathname==='/desktop-diagnostics/api/recovery/desktop-events'){
       const after=Number(url.searchParams.get('after')??0);
       if(!Number.isSafeInteger(after)||after<0){json(400,{error:'Invalid cursor'});return;}
-      json(200,{focusRevision,notifications:await notifications.snapshot(after),desktop:desktopEvents()});return;
+      json(200,{focusRevision,notifications:await notifications.snapshot(after),desktop:desktopEvents(),...(url.searchParams.get('pets')==='1'?{pets:await pets.snapshot(Number(url.searchParams.get('petAfter')??0),url.searchParams.get('petGeneration'))}:{})});return;
     }
     if(url.pathname==='/desktop-diagnostics/api/recovery/notifications'){
       if(req.method==='GET'){const {enabled,warning}=await notifications.snapshot();json(200,{enabled,warning});return;}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pet-resource"
+description = "Enables the pet_resource command without any pre-configured scope."
+commands.allow = ["pet_resource"]
+
+[[permission]]
+identifier = "deny-pet-resource"
+description = "Denies the pet_resource command without any pre-configured scope."
+commands.deny = ["pet_resource"]

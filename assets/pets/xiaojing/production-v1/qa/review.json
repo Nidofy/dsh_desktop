@@ -1,0 +1,986 @@
+{
+  "ok": true,
+  "frames_root": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames",
+  "states": [
+    "idle",
+    "running-right",
+    "running-left",
+    "waving",
+    "jumping",
+    "failed",
+    "waiting",
+    "running",
+    "review"
+  ],
+  "errors": [],
+  "warnings": [
+    "running-right used extraction method stable-slots; confirm motion playback remains stable and unclipped",
+    "running-left used extraction method stable-slots; confirm motion playback remains stable and unclipped",
+    "jumping used extraction method stable-slots; confirm motion playback remains stable and unclipped",
+    "failed used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+  ],
+  "rows": [
+    {
+      "state": "idle",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19321,
+          "bbox": [
+            19,
+            5,
+            173,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 394
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19332,
+          "bbox": [
+            19,
+            5,
+            173,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 380
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19275,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 380
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19223,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 356
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19258,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 374
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\idle\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19250,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 380
+        }
+      ]
+    },
+    {
+      "state": "running-right",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "running-right used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15981,
+          "bbox": [
+            25,
+            8,
+            168,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 292
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14988,
+          "bbox": [
+            24,
+            11,
+            167,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 244
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15761,
+          "bbox": [
+            23,
+            7,
+            169,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 276
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14987,
+          "bbox": [
+            22,
+            5,
+            170,
+            182
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 269
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15982,
+          "bbox": [
+            23,
+            9,
+            169,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 274
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14850,
+          "bbox": [
+            24,
+            12,
+            167,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 259
+        },
+        {
+          "index": 6,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15677,
+          "bbox": [
+            23,
+            9,
+            168,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 269
+        },
+        {
+          "index": 7,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-right\\07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14753,
+          "bbox": [
+            23,
+            7,
+            169,
+            182
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 261
+        }
+      ]
+    },
+    {
+      "state": "running-left",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "running-left used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14326,
+          "bbox": [
+            20,
+            16,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 389
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13423,
+          "bbox": [
+            27,
+            14,
+            164,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 319
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14450,
+          "bbox": [
+            21,
+            14,
+            171,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 369
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13303,
+          "bbox": [
+            20,
+            5,
+            172,
+            176
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 305
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14473,
+          "bbox": [
+            20,
+            15,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 386
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13502,
+          "bbox": [
+            27,
+            14,
+            166,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 322
+        },
+        {
+          "index": 6,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14371,
+          "bbox": [
+            20,
+            14,
+            172,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 409
+        },
+        {
+          "index": 7,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running-left\\07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13270,
+          "bbox": [
+            20,
+            5,
+            172,
+            176
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 337
+        }
+      ]
+    },
+    {
+      "state": "waving",
+      "expected_frames": 4,
+      "actual_frames": 4,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waving\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19498,
+          "bbox": [
+            17,
+            5,
+            174,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waving\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19408,
+          "bbox": [
+            18,
+            5,
+            174,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waving\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19527,
+          "bbox": [
+            18,
+            5,
+            174,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waving\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19287,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        }
+      ]
+    },
+    {
+      "state": "jumping",
+      "expected_frames": 5,
+      "actual_frames": 5,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "jumping used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\jumping\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18766,
+          "bbox": [
+            12,
+            17,
+            179,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\jumping\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18092,
+          "bbox": [
+            13,
+            14,
+            177,
+            198
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\jumping\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18972,
+          "bbox": [
+            12,
+            5,
+            179,
+            193
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\jumping\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18478,
+          "bbox": [
+            12,
+            17,
+            179,
+            200
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\jumping\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18717,
+          "bbox": [
+            12,
+            17,
+            179,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        }
+      ]
+    },
+    {
+      "state": "failed",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "failed used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19196,
+          "bbox": [
+            14,
+            6,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 403
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19181,
+          "bbox": [
+            14,
+            6,
+            177,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 379
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19158,
+          "bbox": [
+            15,
+            6,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 376
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17794,
+          "bbox": [
+            15,
+            20,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 402
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17840,
+          "bbox": [
+            14,
+            19,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 392
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19229,
+          "bbox": [
+            15,
+            6,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 384
+        },
+        {
+          "index": 6,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19179,
+          "bbox": [
+            15,
+            6,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 370
+        },
+        {
+          "index": 7,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\failed\\07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19307,
+          "bbox": [
+            14,
+            5,
+            176,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 372
+        }
+      ]
+    },
+    {
+      "state": "waiting",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19824,
+          "bbox": [
+            17,
+            5,
+            175,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 507
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19614,
+          "bbox": [
+            19,
+            5,
+            173,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 529
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19647,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 538
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19928,
+          "bbox": [
+            17,
+            5,
+            174,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 507
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19513,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 484
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\waiting\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19454,
+          "bbox": [
+            19,
+            5,
+            173,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 481
+        }
+      ]
+    },
+    {
+      "state": "running",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19296,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19232,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19224,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19234,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19120,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\running\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 19259,
+          "bbox": [
+            20,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        }
+      ]
+    },
+    {
+      "state": "review",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "components",
+      "ok": true,
+      "errors": [],
+      "warnings": [],
+      "frames": [
+        {
+          "index": 0,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18105,
+          "bbox": [
+            25,
+            5,
+            166,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 1,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18383,
+          "bbox": [
+            25,
+            5,
+            167,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 2,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18144,
+          "bbox": [
+            25,
+            5,
+            166,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 3,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18357,
+          "bbox": [
+            24,
+            5,
+            167,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 4,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17817,
+          "bbox": [
+            27,
+            5,
+            165,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 5,
+          "file": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\assets\\pets\\xiaojing\\production-v1\\frames\\review\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 18480,
+          "bbox": [
+            19,
+            5,
+            172,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        }
+      ]
+    }
+  ]
+}

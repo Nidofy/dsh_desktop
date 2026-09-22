@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "file": "interactions.json",
+      "bytes": 1802,
+      "sha256": "cbfc2c9abe03fe3593406772b547adc43834984b39712f849aaa9ebe64e711e9"
+    },
+    {
+      "file": "pat.webp",
+      "bytes": 147192,
+      "sha256": "efd9984fc279ac2755443ba93709351d4e174216e53e63b68a11a398e00df6ea"
+    },
+    {
+      "file": "happy.webp",
+      "bytes": 153180,
+      "sha256": "cabd1c4e89457ba2d3964580fbe9bebc3a53d4d3a64bfe3988117488a9a8b423"
+    },
+    {
+      "file": "dragged.webp",
+      "bytes": 113994,
+      "sha256": "d8290a4b4ec6565f623a4f34c9500151d2d821fb870b894d07e167de520fc8e4"
+    },
+    {
+      "file": "pat.png",
+      "bytes": 207075,
+      "sha256": "b97d49160a80d1b822c6314f5ca2e908908a0687aa49dd862e0610f9c034bbf0"
+    },
+    {
+      "file": "happy.png",
+      "bytes": 213690,
+      "sha256": "437b91f3a35583086b07ea14349bf52ca464f141dcfba190164cbd3db9f42377"
+    },
+    {
+      "file": "dragged.png",
+      "bytes": 158549,
+      "sha256": "ac3013cf370d9350ccf929c72ea801a70ccf22628330c11950929f62846cc1ef"
+    }
+  ]
+}
