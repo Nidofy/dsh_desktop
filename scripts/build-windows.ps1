@@ -1,4 +1,4 @@
-param([switch]$ReusePreparedRuntime, [switch]$SkipPackage, [string]$HarnessSourceArtifact)
+param([switch]$ReusePreparedRuntime, [switch]$SkipPackage, [string]$HarnessSourceArtifact, [string]$LegacyRuntime)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -12,6 +12,15 @@ if ($HarnessSourceArtifact) {
 }
 foreach ($tool in @('cargo','rustc','node','npm.cmd')) { if (!(Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Build tool missing: $tool (developer machine only)" } }
 if (!$ReusePreparedRuntime) { & "$PSScriptRoot/fetch-runtime.ps1"; & "$PSScriptRoot/prepare-dsh.ps1" -HarnessSourceArtifact $HarnessSourceArtifact }
+if ($LegacyRuntime) { $env:LEGACY_TEST_RUNTIME=(Resolve-Path -LiteralPath $LegacyRuntime).Path }
+$sourceEngine=(Get-Content -LiteralPath (Join-Path $root 'runtime/dsh/node_modules/@deepseek-ai/dsh/package.json') -Raw | ConvertFrom-Json).version -eq '0.1.7-alpha.2'
+if ($sourceEngine) {
+    if (!$env:LEGACY_TEST_RUNTIME) { throw 'Source migration Gate requires the preserved legacy runtime; specify -LegacyRuntime' }
+    $legacyVersion=(Get-Content -LiteralPath (Join-Path $env:LEGACY_TEST_RUNTIME 'dsh/node_modules/@deepseek-ai/dsh/package.json') -Raw | ConvertFrom-Json).version
+    if ($legacyVersion -ne '0.1.5-rc.2') { throw 'Migration and old bridge regression require the exact legacy 0.1.5-rc.2 runtime' }
+    $env:SOURCE_TEST_RUNTIME=Join-Path $root 'runtime'
+}
+if (!$env:DSH_TEST_FIXTURE_ROOT) { $env:DSH_TEST_FIXTURE_ROOT=Join-Path $env:TEMP 'dsh-desktop-build-tests' }
 & "$PSScriptRoot/fetch-webview2.ps1" -Offline:$ReusePreparedRuntime
 & (Join-Path $root 'runtime/runtime/node.exe') scripts/generate-provider-catalog.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Provider catalog generation failed' }
@@ -35,6 +44,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Runtime module staging contracts failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Harness source artifact contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') --test tests/harness-adapter.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Harness versioned adapter contracts failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/tauri-command-permissions.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Local window command permissions failed' }
+if ($sourceEngine) {
+    & (Join-Path $root 'runtime/runtime/node.exe') --test tests/source-profile.mjs tests/source-data-migration.mjs tests/source-provider-control.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Source profile, immutable migration or provider control contracts failed' }
+}
 & "$PSScriptRoot/../tests/source-runtime-staging.ps1"
 $verificationShell = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh.exe' } else { 'powershell.exe' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/distribution-verifier.mjs (Join-Path $PSHOME $verificationShell)
@@ -128,6 +143,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Native self-test center contracts failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Native self-tests with real Git and Mercurial failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/observability-wire.mjs runtime --cache-key-only
 if ($LASTEXITCODE -ne 0) { throw 'Native independent cache key wire contracts failed' }
+if ($sourceEngine) {
+    & (Join-Path $root 'runtime/runtime/node.exe') tests/observability-wire.mjs runtime --provider-hot-only
+    if ($LASTEXITCODE -ne 0) { throw 'Source next-request provider wire contracts failed' }
+}
 & (Join-Path $root 'runtime/runtime/node.exe') tests/observability-wire.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Observability wire regression failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/change-review-wire.mjs

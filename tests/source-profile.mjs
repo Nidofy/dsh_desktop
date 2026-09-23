@@ -5,6 +5,7 @@ import {resolve,join} from 'node:path';
 import {createRequire} from 'node:module';
 import {prepareSourceProfile} from '../runtime-src/source-profile.mjs';
 import {diagnosticState} from '../runtime-src/diagnostic-state.mjs';
+import {createHash} from 'node:crypto';
 const runtimeRoot=resolve(process.env.SOURCE_TEST_RUNTIME??'.build/source-qualification-s2/resources');
 const {parse,stringify}=createRequire(join(runtimeRoot,'dsh/package.json'))('yaml');
 // Synthetic values only; host integration exercises real Windows DPAPI separately.
@@ -34,6 +35,23 @@ test('unknown or legacy settings are refused before import and original bytes su
   const f=await fixture();await mkdir(f.home);await writeFile(join(f.home,'settings.yaml'),'unknown: synthetic\n');
   await assert.rejects(prepareSourceProfile(f),{code:'SOURCE_LEGACY_SECTION_UNSUPPORTED'});
   assert.equal(await readFile(join(f.home,'settings.yaml'),'utf8'),'unknown: synthetic\n');
+});
+
+test('prior profile revision adds isolated first-use policy without changing registered projects',async()=>{
+  const f=await fixture();await prepareSourceProfile(f);
+  const path=join(f.dir,'cordis.patch.yml'),markerPath=join(f.dir,'desktop-settings-revision.json');
+  const rows=parse(await readFile(path,'utf8')),marker=JSON.parse(await readFile(markerPath,'utf8'));
+  const previousRows=rows.filter(row=>row.id!=='workspace-controller');
+  marker.owned=marker.owned.filter(row=>row.id!=='workspace-controller');
+  marker.fingerprint=createHash('sha256').update(JSON.stringify({patch:f.patch,experimentModes:{}})).digest('hex');
+  await writeFile(path,stringify(previousRows));await writeFile(markerPath,JSON.stringify(marker));
+  await mkdir(join(f.home,'storages'),{recursive:true});
+  const registered=JSON.stringify({tables:{workspaces:{existing:{path:'C:\\explicit-user-project'}}}});
+  await writeFile(join(f.home,'storages/workspace.json'),registered);
+  await prepareSourceProfile(f);
+  assert.deepEqual(parse(await readFile(path,'utf8')).filter(row=>row.id==='workspace-controller'),[{id:'workspace-controller',config:{documentsDirectory:join(f.root,'workspace')}}]);
+  assert.equal(await readFile(join(f.home,'storages/workspace.json'),'utf8'),registered);
+  const after=await readFile(path,'utf8');await prepareSourceProfile(f);assert.equal(await readFile(path,'utf8'),after);
 });
 test('profile transaction recovers after each durable interruption point',async()=>{
   for(const point of ['prepared','after:cordis.patch.yml','after:desktop-settings-revision.json','committed']){

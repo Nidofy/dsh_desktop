@@ -5,8 +5,9 @@ import {pathToFileURL} from 'node:url';
 import {zstdDecompressSync} from 'node:zlib';
 import assert from 'node:assert/strict';
 import {createMock} from './mock-llm-server/server.mjs';
+import {isSourceRuntime,sourceEnvironment,fixtureBase} from './runtime-fixture.mjs';
 const resources=resolve(process.argv[2]??'runtime');
-mkdirSync('.build',{recursive:true});const root=mkdtempSync(resolve('.build/api-negative-'));
+mkdirSync(fixtureBase(),{recursive:true});const root=mkdtempSync(join(fixtureBase(),'api-negative-'));
 const results=[];
 function history(dir,id){
  if(!existsSync(dir))return '';
@@ -24,11 +25,13 @@ for(const test of [
  {name:'T44 model error',model:'unknown-model',expected:/404|unknown model/i},
  {name:'T45 stream idle timeout',stall:true,expected:/TIMEOUT|timed out|idle timeout/i},
 ]){
- const home=join(root,test.name.split(' ')[0]);mkdirSync(home,{recursive:true});
+ const home=join(root,test.name.split(' ')[0],...(isSourceRuntime(resources)?['c-'+crypto.randomUUID().replaceAll('-','')]:[]));mkdirSync(home,{recursive:true});
  const mock=await createMock({stall:test.stall});const patch=join(home,'patch.json');
  const base=test.unreachable?'http://127.0.0.1:1/v1':mock.url;
  writeFileSync(patch,JSON.stringify([{id:'session-telemetry-otel',disabled:true},{id:'llm-pi-ai',config:{providers:{'desktop-internal':{api:'openai-completions',baseURL:base,apiKeyEnv:'DSH_DESKTOP_LLM_KEY',models:[{id:test.model??'desktop-mock',contextWindow:32768,maxTokens:4096}],timeoutMs:1000,streamIdleTimeoutMs:1000,retryPolicy:{mode:'normal',maxRetries:0}}}}},{id:'agent-default-model',config:{provider:'desktop-internal',model:test.model??'desktop-mock'}}]));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:test.key??'desktop-test-key',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
+ Object.assign(env,sourceEnvironment(resources,home,env.DSH_HOME));env.DSH_DESKTOP_PATCH=patch;
+ for(const key of Object.keys(env))if(/^(DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(key))delete env[key];
  let output='',launch;
  const child=spawn(join(resources,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(resources,'host.mjs')).href,join(resources,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',patch,'--host','127.0.0.1','--port','0','--no-open'],{cwd:home,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
  for(const stream of [child.stdout,child.stderr])stream.on('data',c=>{output+=c;launch??=/dsh web: (http:\/\/127\.0\.0\.1:\d+\/[^\s]*)/.exec(output)?.[1];});

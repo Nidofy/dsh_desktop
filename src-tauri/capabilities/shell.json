@@ -17,6 +17,7 @@
     "allow-save-connection-profile",
     "allow-delete-connection-profile",
     "allow-activate-connection-profile",
+    "allow-connection-apply-mode",
     "allow-appearance",
     "allow-task-snapshots",
     "allow-save-connection",

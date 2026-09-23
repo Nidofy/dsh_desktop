@@ -25,7 +25,7 @@ test('pin and artifact identity reject changed commits, dependency locks and tar
   assert.throws(()=>assertIdentity({...source,platform:'other'},pin));
 });
 test('candidate source cannot silently replace current desktop engine',()=>{
-  const result=admission({source},pin,{dsh:'0.1.5-rc.2',node:pin.node});
+  const result=admission({source},{...pin,desktopAdapterApproved:false},{dsh:'0.1.5-rc.2',node:pin.node});
   assert.equal(result.allowed,false);
   assert.deepEqual(result.reasons,['DESKTOP_ENGINE_VERSION_MISMATCH','DESKTOP_ADAPTER_NOT_APPROVED']);
   assert.equal(admission({source},{...pin,desktopAdapterApproved:true},{dsh:pin.version,node:pin.node}).allowed,true);

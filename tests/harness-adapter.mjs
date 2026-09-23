@@ -43,6 +43,20 @@ test('source qualification requires isolated candidate identity and the reviewed
   await writeFile(join(runtime,'harness-source-artifact.json'),JSON.stringify({status:'SOURCE_SMOKE_PASSED',source:{version:'0.1.7-alpha.2',commit:'0'.repeat(40)}}));
   await assert.rejects(requireDesktopAdapter(runtime,{id,root,home}),{code:'HARNESS_ADAPTER_IDENTITY'});
 });
+
+test('native manager bundles survive restart while changed foundations and path specifiers fail closed',async()=>{
+  const f=await fixture(),dir=join(f.home,'profiles',sourceProfile);await mkdir(dir,{recursive:true});
+  const base=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'];
+  const manifest=join(dir,'package.json');
+  for(const extras of [['@fixture/offline-bundle'],['@fixture/offline-bundle','fixture-tools']]){
+    await writeFile(manifest,JSON.stringify({dsh:{profile:{bundles:[...base,...extras]}}}));
+    assert(!(await sourceProbeArguments(f)).includes('--from-default-profile'));
+  }
+  for(const bundles of [[...base,'../another-home'],[...base,base[0]],base.toReversed(),[...base,'file:../bundle']]){
+    await writeFile(manifest,JSON.stringify({dsh:{profile:{bundles}}}));
+    const before=await readFile(manifest);await assert.rejects(sourceProbeArguments(f),{code:'HARNESS_PROFILE_INCOMPATIBLE'});assert.deepEqual(await readFile(manifest),before);
+  }
+});
 test('interrupted initialization is refused without deleting or repairing evidence',async()=>{
   const f=await fixture(),dir=join(f.home,'profiles',sourceProfile);await mkdir(dir,{recursive:true});
   await writeFile(join(dir,'partial'),'keep');

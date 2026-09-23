@@ -12,6 +12,20 @@ Harness fork 已提交 `dad014b7efd3e1d76a36e6bd9646487d28d9037e`。运行时只
 
 ## 后续里程碑及 Gate
 
+### S4b/S5c：原生权限、隔离首屏及完整功能定向检查（2026-09-24）
+
+真实 Tauri 窗口发现“应用连接”被 ACL 拒绝，补齐 `connection_apply_mode` 的命令声明及仅本地 shell 窗口权限。窗口复测成功，旧请求配置保持不变，后端 PID 不变。新增前端静态 invoke 与命令/窗口权限的交叉检查，未给远端 Web 或 pet 窗口增加该权限。
+
+首屏还发现新版 `workspace.initializeDefault` 独立查询 Documents，cwd 隔离不足以约束默认工作区。现在通过公开 `workspace-controller.documentsDirectory` 将首次默认目录放入候选 `workspace/deepseek-harness`，版本化设置指纹确保已有开发 profile 也会更新。已登记项目路径保持原样。问题发现时尚未发送提示；旧合成 fixture 保留，后续使用全新目录复测，没有清理或修改真实 Documents 内容。实际 RPC 的重复初始化、重启后默认目录与显式项目路径保留，以及新原生首屏路径均通过。
+
+源码配置更新保留同模型原生 reasoning effort；恢复历史时修复已从托管路由移除的模型。缓存策略按不可变凭据修订绑定，配置两次写入间隙不会误用上一修订策略；旧请求和回滚仍持有原策略。源 profile 接受原生插件管理器添加的合法 bundle 名称，基础 bundle 与非法路径继续拒绝。
+
+证据：`source-protocol-models.json`（两协议模型/工具/四轮及重启）、`source-hot-policy-wire.json`、`source-task-snapshot-{openai,anthropic}.json`（真实 Rust 私有管道、首次请求前快照、封存/恢复、配额与撤销）、`source-profile-network.json`、`source-api-negative.json`、`source-offline-smoke.json`。快照报告明确标记 `nativeTauriWindow:false`，不冒充窗口验收。离线 smoke 使用最小 PATH 与本地 mock，首个嵌套执行沙箱尝试因 `EPERM realpath C:\\Users\\enxi1` 失败，正常本地权限复测通过，未放宽产品沙箱。实际 ZAI preset 切换与 13 提供方/105 模型检查通过，但直接内置路由测试不覆盖别名继承问题。
+
+最新 Rust 全量 93 通过、1 专门集成测试默认忽略（已另行双协议通过）；adapter/profile/control/窗口权限合计 19 通过，旧 settings/cache bridge 和模型迁移回归通过。资格目录封存校验 28,218 文件，仍为 `productionAdmission:false`。开发 EXE `1e8360b3…43088` 的原生任务完成、工具结果、环境浮窗、快照导航与桌宠拖动已实际检查；受控重启后历史可打开、宠物位置保留、mock 请求数保持 5 次，正常退出后宿主与两次后端均已消失。见 `source-native-development.json`。标签仍为 0.2.4-rc.2，最终包必须重新编译验收。
+
+剩余明确阻断：独立连接路由丢失固定内置目录的完整模型兼容字段。最小 `catalogProvider` 提案见 `proposals/M1-CATALOG-ROUTE.md`，等待新增 fork 接口的明确授权，尚未修改 fork。源码 pin 准入保持 false。完整构建/离线交付与最终原生验收尚未完成。
+
 ### S4a/S5b：源码完整协议与前缀回归（2026-09-24）
 
 提供方热应用接入后重新执行完整双协议 wire：鉴权、工具、工程操作沙箱与取消、产物下载、缓存探测/策略、冷恢复不重放、诊断隐私和设置持久化均通过。原 38 项前缀检查全部通过，包含规则、skills、工具、history、重试、重启、手动压缩和权限变化；仅将原已移除的 preset 文件引用换为当前源码公开的声明式 preset。没有删减断言或修改上游。

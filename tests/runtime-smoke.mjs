@@ -4,9 +4,11 @@ import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import {createMock} from './mock-llm-server/server.mjs';
+import {isSourceRuntime,sourceEnvironment,fixtureBase} from './runtime-fixture.mjs';
 const resources=resolve(process.argv[2]??'runtime');
-const workRoot=resolve('.build');mkdirSync(workRoot,{recursive:true});
-const home=mkdtempSync(join(workRoot,'smoke-中文 (space)-'));
+const workRoot=fixtureBase();mkdirSync(workRoot,{recursive:true});
+const fixture=mkdtempSync(join(workRoot,'smoke-中文 (space)-'));
+const home=isSourceRuntime(resources)?join(fixture,'c-'+crypto.randomUUID().replaceAll('-','')):fixture;
 const workspace=join(home,'测试项目','Solver Test (a-b_c)');mkdirSync(workspace,{recursive:true});
 writeFileSync(join(workspace,'fixture.txt'),'ORIGINAL_CONTENT\n');
 const mock=await createMock();
@@ -17,6 +19,7 @@ writeFileSync(overlay,JSON.stringify([
  {id:'agent-default-model',config:{provider:'desktop-internal',model:'desktop-mock'}}
 ]));
 const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_PATCH:overlay,DSH_DESKTOP_LLM_KEY:'desktop-test-key',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
+Object.assign(env,sourceEnvironment(resources,home,env.DSH_HOME));
 for(const k of Object.keys(env))if(/^(?:DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(k))delete env[k];
 let child;let output='';let cookie='';let origin='';const results=[];
 const check=(name,ok,detail='')=>{results.push({name,status:ok?'PASS':'FAIL',detail});console.log(`${ok?'PASS':'FAIL'} ${name}${detail?' '+detail:''}`);assert(ok,name);};
@@ -48,6 +51,14 @@ try{
  const assets=[...html.matchAll(/(?:src|href)="([^"#]+\.(?:js|css)(?:\?[^" ]*)?)"/g)].map(m=>m[1]);
  for(const asset of assets){const u=new URL(asset,origin);assert.equal(u.origin,origin,'remote asset');assert.equal((await fetch(u,{headers:{cookie}})).status,200,asset);}
  check('upstream UI assets served locally',assets.length>0,`${assets.length} assets`);
+ if(isSourceRuntime(resources)){
+   const initial=await rpc('workspace/initializeDefault',{directoryName:'默认工作区',title:'默认工作区'});
+   const initialValue=initial.result?.value??initial.result??initial;
+   assert.equal(initialValue.workspace.path,join(home,'workspace','deepseek-harness','默认工作区'));
+   const repeated=await rpc('workspace/initializeDefault',{directoryName:'must-not-create',title:'must-not-rename'});
+   assert.deepEqual(repeated.result?.value??repeated.result??repeated,initialValue);
+   check('first-use default workspace stays in candidate and is idempotent',true);
+ }
  const ws=await rpc('workspace/create',{path:workspace});console.log('workspace result',JSON.stringify(ws).slice(0,700));
  check('workspace creation, Chinese/space/parenthesis paths',true);
  const session=await rpc('session/create',{cwd:workspace});console.log('session result',JSON.stringify(session).slice(0,700));
@@ -66,6 +77,12 @@ try{
  check('no denied public internet/package-manager calls',!output.includes('OFFLINE_TEST_DENIED'));
  await stop();check('graceful backend stop',child.exitCode===0);
  await start();const list=await rpc('session/list',{});check('session persists across restart',JSON.stringify(list).includes(sessionId));
+ if(isSourceRuntime(resources)){
+   const data=JSON.parse(readFileSync(join(home,'dsh/storages/workspace.json'),'utf8'));
+   assert(Object.values(data.tables.workspaces).some(row=>row.path===workspace));
+   assert(Object.values(data.tables.workspaces).some(row=>row.path===join(home,'workspace','deepseek-harness','默认工作区')));
+   check('registered explicit project paths survive restart unchanged',true);
+ }
  await stop();
 }finally{
  try{await stop();}catch(e){console.error(e.message);}finally{mock.server.close();}

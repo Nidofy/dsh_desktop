@@ -16,7 +16,8 @@ export function selectHarnessAdapter(version) {
   return contracts[version];
 }
 
-// Called before settings or migration writes. Full file integrity remains the supervisor's gate.
+// Called before settings or migration writes. Full file integrity is checked by
+// assembly/distribution verification and the local self-test, not this identity probe.
 export async function requireDesktopAdapter(runtimeRoot, candidate) {
   const pkg=JSON.parse(await readFile(join(runtimeRoot,'dsh/node_modules/@deepseek-ai/dsh/package.json'),'utf8'));
   const adapter=selectHarnessAdapter(pkg.version);
@@ -60,6 +61,10 @@ export async function sourceProbeArguments({root,home}) {
   let manifest;
   try {manifest=JSON.parse(await readFile(manifestPath,'utf8'));}catch{throw failure('HARNESS_PROFILE_INCOMPLETE');}
   const bundles=manifest?.dsh?.profile?.bundles;
-  if(JSON.stringify(bundles)!==JSON.stringify(['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app']))throw failure('HARNESS_PROFILE_INCOMPATIBLE');
+  // The native plugin manager appends installed bundle names to this manifest.
+  // Keep the two desktop foundations and reject duplicate/path-like specifiers.
+  const foundations=['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app'];
+  const packageName=/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
+  if(!Array.isArray(bundles)||bundles.length<2||bundles.length>128||foundations.some((name,i)=>bundles[i]!==name)||new Set(bundles).size!==bundles.length||bundles.some(name=>typeof name!=='string'||name.length>214||!packageName.test(name)))throw failure('HARNESS_PROFILE_INCOMPATIBLE');
   return [...args,'--host','127.0.0.1','--port','0','--no-open'];
 }

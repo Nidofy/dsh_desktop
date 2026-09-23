@@ -29,6 +29,7 @@ if ($HarnessSourceArtifact) {
     & $node (Join-Path $PSScriptRoot 'runtime-integrity.mjs') create-runtime $prepared
     if ($LASTEXITCODE -ne 0) { throw "Source runtime verification failed in $prepared; previous runtime unchanged" }
     $result = Publish-SourceRuntime -Root $Root -Prepared $prepared
+    $env:LEGACY_TEST_RUNTIME=$result.backup
     Write-Output "Source runtime staged; complete previous runtime retained at $($result.backup)"
     return
 }

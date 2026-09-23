@@ -9,8 +9,11 @@ export function apply(ctx, config) {
     // desktop selection as the cold session is resumed, using the public API.
     const pending=ctx.sessionProjections.stateOf(agent.session,'modelSelection')?.pending;
     const selection=pending??agent.session.requestHeader()?.config;
-    if(selection && diagnosticState.retiredManagedProviders?.includes(selection.provider)){
-      const live=current();await ctx.sessionController.selectModel({sessionId:agent.session.id,provider:live.provider??'desktop-internal',model:live.models?.includes(selection.model)?selection.model:live.defaultModel});
+    const live=current(),route=live.provider??'desktop-internal';
+    if(selection && (diagnosticState.retiredManagedProviders?.includes(selection.provider)||(selection.provider===route&&!live.models?.includes(selection.model)))){
+      const plain=selection.model?.replace(/\[1m\]$/i,'');
+      await ctx.sessionController.selectModel({sessionId:agent.session.id,provider:route,model:live.models?.includes(plain)?plain:live.defaultModel,
+        ...(selection.reasoningEffort?{reasoningEffort:selection.reasoningEffort}:{})});
     }
     agent.ctx.on('agent/request', async (_payload, next) => {
       let request = await next();

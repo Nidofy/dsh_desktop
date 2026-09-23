@@ -4,8 +4,10 @@ import {readFile,mkdtemp,mkdir,writeFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
+import {isSourceRuntime,sourceEnvironment,fixtureBase} from './runtime-fixture.mjs';
 const presets=JSON.parse(await readFile('src-tauri/generated/provider-catalog.json','utf8'));
-const root=await mkdtemp(resolve('.build/provider-catalog-wire-')),runtime=resolve('runtime');
+const runtime=resolve(process.argv[2]??'runtime');await mkdir(fixtureBase(),{recursive:true});
+const fixture=await mkdtemp(join(fixtureBase(),'provider-catalog-wire-')),root=isSourceRuntime(runtime)?join(fixture,'c-'+crypto.randomUUID().replaceAll('-','')):fixture;await mkdir(root,{recursive:true});
 const providers={};
 for(const p of presets){
   const overlay=JSON.parse(await readFile(join('.build/provider-presets',p.id,'desktop.patch.json'),'utf8'));
@@ -16,6 +18,7 @@ await writeFile(overlay,JSON.stringify([{id:'session-telemetry-otel',disabled:tr
 const home=join(root,'dsh');await mkdir(home);
 const env={...process.env,DSH_HOME:home,DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'fixture-key',NODE_OPTIONS:'',NODE_PATH:''};
 for(const k of Object.keys(env))if(/^(DSH_DESKTOP_PATCH|DSH_DESKTOP_ROOT|DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(k))delete env[k];
+Object.assign(env,sourceEnvironment(runtime,root,home));if(isSourceRuntime(runtime))env.DSH_DESKTOP_PATCH=overlay;
 let output='',launch,exited=false;
 const child=spawn(join(runtime,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(runtime,'host.mjs')).href,join(runtime,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',overlay,'--host','127.0.0.1','--port','0','--no-open'],{cwd:root,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
 child.on('exit',()=>exited=true);

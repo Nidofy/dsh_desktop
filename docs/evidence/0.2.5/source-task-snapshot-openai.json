@@ -1,0 +1,33 @@
+{
+  "protocol": "openai",
+  "status": "PASS",
+  "checks": [
+    {
+      "turn": 1,
+      "confirmedBeforeModel": true,
+      "previousEndBeforeNextModel": false
+    },
+    {
+      "turn": 2,
+      "confirmedBeforeModel": true,
+      "previousEndBeforeNextModel": true
+    },
+    {
+      "taskSnapshotNavigation": true,
+      "manualBaselineRefused": true,
+      "crossOriginRefused": true,
+      "noModelOrWorkspaceMutation": true
+    },
+    {
+      "nativeNodeQuota": true,
+      "projectActionAndLog": true,
+      "actionRevocation": true,
+      "localSelfTestFinalRecord": true,
+      "noAdditionalModelRequest": true
+    }
+  ],
+  "requests": 2,
+  "privatePipe": true,
+  "nativeStore": true,
+  "nativeTauriWindow": false
+}

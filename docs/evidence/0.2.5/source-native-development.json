@@ -1,0 +1,39 @@
+{
+  "backendBefore": 12256,
+  "executableSha256": "1e8360b3f8bda63e7961aca0a98e3c3cbc7895e0f2f4d3a4eda05114ec943088",
+  "desktopLabel": "0.2.4-rc.2",
+  "finalReleaseAcceptance": false,
+  "limitations": [
+    "Synthetic localhost provider only",
+    "Final rebuilt 0.2.5 executable remains required",
+    "Real intranet, sleep, mixed DPI, touch and clean enterprise image not tested"
+  ],
+  "schemaVersion": 1,
+  "kind": "development-native-qualification",
+  "hostPid": 16096,
+  "fixture": "C:\\Users\\enxi1\\AppData\\Local\\Temp\\dsh-native-025-isolated-d9ad04aa439046338351446163a459df\\DSHDesktop\\candidates\\c-13f9dfe0703f4a328716375b14e3c334",
+  "sourceCommit": "dad014b7efd3e1d76a36e6bd9646487d28d9037e",
+  "checks": {
+    "noReplayMockRequestCount": 5,
+    "petAtlasDecoded": true,
+    "exitVerified": true,
+    "toolReadEditAndPowershell": true,
+    "nativeSnapshotPageNavigation": true,
+    "completedVisible": true,
+    "defaultWorkspaceInCandidate": true,
+    "environmentFloatOpened": true,
+    "petDragPosition": {
+      "y": 189.71428571428572,
+      "x": 160.0
+    },
+    "restart": true,
+    "restoredConversationVisible": true,
+    "hotApply": {
+      "backendBefore": 29340,
+      "earlierHost": 20128,
+      "acknowledgedInNativeWindow": true,
+      "backendAfter": 29340
+    }
+  },
+  "backendAfter": 31448
+}

@@ -7,7 +7,7 @@ import {spawn,spawnSync} from 'node:child_process';
 import {mkdtempSync,readFileSync,writeFileSync,existsSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
-const root=mkdtempSync(resolve('.build/profile-network-')), runtime=resolve('runtime');
+const root=mkdtempSync(resolve('.build/profile-network-')), runtime=resolve(process.argv[2]??'runtime');
 const node=join(runtime,'runtime/node.exe');
 const openssl=process.env.DSH_TEST_OPENSSL ?? 'C:/Program Files/Git/usr/bin/openssl.exe';
 assert(existsSync(openssl),'Set DSH_TEST_OPENSSL to a developer OpenSSL executable');

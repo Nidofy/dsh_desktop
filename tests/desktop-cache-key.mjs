@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {desktopCacheKeyOptions} from '../runtime-src/desktop-cache-key.mjs';
 import {extendCacheKeyAdapter,installCacheKeyBridge,configureCacheKeyBridge,cacheKeyBridgeRequired} from '../runtime-src/desktop-cache-key-bridge.mjs';
 const profile = {provider:'desktop-internal',api:'openai-completions',baseURL:'https://synthetic.invalid/v1',desktopCacheKey:{mode:'session',models:['model-a']}};
@@ -30,7 +31,8 @@ assert.deepEqual({...result,prompt_cache_key:payload.prompt_cache_key},payload);
 assert.equal(payload.prompt_cache_key,'native-session-id','original payload stays immutable');
 const captured = desktopCacheKeyOptions(profile,{id:'model-a'},{sessionId:'private-session'},state);
 state.key = Buffer.alloc(32,9); assert.equal(captured.onPayload(payload).prompt_cache_key,key,'prepared stream key remains stable');
-const source = readFileSync('runtime/dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js');
+const legacyRuntime=resolve(process.env.LEGACY_TEST_RUNTIME??'runtime');
+const source = readFileSync(resolve(legacyRuntime,'dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js'));
 const patch=(policy)=>[{id:'llm-pi-ai',config:{providers:{'desktop-internal':{api:'openai-completions',...(policy?{desktopCacheKey:policy}:{})}}}}];
 assert.equal(cacheKeyBridgeRequired(patch()),false);
 assert.equal(cacheKeyBridgeRequired(patch({mode:'native'})),false);
@@ -47,9 +49,9 @@ assert.throws(()=>configureCacheKeyBridge(changedRoot,patch({mode:'off'})),/ADAP
 assert.throws(()=>configureCacheKeyBridge(changedRoot,patch({mode:'session',models:['model-a']})),/ADAPTER_MISMATCH/);
 assert.throws(()=>extendCacheKeyAdapter(Buffer.concat([source,Buffer.from('\n')]),import.meta.url),/ADAPTER_MISMATCH/);
 assert(extendCacheKeyAdapter(source,import.meta.url).includes('desktopCacheKey: z.object'));
-const hook = installCacheKeyBridge(resolve('runtime'));
+const hook = installCacheKeyBridge(legacyRuntime);
 try {
-  const adapter = await import('../runtime/dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js');
+  const adapter = await import(pathToFileURL(resolve(legacyRuntime,'dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js')).href);
   assert(adapter.PiAiAdapter && adapter.Config,'pinned adapter loads through the real Node hook');
   const legacy=adapter.Config({providers:{'desktop-internal':{api:'openai-completions',baseURL:'http://localhost/v1'}}});
   assert.equal(legacy.providers['desktop-internal'].desktopCacheKey.mode,'native','missing desktop policy is backwards compatible');

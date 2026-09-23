@@ -35,7 +35,8 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
   const cleanProviders=structuredClone(providers??{});
   for(const item of Object.values(cleanProviders))delete item.desktopCacheKey;
   const experimentModes={spillMode:diagnosticState.preferences.spillMode,skillMode:diagnosticState.preferences.skillMode};
-  const fingerprint=hash({patch,experimentModes});
+  const documentsDirectory=join(root,'workspace');
+  const fingerprint=hash({profileSchema:2,patch,experimentModes,documentsDirectory});
   diagnosticState.effectiveSpillBytes=experimentModes.spillMode==='compact'?24000:50000;
   diagnosticState.effectiveSkillDescription=experimentModes.skillMode==='compact'?250:500;
   diagnosticState.managedProvider=route;
@@ -63,13 +64,16 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
       for(const key of ['effectiveSpillBytes','effectiveSkillDescription'])if(Number.isFinite(previous.effective?.[key]))diagnosticState[key]=previous.effective[key];
       return;
     }
+    const nativeSelection=doc.contents.items.map(node=>node.toJSON()).filter(row=>row.id==='agent-default-model').at(-1)?.config;
+    const sameModel=nativeSelection?.provider===selection?.provider&&nativeSelection?.model?.replace(/\[1m\]$/i,'')===selection?.model;
+    const preservedEffort=sameModel&&['off','minimal','low','medium','high','xhigh','max'].includes(nativeSelection?.reasoningEffort)?nativeSelection.reasoningEffort:undefined;
     // This marker owns only dedicated entries appended by this writer. Refuse
     // competing edits to them instead of deleting unrelated user patches.
     let nativeProviders={};
     if(previous.owned) {
       for(const entry of previous.owned) {
         let index=doc.contents.items.findIndex(node=>isMap(node)&&JSON.stringify(node.toJSON())===JSON.stringify(entry));
-        if(index<0&&/^desktop-(legacy|p-[a-f0-9]{32})$/.test(previous.route??'')&&['llm-pi-ai','agent-default-model'].includes(entry.id)){
+        if(index<0&&(entry.id==='agent-default-model'||(/^desktop-(legacy|p-[a-f0-9]{32})$/.test(previous.route??'')&&entry.id==='llm-pi-ai'))){
           index=doc.contents.items.findLastIndex(node=>isMap(node)&&node.toJSON().id===entry.id);
           if(index>=0&&entry.id==='llm-pi-ai')nativeProviders=Object.fromEntries(Object.entries(doc.contents.items[index].toJSON().config?.providers??{}).filter(([id])=>!/^desktop-(legacy|p-[a-f0-9]{32})$/.test(id)));
         }
@@ -79,6 +83,10 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
     }
     const inheritedProviders={...(doc.contents.items.map(node=>node.toJSON()).filter(row=>row.id==='llm-pi-ai').at(-1)?.config?.providers??{}),...nativeProviders};
     const owned=structuredClone(patch).map(row=>row.id==='llm-pi-ai'?{...row,config:{...row.config,providers:{...inheritedProviders,...cleanProviders}}}:row);
+    if(preservedEffort)owned.find(row=>row.id==='agent-default-model').config.reasoningEffort=preservedEffort;
+    // First-use UI initialization resolves Documents independently of cwd. Keep
+    // its newly created workspace in this candidate; registered paths are untouched.
+    owned.push({id:'workspace-controller',config:{documentsDirectory}});
     owned.push({id:'credentials',disabled:true});
     owned.push({insert:[{id:'desktop-source-credentials',name:new URL('./source-credentials.mjs',import.meta.url).href}]});
     for(const [modeKey,id,field,native,compact,stateKey] of [

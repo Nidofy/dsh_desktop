@@ -3,12 +3,21 @@ import {cacheKeyBridgeRequired} from './desktop-cache-key-bridge.mjs';
 import {diagnosticState} from './diagnostic-state.mjs';
 let context,policies,revision=-1,busy=false;
 const secrets=new Map();
+const policySnapshots=new Map();
 const managed=/^desktop-(?:legacy|p-[a-f0-9]{32})$/;
 const keyName=/^DSH_DESKTOP_PROVIDER_KEY_R\d{1,16}_(?:legacy|[a-f0-9]{32})$/;
 export function ownsSourceCredential(ref){return keyName.test(ref);}
 export function sourceCredential(ref){const value=secrets.get(ref);return value?{value,source:'windows-supervisor'}:undefined;}
 export function sourceProviderPolicies(fallback){return policies??fallback;}
-export function installSourceProviderControl(ctx,initialPolicies){context=ctx;policies??=structuredClone(initialPolicies??{});ctx.effect(()=>()=>{if(context===ctx)context=undefined;});}
+export function sourceProviderPolicy(route,reference,fallback){return policySnapshots.get(route+'\0'+reference)??sourceProviderPolicies(fallback)?.[route];}
+function stagePolicies(providers){
+  for(const [route,value] of Object.entries(providers)){
+    const key=route+'\0'+value.apiKeyEnv,previous=policySnapshots.get(key);
+    if(previous&&JSON.stringify(previous.desktopCacheKey)!==JSON.stringify(value.desktopCacheKey))throw Error('SOURCE_PROVIDER_POLICY_IMMUTABLE');
+  }
+  for(const [route,value] of Object.entries(providers))policySnapshots.set(route+'\0'+value.apiKeyEnv,structuredClone(value));
+}
+export function installSourceProviderControl(ctx,initialPolicies){context=ctx;policies??=structuredClone(initialPolicies??{});stagePolicies(initialPolicies??{});ctx.effect(()=>()=>{if(context===ctx)context=undefined;});}
 export function receiveSourceKeys(keys){
   if(!keys||typeof keys!=='object'||Array.isArray(keys)||Object.keys(keys).length>64)throw Error('SOURCE_PROVIDER_KEYS_INVALID');
   for(const [name,key] of Object.entries(keys))if(!keyName.test(name)||typeof key!=='string'||key.length>16384||key.includes('\0'))throw Error('SOURCE_PROVIDER_KEYS_INVALID');
@@ -33,6 +42,10 @@ export async function sourceProviderControl(request,write=line=>process.stdout.w
     const nextProviders=Object.fromEntries(Object.entries(oldProviders.providers).filter(([route])=>!managed.test(route)));
     for(const [route,value] of Object.entries(providers)){const clean=structuredClone(value);delete clean.desktopCacheKey;nextProviders[route]=clean;}
     receiveSourceKeys(keys);
+    // Publish immutable policy snapshots before making volatile providers visible.
+    // The payload hook reads the provider's credential revision synchronously, so
+    // requests admitted between the two settings writes cannot see an old policy.
+    stagePolicies(providers);
     try{
       await context.settings.replace('llm-pi-ai',{providers:nextProviders});
       await context.settings.replace('agent-default-model',selection);

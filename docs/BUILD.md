@@ -62,6 +62,10 @@ Changing DSH requires repeating the investigation, provider contract tests, comp
 
 这份记录用于防止旧 EXE 和新资源误混装，不是数字签名，也不代表真实网关、原生点击或企业目标机通过。文档由包内完整性清单覆盖，开发证据文档可在门禁结束后更新，不会被误当成需要重新编译的源码。`tests/release-receipt.mjs` 验证旧记录、运行中修改、额外源文件、EXE/运行时变化和版本不一致时拒绝。
 
+源码引擎 Gate 同时需要旧 `0.1.5-rc.2` 运行时，供真实旧 writer 迁移和旧缓存桥回归使用。首次 `-HarnessSourceArtifact` 准备成功会自动使用保留的旧目录；后续复用源码运行时须传 `-LegacyRuntime <完整旧目录>`。该参数不会跳过旧引擎版本检查。源码分支额外执行 profile、不可变迁移、热应用和本地窗口命令权限检查。协议 fixture 默认位于用户临时目录，可用 `DSH_TEST_FIXTURE_ROOT` 指定，测试仍保留 Harness 自身沙箱。
+
+开发阶段可用 `scripts/seal-source-qualification.mjs <artifact> <resources>` 校验并封存桌面模块更新后的隔离 qualification 目录。它先逐文件验证原始源码依赖、Node、WebView2 和已同步桌面模块，且只接受 `productionAdmission:false` 标记；不会生成 release receipt 或批准产品准入。
+
 ## 0.2.0 完整目录交付（不压缩 ZIP）
 
 ```powershell

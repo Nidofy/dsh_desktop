@@ -1618,7 +1618,7 @@ mod tests {
     impl Fixture {
         fn new() -> Self {
             let dir =
-                std::env::temp_dir().join(format!("dsh-snapshot-test-{}", random_id().unwrap()));
+                std::env::temp_dir().join(format!("c-{}", random_id().unwrap()));
             let work = dir.join("工程");
             let home = dir.join("home");
             fs::create_dir_all(&work).unwrap();
@@ -1645,12 +1645,7 @@ mod tests {
         fn drop(&mut self) {
             // Only the uniquely-created fixture subtree; never a workspace/user root.
             assert!(self.dir.parent() == Some(std::env::temp_dir().as_path()));
-            assert!(self
-                .dir
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .starts_with("dsh-snapshot-test-"));
+            assert!(crate::environments::valid_id(&self.dir.file_name().unwrap().to_string_lossy()));
             let _ = fs::remove_dir_all(&self.dir);
         }
     }

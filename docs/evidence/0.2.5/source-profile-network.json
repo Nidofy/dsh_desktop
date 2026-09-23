@@ -1,0 +1,12 @@
+[
+  {
+    "status": "PASS",
+    "direct": true,
+    "explicitProxy": true,
+    "inheritedProxy": true,
+    "loopbackBypass": true,
+    "untrustedTlsRejected": true,
+    "enterpriseCa": true,
+    "invalidCaStopsStartup": true
+  }
+]

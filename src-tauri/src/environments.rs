@@ -7,10 +7,36 @@ pub fn id()->&'static str {ID.get().map(String::as_str).unwrap_or("stable")}
 pub fn valid_id(id:&str)->bool{id.len()==34&&id.starts_with("c-")&&id[2..].bytes().all(|b|b.is_ascii_hexdigit()&&!b.is_ascii_uppercase())}
 pub fn initialize()->Result<(),String>{
  let args=std::env::args().skip(1).collect::<Vec<_>>();
- let value=if args.is_empty(){"stable".into()}else if args.len()==2&&args[0]=="--environment"&&valid_id(&args[1]){args[1].clone()}else{return Err("无效的环境启动参数".into());};
+ let versions:Value=serde_json::from_str(include_str!("../../versions.json")).map_err(|_|"构建版本无效")?;
+ let value=if args.is_empty(){if versions["dsh"]=="0.1.7-alpha.2"{default_source_candidate(&stable_root()?,env!("CARGO_PKG_VERSION"))?}else{"stable".into()}}else if args.len()==2&&args[0]=="--environment"&&valid_id(&args[1]){args[1].clone()}else{return Err("无效的环境启动参数".into());};
  ID.set(value).map_err(|_|"环境已初始化")?;
  if id()!="stable" {let root=selected(id())?;let file=root.join("environment.json");if regular(&file)?.len()>4096{return Err("环境清单过大".into());}let meta:Value=serde_json::from_slice(&fs::read(file).map_err(|_|"候选环境不存在")?).map_err(|_|"环境清单损坏")?;if meta["schemaVersion"]!=1||meta["id"]!=id(){return Err("环境版本不支持".into());}}
  Ok(())
+}
+// Source releases open an isolated, version-scoped candidate on a normal double
+// click. No launcher script or writes to the sealed package are needed.
+// Existing incomplete/foreign directories are refused, never repaired or reset.
+fn default_source_candidate(base:&Path,version:&str)->Result<String,String>{
+ use sha2::{Digest,Sha256};
+ let digest=format!("{:x}",Sha256::digest(format!("DSHDesktop/source-candidate/v1/{version}")));
+ let name=format!("c-{}",&digest[..32]);
+ fs::create_dir_all(base).map_err(|_|"无法创建候选数据根目录")?;regular(base)?;
+ let parent=base.join("candidates");fs::create_dir_all(&parent).map_err(|_|"无法创建候选目录")?;regular(&parent)?;
+ let target=parent.join(&name);
+ if !target.exists(){
+  let staging=parent.join(format!(".new-{}",crate::profiles::new_id()?));fs::create_dir(&staging).map_err(|_|"候选环境创建失败")?;
+  let manifest=json!({"schemaVersion":1,"id":name,"createdWith":version,"projects":"independent","checkpoints":"not-mounted","defaultSourceCandidate":true});
+  use std::io::Write;
+  let mut file=fs::OpenOptions::new().write(true).create_new(true).open(staging.join("environment.json")).map_err(|_|"候选清单创建失败")?;
+  file.write_all(&serde_json::to_vec_pretty(&manifest).unwrap()).and_then(|_|file.sync_all()).map_err(|_|"候选清单写入失败")?;drop(file);
+  fs::create_dir(staging.join("workspace")).map_err(|_|"候选工作区创建失败")?;
+  if fs::rename(&staging,&target).is_err()&&!target.exists(){return Err("候选环境安装失败，已保留暂存目录".into());}
+ }
+ regular(&target)?;let path=target.join("environment.json");let metadata=regular(&path)?;
+ if !metadata.is_file()||metadata.len()>4096{return Err("默认候选清单无效，请从已有候选恢复，原数据未改变".into());}
+ let manifest:Value=serde_json::from_slice(&fs::read(&path).map_err(|_|"默认候选清单不可读")?).map_err(|_|"默认候选清单损坏，原数据未改变")?;
+ if manifest["schemaVersion"]!=1||manifest["id"]!=name||manifest["createdWith"]!=version||manifest["defaultSourceCandidate"]!=true{return Err("默认候选身份不匹配，原数据未改变".into());}
+ Ok(name)
 }
 pub fn stable_root()->Result<PathBuf,String>{Ok(PathBuf::from(std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA 不可用")?).join("DSHDesktop"))}
 pub fn root()->Result<PathBuf,String>{let base=stable_root()?;Ok(if id()=="stable"{base}else{base.join("candidates").join(id())})}
@@ -72,6 +98,12 @@ pub fn dispatch(action:&str,selection:Option<&str>)->Result<Value,String>{
 #[cfg(test)] mod tests{use super::*;#[test]fn identifiers_cannot_escape(){assert!(valid_id("c-1234567890abcdef1234567890abcdef"));for value in ["stable","../stable","c-../","C-1234567890abcdef1234567890abcdef"]{assert!(!valid_id(value));}}}
 #[cfg(test)]mod checkpoint_tests {
  use super::*;
+ #[test]fn default_source_launch_is_version_scoped_and_preserves_stable_and_unknown_data(){
+  let root=std::env::temp_dir().join(format!("dsh-source-launch-{}",crate::profiles::new_id().unwrap()));fs::create_dir_all(root.join("dsh")).unwrap();fs::write(root.join("dsh/keep"),"stable data").unwrap();
+  let a=default_source_candidate(&root,"0.2.5-rc.1").unwrap();assert!(valid_id(&a));assert_eq!(default_source_candidate(&root,"0.2.5-rc.1").unwrap(),a);
+  let b=default_source_candidate(&root,"0.2.5-rc.2").unwrap();assert_ne!(a,b);assert_eq!(fs::read_to_string(root.join("dsh/keep")).unwrap(),"stable data");
+  let manifest=root.join("candidates").join(a).join("environment.json");fs::write(&manifest,"unknown interruption").unwrap();assert!(default_source_candidate(&root,"0.2.5-rc.1").is_err());assert_eq!(fs::read_to_string(manifest).unwrap(),"unknown interruption");
+ }
  #[test]fn bounded_copy_is_inert_refuses_collisions_and_links(){
   let repo=Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();let root=repo.join(".build").join(format!("checkpoint-{}",crate::profiles::new_id().unwrap()));let source=root.join("source");fs::create_dir_all(source.join("sessions")).unwrap();fs::write(source.join("sessions/fixture.json"),"{\"version\":2}").unwrap();
   let target=root.join(".checkpoint-staging");copy_tree(&source,&target).unwrap();assert_eq!(fs::read(source.join("sessions/fixture.json")).unwrap(),fs::read(target.join("sessions/fixture.json")).unwrap());assert!(!root.join("dsh").exists());assert!(copy_tree(&source,&target).is_err());assert!(copy_bounded(&source,&root.join("over-limit"),&mut 100000,&mut 0,0).is_err());assert!(scan_tree(&source,&mut 0,&mut 0,65).is_err());

@@ -6,9 +6,11 @@ import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync,existsSync,
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {zstdDecompressSync} from 'node:zlib';
+import {isSourceRuntime,sourceEnvironment,fixtureBase,remapDesktopPatch} from './runtime-fixture.mjs';
 const resources=resolve(process.argv[2]??'runtime');
-mkdirSync('.build',{recursive:true});
-const root=mkdtempSync(resolve('.build/protocol-models-'));
+const source=isSourceRuntime(resources);
+mkdirSync(fixtureBase(),{recursive:true});
+const root=mkdtempSync(join(fixtureBase(),'protocol-models-'));
 const pause=()=>new Promise(r=>setTimeout(r,100));
 const results=[];
 function events(dir,id){
@@ -21,7 +23,7 @@ function events(dir,id){
  }}walk(dir);return text.split('\n').filter(Boolean).map(l=>JSON.parse(l));
 }
 for(const protocol of ['openai','anthropic']){
- const home=join(root,protocol);mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PROTOCOL_TOOL_READ_OK');
+ const home=join(root,protocol,...(source?['c-'+crypto.randomUUID().replaceAll('-','')]:[]));mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PROTOCOL_TOOL_READ_OK');
  const requests=[], failures=[];
  let overrideEffort;
  const server=http.createServer(async(req,res)=>{
@@ -62,6 +64,7 @@ for(const protocol of ['openai','anthropic']){
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const patch=JSON.parse(readFileSync(`.build/config-protocol-fixtures/${protocol}/desktop.patch.json`,'utf8'));
+ remapDesktopPatch(patch,resources);
  for(const row of patch)for(const plugin of row.insert??[]) {
   const file={'desktop-observability':'desktop-observability.mjs','desktop-model-defaults':'model-defaults.mjs','desktop-client':'desktop-client/index.mjs','desktop-vision':'desktop-vision.mjs'}[plugin.id];
   if(file)plugin.name=pathToFileURL(join(resources,file)).href;
@@ -69,9 +72,10 @@ for(const protocol of ['openai','anthropic']){
  patch[1].config.providers['desktop-internal'].baseURL=`http://127.0.0.1:${server.address().port}/gateway${protocol==='openai'?'/v1':''}`;
  const overlay=join(home,'desktop.patch.json');writeFileSync(overlay,JSON.stringify(patch));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'desktop-test-key',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
+ Object.assign(env,sourceEnvironment(resources,home,env.DSH_HOME));
  mkdirSync(env.DSH_HOME,{recursive:true});
  const nativeSettings=join(env.DSH_HOME,'settings.yaml');
- writeFileSync(nativeSettings,JSON.stringify({'llm-pi-ai':{providers:{'desktop-internal':{...patch[1].config.providers['desktop-internal'],models:[{...patch[1].config.providers['desktop-internal'].models[1],id:'glm-5.3[1m]',contextWindow:32768,maxTokens:4096}]}}},'agent-default-model':{provider:'desktop-internal',model:'glm-5.3[1m]'},'desktop-sync-test':{preserve:true}}));
+ writeFileSync(nativeSettings,JSON.stringify({'llm-pi-ai':{providers:{'desktop-internal':{...patch[1].config.providers['desktop-internal'],models:[{...patch[1].config.providers['desktop-internal'].models[1],id:'glm-5.3[1m]',contextWindow:32768,maxTokens:4096}]}}},'agent-default-model':{provider:'desktop-internal',model:'glm-5.3[1m]'},...(source?{'ui-theme':{preference:'dark'}}:{'desktop-sync-test':{preserve:true}})}));
  for(const key of Object.keys(env))if(/^(DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(key))delete env[key];
  let child,output='',origin,cookie;
  async function start(sync=true){

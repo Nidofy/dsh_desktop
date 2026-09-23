@@ -39,6 +39,8 @@ pub fn build(root:&Path,runtime:&Path,catalog:&profiles::Catalog,selected:&profi
             if entry["id"]=="desktop-observability" {entry["config"]["managedProvider"]=json!(route);}
         }}
     }
+    // Leave room for the pipe envelope; the receiver refuses lines >= 2 MiB.
+    if serde_json::to_vec(&json!({"providers":providers,"keys":keys,"selection":selection})).map_err(|_|"提供方配置无法编码")?.len()>2*1024*1024-1024{return Err("提供方配置超过监督管道容量，请减少模型目录后重试".into());}
     Ok(Configuration{patch,providers:json!(providers),selection,keys:json!(keys)})
 }
 #[cfg(test)]mod tests{use super::*;

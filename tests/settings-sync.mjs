@@ -4,7 +4,7 @@ import {resolve,join} from 'node:path';
 import {createRequire} from 'node:module';
 import {diagnosticState} from '../runtime-src/diagnostic-state.mjs';
 import {synchronizeDesktopSettings} from '../runtime-src/settings-sync.mjs';
-const runtimeRoot=resolve('runtime');
+const runtimeRoot=resolve(process.env.LEGACY_TEST_RUNTIME??'runtime');
 const require=createRequire(join(runtimeRoot,'dsh/package.json'));
 const {parse,stringify}=require('yaml');
 mkdirSync('.build',{recursive:true});

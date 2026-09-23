@@ -8,7 +8,7 @@ import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {migrateWorkspaceHistory} from '../runtime-src/workspace-migration.mjs';
 import {prepareSourceProfile} from '../runtime-src/source-profile.mjs';
-const oldRuntime=resolve('runtime'),runtimeRoot=resolve(process.env.SOURCE_TEST_RUNTIME??'.build/source-qualification-s2/resources');
+const oldRuntime=resolve(process.env.LEGACY_TEST_RUNTIME??'runtime'),runtimeRoot=resolve(process.env.SOURCE_TEST_RUNTIME??'.build/source-qualification-s2/resources');
 const loadFrom=root=>{const require=createRequire(join(root,'dsh/package.json'));return id=>import(pathToFileURL(require.resolve(id)).href);};
 const old=loadFrom(oldRuntime),next=loadFrom(runtimeRoot);
 const protection={protect:async bytes=>Buffer.from(bytes),unprotect:async bytes=>Buffer.from(bytes)};

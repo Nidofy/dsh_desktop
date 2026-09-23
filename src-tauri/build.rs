@@ -19,6 +19,7 @@ fn main() {
             "save_connection_profile",
             "delete_connection_profile",
             "activate_connection_profile",
+            "connection_apply_mode",
             "appearance",
             "task_snapshots",
             "save_connection",
