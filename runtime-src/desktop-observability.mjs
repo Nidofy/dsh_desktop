@@ -1,4 +1,6 @@
 import {Capture, observeStream} from './diagnostic-capture.mjs';
+import {readHarnessSetting} from './harness-settings.mjs';
+import {sourceCredential} from './source-provider-control.mjs';
 import {diagnosticState, saveDiagnosticPreferences} from './diagnostic-state.mjs';
 import {diagnosticHtml, diagnosticScript} from './diagnostic-page.mjs';
 import {readFile} from 'node:fs/promises';
@@ -104,6 +106,13 @@ export function apply(ctx, config = {}) {
     if(options.sessionId?.startsWith(probeSessionPrefix)||options.sessionId?.startsWith(selfTestSessionPrefix))return next();
     if (!diagnosticState.preferences.enabled) return next();
     // Attach only numeric event positions and explicit durable boundary facts.
+    const configuration={...capture.configuration};
+    try{if(diagnosticState.engineVersion==='0.1.7-alpha.2'){
+      const provider=readHarnessSetting(ctx,'llm-pi-ai')?.providers?.[options.provider];
+      configuration.connectionId=capture.id(JSON.stringify(provider??null));
+      configuration.credentialId=capture.id(sourceCredential(provider?.apiKeyEnv)?.value??process.env[provider?.apiKeyEnv]??'');
+      configuration.api=provider?.api??'unknown';
+    }}catch{capture.failures++;}
     return observeStream(capture,options,next,record=>{
             const boundary=boundaries.get(record.session);
             if(record&&boundary&&record.purpose==='conversation') {
@@ -111,7 +120,7 @@ export function apply(ctx, config = {}) {
               if(boundary.retry){record.comparison.facts.push('RETRY');delete boundary.retry;}
               if(boundary.compaction){record.comparison.facts.push('COMPACTION');record.continuity.reasons.push('COMPACTION');delete boundary.compaction;}
             }
-    });
+    },configuration);
   });
   const snapshot = session => {
     const result = capture.snapshot();

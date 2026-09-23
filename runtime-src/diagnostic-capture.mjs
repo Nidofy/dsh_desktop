@@ -84,7 +84,7 @@ export class Capture {
     this.sequence=0;this.continuity=new Map();
   }
   id(value) { return createHmac('sha256',this.key).update(Buffer.isBuffer(value)?value:String(value)).digest('hex').slice(0,24); }
-  begin(options) {
+  begin(options,configuration=this.configuration) {
     if(this.active.size>=64) {this.dropped++;return null;}
     const session=options.sessionId ? this.id(options.sessionId) : null;
     const purpose=['compaction','session-title'].includes(options.purpose) ? options.purpose : options.sessionId ? 'conversation' : 'unknown';
@@ -92,7 +92,7 @@ export class Capture {
       provider:String(options.provider ?? '').slice(0,256),model:String(options.model ?? '').slice(0,256),
       effort:['off','minimal','low','medium','high','xhigh','max'].includes(options.reasoningEffort) ? options.reasoningEffort : 'unspecified-or-custom',
       messageCount:options.messages?.length ?? 0,toolCount:options.tools?.length ?? 0,
-      fingerprint:fingerprintRequest(options,this.key,this.configuration),status:'running',usage:usageMetadata(null),
+      fingerprint:fingerprintRequest(options,this.key,configuration),status:'running',usage:usageMetadata(null),
       firstOutputMs:null,firstTextMs:null,toolCallCount:0};
     const previous=session ? this.records.findLast(r=>r.session===session&&r.purpose===purpose) : undefined;
     record.comparison=classify(previous,record);
@@ -126,11 +126,12 @@ export class Capture {
     retainedBytes:this.bytes,dropped:this.dropped,observerFailures:this.failures,
     records:[...this.records,...this.active.values()]};}
 }
-export function observeStream(capture, options, next, onBegin = () => {}) {
+export function observeStream(capture, options, next, onBegin = () => {}, configuration=capture.configuration) {
+  const configurationSnapshot=structuredClone(configuration);
   return (async function* () {
     let record;const started=performance.now();
     const safely=fn=>{try{fn();}catch{capture.failures++;}};
-    safely(()=>{record=capture.begin(options);if(record)onBegin(record);});
+    safely(()=>{record=capture.begin(options,configurationSnapshot);if(record)onBegin(record);});
     try {
       for await (const chunk of await next()) {
         if(record) safely(()=>{

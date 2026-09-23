@@ -8,6 +8,7 @@ import {cacheHtml,cacheScript} from './cache-page.mjs';
 import {diagnosticState} from './diagnostic-state.mjs';
 import {CACHE_KEY_BRIDGE_VERSION} from './desktop-cache-key.mjs';
 import {readHarnessSetting} from './harness-settings.mjs';
+import {sourceCredential,sourceProviderPolicies} from './source-provider-control.mjs';
 
 const ID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const FEATURES=['automaticCaching','promptCacheKey','cacheControl','longRetention'];
@@ -32,15 +33,16 @@ export function installCacheCenter(ctx,home,key){
   const directory=join(home,'desktop-cache-probes'),declarationPath=join(home,'desktop-cache-capabilities.json');
   let declarations={},declarationWarning=null,writing=Promise.resolve();
   const ready=(async()=>{try{const value=await readJson(declarationPath);if(value.version!==1||!value.models||Array.isArray(value.models)||Object.keys(value.models).length>100)throw Error();declarations=value.models;}catch(error){if(error.code!=='ENOENT')declarationWarning='能力声明文件无法读取；当前显示未知，重新保存可修复。';}})();
-  const profile=()=>readHarnessSetting(ctx,'llm-pi-ai')?.providers?.[diagnosticState.managedProvider??'desktop-internal'];
+  const profile=()=>{const route=diagnosticState.managedProvider??'desktop-internal',current=readHarnessSetting(ctx,'llm-pi-ai')?.providers?.[route],policy=sourceProviderPolicies()?.[route]?.desktopCacheKey;return current&&policy?{...current,desktopCacheKey:policy}:current;};
   const fingerprint=()=>{
     const current=profile();
     // Include credential rotation and routing without exposing these values.
     const environment=Object.fromEntries(['HTTP_PROXY','HTTPS_PROXY','ALL_PROXY','NO_PROXY','NODE_EXTRA_CA_CERTS'].map(k=>[k,process.env[k]??null]));
-    const authTag=createHmac('sha256',key).update(process.env[current?.apiKeyEnv]??'').digest('hex');
+    const authTag=createHmac('sha256',key).update(sourceCredential(current?.apiKeyEnv)?.value??process.env[current?.apiKeyEnv]??'').digest('hex');
     return createHmac('sha256',key).update(JSON.stringify({home,profile:current??null,environment,authTag,cacheKeyBridgeVersion:CACHE_KEY_BRIDGE_VERSION})).digest('hex');
   };
-  const models=async()=>ctx.llm.listProviders&&!ctx.llm.listProviders().some(p=>p.id==='desktop-internal')?[]:await ctx.llm.listModels('desktop-internal');
+  const route=()=>diagnosticState.managedProvider??'desktop-internal';
+  const models=async()=>ctx.llm.listProviders&&!ctx.llm.listProviders().some(p=>p.id===route())?[]:await ctx.llm.listModels(route());
   async function persist(report){
     const encoded=JSON.stringify(report);if(Buffer.byteLength(encoded)>65536)throw Error('Report size limit');
     await mkdir(directory,{recursive:true});await writeAtomic(join(directory,report.id+'.json'),encoded);
@@ -52,7 +54,7 @@ export function installCacheCenter(ctx,home,key){
     const before=fingerprint(),calls=[];
     if(options.fingerprint!==before)throw new ProbePreparationError('CONFIGURATION_CHANGED');
     for(let i=0;i<options.requests;i++){
-      const call=await ctx.llm.prepareCall({provider:'desktop-internal',model:options.model,maxTokens:64},signal);
+      const call=await ctx.llm.prepareCall({provider:route(),model:options.model,maxTokens:64},signal);
       if(call.retryPolicy.maxRetries!==0)throw new ProbePreparationError('RETRIES_ENABLED');
       if(call.context?.contextWindow && options.inputBytes+320>call.context.contextWindow)throw new ProbePreparationError('CONTEXT_BUDGET');
       calls.push(call);

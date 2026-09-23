@@ -8,6 +8,7 @@ mod engine;
 mod engine_control;
 mod environments;
 mod settings_owner;
+mod source_providers;
 mod engine_http;
 mod engine_snapshots;
 mod logging;
@@ -175,6 +176,14 @@ async fn delete_connection_profile(state: tauri::State<'_, Engine>, id: String, 
     }).await.map_err(|_| "删除操作中断，请重新载入连接列表".to_string())?
 }
 #[tauri::command]
+fn connection_apply_mode(state:tauri::State<Engine>,id:String,revision:u64)->Result<String,String>{
+    let catalog=profiles::load(&state.root)?;if catalog.revision!=revision{return Err("连接配置已变化，请重新载入。".into());}
+    let selected=catalog.profiles.iter().find(|p|p.id==id).ok_or("连接不存在")?;
+    let current=state.state.lock().map_err(|_|"引擎状态不可用")?;
+    let previous=current.active_profile_definition.clone().and_then(|value|serde_json::from_value(value).ok());
+    Ok(if source_providers::can_hot_apply(&current.dsh_version,current.backend_health=="ready",previous.as_ref(),selected){"next-request"}else{"reload"}.into())
+}
+#[tauri::command]
 async fn activate_connection_profile(
     state: tauri::State<'_, Engine>,
     id: String,
@@ -197,10 +206,11 @@ async fn activate_connection_profile(
                 catalog.profiles.iter().find(|profile|profile.id==id).and_then(|profile|serde_json::to_value(profile).ok())==running.active_profile_definition
         };
         if already_applied { return Ok(()); }
-        engine_control::authorize(&engine,ticket.as_deref())?;
         let profile=catalog.profiles.iter().find(|p|p.id==id).ok_or("连接已不存在，请重新载入。")?.clone();
         let (runtime,previous)={let state=engine.state.lock().map_err(|_|"Engine state unavailable")?;
             (PathBuf::from(&state.runtime_path),state.active_profile_definition.clone().and_then(|value|serde_json::from_value(value).ok()))};
+        let hot={let running=engine.state.lock().map_err(|_|"Engine state unavailable")?;source_providers::can_hot_apply(&running.dsh_version,running.backend_health=="ready",previous.as_ref(),&profile)};
+        if !hot {engine_control::authorize(&engine,ticket.as_deref())?;}
         config::preflight_runtime(&profile.connection,&runtime)?;
         profiles::validate_network(&profile.network)?;
         if profiles::key(&engine.root,&profile)?.is_empty(){return Err("此连接缺少凭据，请先保存 API Key。".into());}
@@ -368,6 +378,7 @@ fn main() {
             save_connection_profile,
             delete_connection_profile,
             activate_connection_profile,
+            connection_apply_mode,
             appearance,
             task_snapshots,
             save_connection,

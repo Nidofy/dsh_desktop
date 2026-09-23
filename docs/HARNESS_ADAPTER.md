@@ -4,6 +4,8 @@
 
 ## 最小版本化入口
 
+本文下表保留 T1 核查时的耦合清单；当前实施结果见 [0.2.5 实施记录](IMPLEMENTATION-0.2.5.md)。截至 S5a，固定 hook 已提交 dad014b7，隔离 Rust/source profile 已接通并完成原生启动、重启、退出开发验收，生产准入仍关闭。新增公开服务耦合为 LocalCredentialProvider 的 resolve/describe/set/unset 扩展、SettingsForms.replace 和自有 profile 的 package.json 原生写入锁。主 Key 经监督管道进入内存，其他凭据继续委托原生服务。没有更改官方会话 writer、Agent Loop 或增加新的 fork hook。
+
 `runtime-src/harness-adapter.mjs` 的 `harnessAdapterVersion=1` 记录两个已核查的引擎布局：
 
 | adapter | 引擎 | Node | Session writer | 配置 | 桌面运行准入 |

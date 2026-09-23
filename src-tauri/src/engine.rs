@@ -339,7 +339,8 @@ fn run(
     let catalog = profiles::load(&engine.root)?;
     let profile = applying.as_ref().map(|a|&a.profile).or(fallback.as_ref()).unwrap_or(profiles::active(&catalog)?).clone();
     let c = &profile.connection;
-    config::write_overlay(&engine.root, &c, runtime)?;
+    let source_configuration=if engine_version=="0.1.7-alpha.2" {Some(crate::source_providers::build(&engine.root,runtime,&catalog,&profile)?)}else{None};
+    if let Some(source)=&source_configuration {fs::write(engine.root.join("desktop.patch.json"),serde_json::to_vec_pretty(&source.patch).unwrap()).map_err(|_|"源码提供方配置写入失败")?;}else{config::write_overlay(&engine.root, &c, runtime)?;}
     let key = profiles::key(&engine.root, &profile)?;
     if !c.base_url.is_empty() && key.is_empty() {
         return Err("当前连接缺少凭据，请在设置中保存 API Key。".into());
@@ -477,7 +478,7 @@ fn run(
     let diagnostic_key = config::diagnostic_key(false).ok();
     let start_message = format!(
         "start {}\n",
-        serde_json::json!({"diagnosticKey": diagnostic_key, "storageQuota":true, "snapshotBridge": {"token": snapshot_bridge.token, "engineId": snapshot_bridge.engine_id}})
+        serde_json::json!({"diagnosticKey": diagnostic_key, "providerKeys":source_configuration.as_ref().map(|s|&s.keys), "storageQuota":true, "snapshotBridge": {"token": snapshot_bridge.token, "engineId": snapshot_bridge.engine_id}})
     );
     process
         .child
@@ -493,7 +494,7 @@ fn run(
         Some(pid),
         None,
     );
-    let mut http = crate::engine_http::Worker::new(engine_version);
+    let mut http = crate::engine_http::Worker::new(engine_version.clone());
     let mut url = None;
     let mut ready = false;
     let mut last_check = Instant::now() - Duration::from_secs(5);
@@ -503,7 +504,24 @@ fn run(
     let mut notification_sink = None;
     let mut misses = 0;
     let mut query:Option<(String,Instant,Sender<serde_json::Value>)>=None;
+    let mut live_profile=profile.clone();
+    let mut hot_apply:Option<(String,Instant,Apply)>=None;
     loop {
+        if let Some((id,at,request))=hot_apply.take(){
+            if let Ok(value)=control_rx.try_recv(){
+                let epoch=engine.state.lock().map_err(|_|"引擎状态不可用")?.engine_epoch.clone();
+                if value["id"]==id&&value["epoch"]==epoch {
+                    if value["ok"]==true {
+                        if let Err(error)=profiles::activate(&engine.root,&request.profile.id,request.revision){let _=request.reply.send(Err(error));return Err("提供方已更新但默认连接保存失败，请重启以恢复已保存的选择。".into());}
+                        live_profile=request.profile.clone();
+                        let mut state=engine.state.lock().map_err(|_|"引擎状态不可用")?;
+                        state.active_profile_id=live_profile.id.clone();state.active_profile_name=live_profile.connection.provider_name.clone();state.active_credential_ref=live_profile.credential_ref.clone();state.active_profile_definition=serde_json::to_value(&live_profile).ok();
+                        let _=request.reply.send(Ok(()));
+                    }else {let _=request.reply.send(Err("提供方更新失败，已请求恢复旧配置；请检查运行状态。".into()));if value["code"]=="SOURCE_PROVIDER_RECOVERY_REQUIRED"{return Err("提供方配置回退未完成，请重启引擎恢复保存的连接。".into());}}
+                }else{hot_apply=Some((id,at,request));}
+            }else if at.elapsed()>Duration::from_secs(20){let _=request.reply.send(Err("提供方应用结果未确认，请等待引擎恢复后重试。".into()));return Err("提供方应用响应超时，请重启以恢复保存的连接。".into());}
+            else{hot_apply=Some((id,at,request));}
+        }
         if let Some((id,at,reply))=query.take(){
             if let Ok(value)=control_rx.try_recv(){if value["id"]==id {let _=reply.send(value);}else{query=Some((id,at,reply));}}
             else if at.elapsed()>Duration::from_secs(3){let _=reply.send(serde_json::json!({"known":false}));}
@@ -511,12 +529,28 @@ fn run(
         }
         if let Ok(control) = rx.try_recv() {
             if let Control::Inspect{id,action,reply}=control {
-                if !ready||query.is_some(){let _=reply.send(serde_json::json!({"known":false}));}
+                if !ready||query.is_some()||hot_apply.is_some(){let _=reply.send(serde_json::json!({"known":false}));}
                 else{let line=format!("desktop-control {}\n",serde_json::json!({"id":id,"action":action}));
                     if process.child.stdin.as_mut().is_some_and(|input|input.write_all(line.as_bytes()).is_ok()){query=Some((id,Instant::now(),reply));}
                     else{let _=reply.send(serde_json::json!({"known":false}));}}
                 continue;
             }
+            if let Control::Apply(request)=control {
+                if crate::source_providers::can_hot_apply(&engine_version,ready,Some(&live_profile),&request.profile){
+                    if hot_apply.is_some()||query.is_some(){let _=request.reply.send(Err("其他连接操作尚未完成，请稍后重试。".into()));continue;}
+                    let prepared=(||->Result<(String,String),String>{
+                        let catalog=profiles::load(&engine.root)?;if catalog.revision!=request.revision{return Err("连接配置已变化，请重新载入。".into());}
+                        let source=crate::source_providers::build(&engine.root,runtime,&catalog,&request.profile)?;
+                        let id=profiles::new_id()?[2..].to_owned();let epoch=engine.state.lock().map_err(|_|"引擎状态不可用")?.engine_epoch.clone();
+                        Ok((id.clone(),format!("source-providers {}\n",serde_json::json!({"id":id,"epoch":epoch,"revision":catalog.revision,"providers":source.providers,"selection":source.selection,"keys":source.keys}))))
+                    })();
+                    match prepared {Ok((id,line))=>{if process.child.stdin.as_mut().is_some_and(|input|input.write_all(line.as_bytes()).is_ok()){hot_apply=Some((id,Instant::now(),request));}else{let _=request.reply.send(Err("提供方控制通道不可用".into()));}},Err(error)=>{let _=request.reply.send(Err(error));}}
+                    continue;
+                }
+                if let Some((_,_,pending))=hot_apply.take(){let _=pending.reply.send(Err("提供方应用被重载中断".into()));}
+                engine.update("restarting","正在停止旧引擎并应用网络设置…",Some(pid),None);process.stop();return Ok(Control::Apply(request));
+            }
+            if let Some((_,_,pending))=hot_apply.take(){let _=pending.reply.send(Err("提供方应用被引擎控制中断".into()));}
             if let Some(request)=applying.take(){let _=request.reply.send(Err("连接应用被控制请求中断，默认连接保持不变。".into()));}
             engine.update("restarting", "正在停止旧引擎并应用设置…", Some(pid), None);
             if let Some(w) = app.get_webview_window("main") {

@@ -16,6 +16,7 @@ import {desktopControl} from './desktop-control.mjs';
 import {requireDesktopAdapter} from './harness-adapter.mjs';
 import {prepareSourceProfile} from './source-profile.mjs';
 import {diagnosticState} from './diagnostic-state.mjs';
+import {receiveSourceKeys,sourceProviderControl} from './source-provider-control.mjs';
 installStartupErrors();
 const input = createInterface({ input: process.stdin });
 // --import preload gates the real CLI entry; import.meta.main remains true in DSH.
@@ -23,7 +24,7 @@ await new Promise(resolve => input.on('line', line => {
   if (line === 'start') resolve();
   if (line.startsWith('start ')) {
     // Credential bytes travel only through the inherited private supervisor pipe.
-    try {const value=JSON.parse(line.slice(6));receiveDiagnosticKey(value.diagnosticKey);snapshotPipe.configure(value.snapshotBridge);storageAdmission.configure(value.storageQuota===true,process.env.DSH_HOME);} catch {}
+    try {const value=JSON.parse(line.slice(6));receiveDiagnosticKey(value.diagnosticKey);snapshotPipe.configure(value.snapshotBridge);storageAdmission.configure(value.storageQuota===true,process.env.DSH_HOME);if(value.providerKeys)receiveSourceKeys(value.providerKeys);} catch {}
     resolve();
   }
   if (line === 'stop') {
@@ -34,6 +35,7 @@ await new Promise(resolve => input.on('line', line => {
   }
   if (line.startsWith('snapshot ')) snapshotPipe.receive(line);
   if (line.startsWith('desktop-control ') && line.length<256) void desktopControl(line.slice(16));
+  if (line.startsWith('source-providers ')&&line.length<2*1024*1024) {try{void sourceProviderControl(JSON.parse(line.slice(17)));}catch{}}
 }));
 let adapter;
 try { adapter=await requireDesktopAdapter(dirname(fileURLToPath(import.meta.url)),{

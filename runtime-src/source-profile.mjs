@@ -32,13 +32,14 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
   const providers=patch.find(row=>row.id==='llm-pi-ai')?.config?.providers;
   const route=selection?.provider,provider=providers?.[route];
   if(provider&&(!Array.isArray(provider.models)||!provider.models.some(m=>m.id===selection.model)))throw fail('SOURCE_PROVIDER_INVALID');
-  const cleanProvider=provider?structuredClone(provider):undefined;
-  if(cleanProvider)delete cleanProvider.desktopCacheKey;
+  const cleanProviders=structuredClone(providers??{});
+  for(const item of Object.values(cleanProviders))delete item.desktopCacheKey;
   const experimentModes={spillMode:diagnosticState.preferences.spillMode,skillMode:diagnosticState.preferences.skillMode};
   const fingerprint=hash({patch,experimentModes});
   diagnosticState.effectiveSpillBytes=experimentModes.spillMode==='compact'?24000:50000;
   diagnosticState.effectiveSkillDescription=experimentModes.skillMode==='compact'?250:500;
   diagnosticState.managedProvider=route;
+  diagnosticState.managedModels=provider?{provider:route,models:provider.models.map(model=>model.id),defaultModel:selection.model}:undefined;
   diagnosticState.providerConfiguration=provider?JSON.stringify(provider):undefined;
   diagnosticState.overlayHash=hash(patch);
   const lockTarget=join(dir,'package.json');
@@ -56,22 +57,30 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
     const previous=marker?JSON.parse(marker):{};
     const doc=parseDocument(original??'[]');
     if(doc.errors.length||!isSeq(doc.contents))throw fail('SOURCE_PROFILE_SETTINGS_INVALID');
-    diagnosticState.retiredManagedProviders=previous.route&&previous.route!==route?[previous.route]:[];
+    const oldRoutes=Object.keys(previous.owned?.find(row=>row.id==='llm-pi-ai')?.config?.providers??{});
+    diagnosticState.retiredManagedProviders=[...new Set([...(previous.retiredProviders??[]),...oldRoutes,...(previous.route?[previous.route]:[])])].filter(id=>id!==route&&!Object.hasOwn(providers??{},id));
     if(previous.fingerprint===fingerprint){
       for(const key of ['effectiveSpillBytes','effectiveSkillDescription'])if(Number.isFinite(previous.effective?.[key]))diagnosticState[key]=previous.effective[key];
       return;
     }
     // This marker owns only dedicated entries appended by this writer. Refuse
     // competing edits to them instead of deleting unrelated user patches.
+    let nativeProviders={};
     if(previous.owned) {
       for(const entry of previous.owned) {
-        const index=doc.contents.items.findIndex(node=>isMap(node)&&JSON.stringify(node.toJSON())===JSON.stringify(entry));
+        let index=doc.contents.items.findIndex(node=>isMap(node)&&JSON.stringify(node.toJSON())===JSON.stringify(entry));
+        if(index<0&&/^desktop-(legacy|p-[a-f0-9]{32})$/.test(previous.route??'')&&['llm-pi-ai','agent-default-model'].includes(entry.id)){
+          index=doc.contents.items.findLastIndex(node=>isMap(node)&&node.toJSON().id===entry.id);
+          if(index>=0&&entry.id==='llm-pi-ai')nativeProviders=Object.fromEntries(Object.entries(doc.contents.items[index].toJSON().config?.providers??{}).filter(([id])=>!/^desktop-(legacy|p-[a-f0-9]{32})$/.test(id)));
+        }
         if(index<0)throw fail('SETTINGS_TRANSACTION_CONFLICT');
         doc.contents.items.splice(index,1);
       }
     }
-    const inheritedProviders=doc.contents.items.map(node=>node.toJSON()).filter(row=>row.id==='llm-pi-ai').at(-1)?.config?.providers??{};
-    const owned=structuredClone(patch).map(row=>row.id==='llm-pi-ai'?{...row,config:{...row.config,providers:{...inheritedProviders,[route]:cleanProvider}}}:row);
+    const inheritedProviders={...(doc.contents.items.map(node=>node.toJSON()).filter(row=>row.id==='llm-pi-ai').at(-1)?.config?.providers??{}),...nativeProviders};
+    const owned=structuredClone(patch).map(row=>row.id==='llm-pi-ai'?{...row,config:{...row.config,providers:{...inheritedProviders,...cleanProviders}}}:row);
+    owned.push({id:'credentials',disabled:true});
+    owned.push({insert:[{id:'desktop-source-credentials',name:new URL('./source-credentials.mjs',import.meta.url).href}]});
     for(const [modeKey,id,field,native,compact,stateKey] of [
       ['spillMode','spill-policy','maxInlineBytes',50000,24000,'effectiveSpillBytes'],
       ['skillMode','tool-skill','catalogDescriptionMaxLength',500,250,'effectiveSkillDescription']]){
@@ -88,7 +97,7 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
     owned.push({insert:[{id:'desktop-source-cache',name:new URL('./source-cache.mjs',import.meta.url).href,config:{providers:{...cacheProviders,...providers}}}]});
     for(const entry of owned)doc.contents.add(doc.createNode(entry));
     const effective={effectiveSpillBytes:diagnosticState.effectiveSpillBytes,effectiveSkillDescription:diagnosticState.effectiveSkillDescription};
-    await transaction.commit({'cordis.patch.yml':String(doc),'desktop-settings-revision.json':JSON.stringify({schemaVersion:1,fingerprint,route,owned,effective}),
+    await transaction.commit({'cordis.patch.yml':String(doc),'desktop-settings-revision.json':JSON.stringify({schemaVersion:1,fingerprint,route,owned,effective,retiredProviders:diagnosticState.retiredManagedProviders}),
       'desktop-experiment-baseline.json':JSON.stringify(baseline)},
       {'cordis.patch.yml':original,'desktop-settings-revision.json':marker,'desktop-experiment-baseline.json':baselineText});
   });

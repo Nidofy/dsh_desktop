@@ -441,6 +441,10 @@ pub fn save(root: &Path, c: &Connection, key: &str) -> Result<(), String> {
     Ok(())
 }
 pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), String> {
+    let overlay=overlay(c,runtime)?;
+    fs::write(root.join("desktop.patch.json"),serde_json::to_vec_pretty(&overlay).unwrap()).map_err(|_| "Cannot save native DSH overlay".into())
+}
+pub fn overlay(c: &Connection, runtime: &Path) -> Result<Vec<serde_json::Value>, String> {
     // JSON is YAML-compatible; no string interpolation into executable YAML tags.
     let presets: Vec<serde_json::Value> = serde_json::from_str(include_str!("../generated/provider-catalog.json"))
         .map_err(|_| "内置提供方目录无效")?;
@@ -488,11 +492,7 @@ pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), 
     let vision = url::Url::from_file_path(runtime.join("desktop-vision.mjs"))
         .map_err(|_| "Invalid vision plugin path")?;
     overlay.push(serde_json::json!({"insert":[{"id":"desktop-vision","name":vision.as_str()}]}));
-    fs::write(
-        root.join("desktop.patch.json"),
-        serde_json::to_vec_pretty(&overlay).unwrap(),
-    )
-    .map_err(|_| "Cannot save native DSH overlay".into())
+    Ok(overlay)
 }
 /// Check the optional pinned bridge before retiring the working backend. Native
 /// policy deliberately does not depend on this adapter's source fingerprint.
@@ -500,6 +500,8 @@ pub fn preflight_runtime(c: &Connection, runtime: &Path) -> Result<(), String> {
     use sha2::{Digest,Sha256};
     validate(c)?;
     if c.cache.key_mode == CacheKeyMode::Native || c.api != ApiFormat::OpenAi { return Ok(()); }
+    let package:serde_json::Value=fs::read(runtime.join("dsh/node_modules/@deepseek-ai/dsh/package.json")).ok().and_then(|bytes|serde_json::from_slice(&bytes).ok()).unwrap_or_default();
+    if package["name"]=="@deepseek-ai/dsh"&&package["version"]=="0.1.7-alpha.2" {return crate::source_providers::verify_payload_hook(runtime);}
     let file=runtime.join("dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js");
     if fs::metadata(&file).map_err(|_|"缓存适配器缺失，当前连接保持不变。")?.len()>2*1024*1024 {
         return Err("缓存适配器不匹配，当前连接保持不变。".into());

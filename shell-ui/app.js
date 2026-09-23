@@ -235,11 +235,12 @@ $('activate-profile').onclick = async () => {
   profileBusy = true; profileControls(); $('connection-fields').disabled = true;
     $('message').textContent = '正在检查并应用连接，核心服务就绪后生效…';
   try {
-    const ticket=await window.confirmEngineChange('应用所选连接');
+      const mode=await invoke('connection_apply_mode',{id:selectedProfile,revision:catalog.revision});
+      const ticket=mode==='next-request'?null:await window.confirmEngineChange('应用所选连接（代理或企业 CA 变化需要重载）');
     await invoke('activate_connection_profile', {id:selectedProfile,revision:catalog.revision,ticket});
     renderCatalog(await invoke('connection_profiles'), selectedProfile);
     await refresh();
-    $('message').textContent = '连接已就绪，工作区与会话已保留。';
+      $('message').textContent = mode==='next-request'?'提供方已更新，下一次模型请求生效；正在执行的请求保持原配置。':'连接已就绪，工作区与会话已保留。';
     } catch(e) { $('message').textContent = String(e); }
   finally { profileBusy = false; $('connection-fields').disabled = false; profileControls(); }
 };

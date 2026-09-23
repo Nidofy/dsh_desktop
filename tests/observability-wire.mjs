@@ -9,6 +9,7 @@ import {zstdDecompressSync} from 'node:zlib';
 import {createRequire} from 'node:module';
 import {runSelfTestWire} from './self-test-wire.mjs';
 import {runCacheKeyWire} from './cache-key-wire.mjs';
+import {prepareHotFixture,runSourceProviderWire} from './source-provider-wire.mjs';
 const resources=resolve(process.argv[2]??'runtime');
 const engineVersion=JSON.parse(readFileSync(join(resources,'dsh/node_modules/@deepseek-ai/dsh/package.json'),'utf8')).version;
 const sourceEngine=engineVersion==='0.1.7-alpha.2';
@@ -31,6 +32,7 @@ for(const protocol of ['openai','anthropic']) {
  const dataRoot=sourceEngine?join(root,'data',environmentId):home;
  if(sourceEngine)mkdirSync(dataRoot,{recursive:true});
  const requests=[],failures=[];let mode='normal',pending=false;
+ let hotRelease,hotHeld=false,providerKeys;
  let visionCalls=0;
  const server=http.createServer(async(req,res)=>{
   try {
@@ -46,7 +48,10 @@ for(const protocol of ['openai','anthropic']) {
    const isProbe=JSON.stringify(body.messages).includes('Synthetic cache measurement.');
    const toolResults=protocol==='openai'?body.messages.filter(m=>m.role==='tool').map(m=>m.content):body.messages.flatMap(m=>Array.isArray(m.content)?m.content.filter(c=>c.type==='tool_result').map(c=>c.content):[]);
    requests.push({body,raw,method:req.method,path:req.url,isTitle,toolResults});
-   assert.equal(protocol==='openai'?req.headers.authorization:req.headers['x-api-key'],protocol==='openai'?'Bearer desktop-test-key':'desktop-test-key');
+   const hotRevision=process.argv.includes('--provider-hot-only')?/\/r(\d+)(?:\/|$)/.exec(req.url)?.[1]:null;
+   const expectedKey=hotRevision?'hot-key-'+hotRevision:'desktop-test-key';
+   assert.equal(protocol==='openai'?req.headers.authorization:req.headers['x-api-key'],protocol==='openai'?'Bearer '+expectedKey:expectedKey);
+   if(!isTitle&&mode==='hot-hold'){hotHeld=true;await new Promise(resolve=>{hotRelease=resolve;});}
    if(!isTitle&&mode==='error'){res.writeHead(400,{'content-type':'application/json'}).end(JSON.stringify({error:{type:'invalid_request_error',message:'PRIVATE_PROVIDER_ERROR'}}));return;}
    if(!isTitle&&mode==='cancel'){pending=true;res.writeHead(200,{'content-type':'text/event-stream'});res.write(': waiting\n\n');return;}
    const tool=!isTitle&&!isProbe&&!toolResults.length;
@@ -76,9 +81,11 @@ for(const protocol of ['openai','anthropic']) {
   if(plugin.id==='desktop-vision')plugin.name=pathToFileURL(join(resources,'desktop-vision.mjs')).href;
  }
  patch[1].config.providers['desktop-internal'].baseURL=`http://127.0.0.1:${server.address().port}${protocol==='openai'?'/v1':''}`;
+ if(process.argv.includes('--provider-hot-only')){assert(sourceEngine);providerKeys=prepareHotFixture(patch);}
  const overlay=join(home,'patch.json');writeFileSync(overlay,JSON.stringify(patch));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_DESKTOP_PATCH:overlay,DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'desktop-test-key',PI_CACHE_RETENTION:'long',NODE_NO_WARNINGS:'1',NODE_OPTIONS:'',NODE_PATH:''};
  if(sourceEngine)Object.assign(env,{DSH_DESKTOP_ROOT:dataRoot,DSH_HOME:join(dataRoot,'dsh'),DSH_DESKTOP_ENVIRONMENT:environmentId});
+ if(process.argv.includes('--provider-hot-only'))env.DSH_DESKTOP_SETTINGS_OWNER='p-'+crypto.randomUUID().replaceAll('-','');
  if(process.argv.includes('--self-test-vcs'))env.PATH=resolve('.build/hg-test-venv/Scripts')+';'+(process.env.PATH??process.env.Path??'');
  if(process.argv.includes('--feedback-ui')){
   env.PATH=process.env.PATH??process.env.Path??'';
@@ -93,7 +100,7 @@ for(const protocol of ['openai','anthropic']) {
   let launch;output='';
   child=spawn(join(resources,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(resources,'host.mjs')).href,join(resources,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',overlay,'--host','127.0.0.1','--port','0','--no-open'],{cwd:home,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
   for(const stream of [child.stdout,child.stderr])stream.on('data',c=>{output+=c;launch??=/dsh web: (http:\/\/127\.0\.0\.1:\d+\/[^\s]*)/.exec(output)?.[1];});
-  child.stdin.write('start '+JSON.stringify({diagnosticKey:'07'.repeat(32)})+'\n');
+  child.stdin.write('start '+JSON.stringify({diagnosticKey:'07'.repeat(32),providerKeys})+'\n');
   const deadline=Date.now()+90000;while(!launch&&child.exitCode===null&&Date.now()<deadline)await pause();
   assert(launch,'DSH startup: '+output.slice(-3000));launchUrl=launch;const response=await fetch(launch,{redirect:'manual'});cookie=response.headers.get('set-cookie').split(';')[0];origin=new URL(launch).origin;
  }
@@ -115,6 +122,11 @@ for(const protocol of ['openai','anthropic']) {
   assert.equal((await fetch(origin+'/desktop-diagnostics/api/health')).status,401,'health uses native authentication');
   assert.equal((await fetch(origin+'/desktop-diagnostics/api/health',{headers:{cookie,origin:'https://example.com'}})).status,403);
   if(process.argv.includes('--health-only')){assert.equal(requests.length,0,'health never calls models');results.push({protocol,health:'PASS'});continue;}
+  if(process.argv.includes('--provider-hot-only')){
+    async function hotControl(value){const id=crypto.randomUUID().replaceAll('-','');child.stdin.write('source-providers '+JSON.stringify({...value,id,epoch:env.DSH_DESKTOP_SETTINGS_OWNER})+'\n');const end=Date.now()+15000;while(Date.now()<end){const result=output.split('\n').filter(l=>l.startsWith('dsh control: ')).map(l=>JSON.parse(l.slice(13))).find(v=>v.id===id);if(result)return result;await pause();}throw Error('Provider control timed out: '+output.slice(-1500));}
+    results.push(await runSourceProviderWire({protocol,patch,overlay,requests,rpc,api,prompt,home,dataHome:env.DSH_HOME,control:hotControl,start,stop,setMode:value=>{mode=value;},held:()=>hotHeld,release:()=>hotRelease(),setStartKeys:value=>{providerKeys=value;},pid:()=>child.pid}));
+    assert.deepEqual(failures,[]);assert(!output.includes('OFFLINE_TEST_DENIED'));console.log('PASS '+protocol+': same-name providers, in-flight snapshot, hot credentials/endpoint, empty/stale/invalid refusal, restart');continue;
+  }
   if(process.argv.includes('--vision-only')){
     async function settingsRpc(method,args){const response=await fetch(origin+'/api/'+method,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args}})});const value=await response.json();assert(value.result?.ok,JSON.stringify(value));return value.result.value;}
     const description=await settingsRpc('settings/describe',{}),vision=description.namespaces.find(n=>n.ns==='desktop-vision');assert(vision);
