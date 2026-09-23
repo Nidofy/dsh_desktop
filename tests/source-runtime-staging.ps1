@@ -38,3 +38,27 @@ if (!$failed -or !(Test-Path -LiteralPath (Join-Path $f.root '.build/source-stag
 $record=Get-Content (Join-Path $f.root '.build/source-transaction-*.json') -Raw | ConvertFrom-Json
 if ([IO.File]::ReadAllText((Join-Path $record.backup 'host.mjs')) -ne 'old host') { throw 'Backup lost on conflict' }
 Write-Output "PASS source staging: 7 scenarios; complete backup, rollback after rename, failed candidate retained, unknown lock retained, outside/link/missing paths refused, recovery conflict retains lock and backup. Evidence: $base"
+$helper=Join-Path $base 'crash-publisher.ps1'
+@'
+param($Module,$Root,$Prepared,$Phase)
+$ErrorActionPreference='Stop'
+. $Module
+Publish-SourceRuntime -Root $Root -Prepared $Prepared -AfterPhase {param($Point) if ($Point -eq $Phase) { Stop-Process -Id $PID -Force }}
+'@ | Set-Content -LiteralPath $helper -Encoding utf8
+$shell=(Get-Process -Id $PID).Path
+foreach ($phase in @('prepared','old-renamed','new-renamed','complete')) {
+    $f=Fixture ('crash-'+$phase)
+    $arguments=@('-NoProfile','-File',('"'+$helper+'"'),('"'+[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../scripts/source-runtime-staging.ps1'))+'"'),('"'+$f.root+'"'),('"'+$f.prepared+'"'),$phase)
+    $child=Start-Process -FilePath $shell -ArgumentList $arguments -WindowStyle Hidden -PassThru
+    if (!$child.WaitForExit(30000)) {throw 'Crash fixture did not finish'}
+    if (!(Restore-SourceRuntime -Root $f.root)) {throw 'Crash recovery did not run'}
+    if ($phase -eq 'complete') {if ([IO.File]::ReadAllText((Join-Path $f.root 'runtime/host.mjs')) -ne 'new host') {throw 'Committed runtime lost'}} else {Expect-Old $f}
+    if (Restore-SourceRuntime -Root $f.root) {throw 'Recovery was not idempotent'}
+}
+$f=Fixture 'crash-conflict'
+$child=Start-Process -FilePath $shell -ArgumentList @('-NoProfile','-File',('"'+$helper+'"'),('"'+[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../scripts/source-runtime-staging.ps1'))+'"'),('"'+$f.root+'"'),('"'+$f.prepared+'"'),'new-renamed') -WindowStyle Hidden -PassThru
+if (!$child.WaitForExit(30000)) {throw 'Crash conflict fixture did not finish'}
+[IO.File]::WriteAllText((Join-Path $f.root 'runtime/host.mjs'),'external modification')
+$failed=$false;try {Restore-SourceRuntime -Root $f.root | Out-Null} catch {$failed=$true}
+if (!$failed -or !(Test-Path -LiteralPath (Join-Path $f.root '.build/source-staging.lock')) -or [IO.File]::ReadAllText((Join-Path $f.root 'runtime/host.mjs')) -ne 'external modification') {throw 'Conflicted crash state changed'}
+Write-Output 'PASS 5 forced-termination scenarios: pre-move, both rename gaps, completed publication, and changed-tree refusal; known lock recovered only after owner exit and full inventory match.'

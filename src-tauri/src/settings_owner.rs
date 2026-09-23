@@ -11,7 +11,7 @@ fn dead(pid:u32)->bool{unsafe{
 pub fn record(root:&Path,owner:&Owner)->Result<(),String>{use std::io::Write;let path=root.join("desktop-settings-owner.new");let mut file=fs::File::create(&path).map_err(|_|"无法保存设置写入者身份")?;file.write_all(&serde_json::to_vec(owner).unwrap()).and_then(|_|file.sync_all()).map_err(|_|"无法刷新设置写入者身份")?;drop(file);fs::rename(path,root.join("desktop-settings-owner.json")).map_err(|_|"无法提交设置写入者身份".into())}
 pub fn recover(root:&Path)->Result<bool,String>{
  let mut recovered=false;
- for relative in ["dsh/settings.yaml.lock","dsh/profiles/dsh-desktop/cordis.patch.yml.lock"] { recovered|=recover_lock(root,&root.join(relative))?; }
+ for relative in ["dsh/settings.yaml.lock","dsh/profiles/dsh-desktop/package.json.lock"] { recovered|=recover_lock(root,&root.join(relative))?; }
  Ok(recovered)
 }
 fn recover_lock(root:&Path,path:&Path)->Result<bool,String>{
@@ -39,5 +39,8 @@ fn recover_lock(root:&Path,path:&Path)->Result<bool,String>{
   record(&root,&Owner{pid,token:token.clone()}).unwrap();fs::write(&lock,"").unwrap();assert!(!recover(&root).unwrap());
   fs::write(&lock,"DSHDesktop-startup:p-ffffffffffffffffffffffffffffffff").unwrap();assert!(!recover(&root).unwrap());
   fs::write(&lock,format!("DSHDesktop-startup:{token}")).unwrap();assert!(recover(&root).unwrap());assert!(!lock.exists());assert!(!recover(&root).unwrap());
+  let source_lock=root.join("dsh/profiles/dsh-desktop/package.json.lock");fs::create_dir_all(source_lock.parent().unwrap()).unwrap();
+  fs::write(&source_lock,"native-writer").unwrap();assert!(!recover(&root).unwrap());
+  fs::write(&source_lock,format!("DSHDesktop-startup:{token}")).unwrap();assert!(recover(&root).unwrap());assert!(!source_lock.exists());
  }
 }

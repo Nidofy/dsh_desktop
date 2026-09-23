@@ -4,6 +4,8 @@ $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
 if (![Environment]::Is64BitOperatingSystem) { throw 'Windows x64 build host required' }
 if ($HarnessSourceArtifact) {
+    . (Join-Path $PSScriptRoot 'source-runtime-staging.ps1')
+    $null = Restore-SourceRuntime -Root $root
     if ($ReusePreparedRuntime) { throw 'Source artifact and reused runtime cannot be selected together' }
     & (Join-Path $root 'runtime/runtime/node.exe') scripts/harness-source.mjs admission $HarnessSourceArtifact
     if ($LASTEXITCODE -ne 0) { throw 'Source candidate requires desktop adapter qualification before integration' }

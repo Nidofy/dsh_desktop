@@ -41,10 +41,11 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
   diagnosticState.managedProvider=route;
   diagnosticState.providerConfiguration=provider?JSON.stringify(provider):undefined;
   diagnosticState.overlayHash=hash(patch);
-  await withFileLock(filename,async()=>{
+  const lockTarget=join(dir,'package.json');
+  await withFileLock(lockTarget,async()=>{
     const owner=process.env.DSH_DESKTOP_SETTINGS_OWNER;
     if(/^p-[a-f0-9]{32}$/.test(owner??'')){
-      const lock=await open(filename+'.lock','r+');try{await lock.writeFile('DSHDesktop-startup:'+owner);await lock.sync();}finally{await lock.close();}
+      const lock=await open(lockTarget+'.lock','r+');try{await lock.writeFile('DSHDesktop-startup:'+owner);await lock.sync();}finally{await lock.close();}
     }
     const transaction=settingsTransaction(dir,writeFileAtomic,transactionOptions);await transaction.recover();
     await migrateSourceSettings({home,dir,load,require,writeFileAtomic,transactionOptions,patch,installAnchor:join(runtimeRoot,'dsh/package.json')});

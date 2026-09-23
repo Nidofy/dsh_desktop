@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $out = Join-Path $Root 'runtime/dsh'
 if ($HarnessSourceArtifact) {
     . (Join-Path $PSScriptRoot 'source-runtime-staging.ps1')
+    $null = Restore-SourceRuntime -Root $Root
     $node = Join-Path $Root 'runtime/runtime/node.exe'
     & $node (Join-Path $PSScriptRoot 'harness-source.mjs') admission $HarnessSourceArtifact
     if ($LASTEXITCODE -ne 0) { throw 'Source artifact does not match approved desktop combination' }
