@@ -5,7 +5,7 @@ export class ToolTelemetry {
   event(session,event){
     const d=event.data, nested=event.type.startsWith('tool/ptc-'), start=['tool/call','tool/ptc-dispatch-start'].includes(event.type);
     if(!start&&!['tool/result','tool/ptc-dispatch'].includes(event.type))return;
-    const sessionId=this.capture.id(session.header.id), block=d.message?.content?.[0];
+    const sessionId=this.capture.id(session.header.id), block=d.message?.role==='tool'?d.message:d.message?.content?.[0];
     const rawId=nested?d.subCallId:start?d.callId:block?.toolCallId;
     if(!rawId)return;
     const id=this.capture.id(session.header.id+':'+rawId),time=Number.isFinite(event.time)?event.time:Date.now();

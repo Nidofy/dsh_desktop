@@ -1,0 +1,12 @@
+[
+  {
+    "protocol": "openai",
+    "visionTool": "PASS",
+    "settingsPersistence": true
+  },
+  {
+    "protocol": "anthropic",
+    "visionTool": "PASS",
+    "settingsPersistence": true
+  }
+]

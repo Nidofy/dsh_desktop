@@ -10,7 +10,12 @@ fn dead(pid:u32)->bool{unsafe{
 }}
 pub fn record(root:&Path,owner:&Owner)->Result<(),String>{use std::io::Write;let path=root.join("desktop-settings-owner.new");let mut file=fs::File::create(&path).map_err(|_|"无法保存设置写入者身份")?;file.write_all(&serde_json::to_vec(owner).unwrap()).and_then(|_|file.sync_all()).map_err(|_|"无法刷新设置写入者身份")?;drop(file);fs::rename(path,root.join("desktop-settings-owner.json")).map_err(|_|"无法提交设置写入者身份".into())}
 pub fn recover(root:&Path)->Result<bool,String>{
- let path=root.join("dsh/settings.yaml.lock");if !path.exists(){return Ok(false);}
+ let mut recovered=false;
+ for relative in ["dsh/settings.yaml.lock","dsh/profiles/dsh-desktop/cordis.patch.yml.lock"] { recovered|=recover_lock(root,&root.join(relative))?; }
+ Ok(recovered)
+}
+fn recover_lock(root:&Path,path:&Path)->Result<bool,String>{
+ if !path.exists(){return Ok(false);}
  let mut bytes=Vec::new();let Ok(file)=fs::File::open(root.join("desktop-settings-owner.json"))else{return Ok(false)};if file.take(4097).read_to_end(&mut bytes).is_err()||bytes.len()>4096{return Ok(false);}
  let Ok(owner)=serde_json::from_slice::<Owner>(&bytes)else{return Ok(false)};
  if owner.token.len()!=34||!owner.token.starts_with("p-")||!owner.token[2..].bytes().all(|b|b.is_ascii_hexdigit()){return Ok(false);}

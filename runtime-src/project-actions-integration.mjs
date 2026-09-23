@@ -14,8 +14,10 @@ export function nativeActionExecutor(ctx) {
     const sandboxPolicy = exec?.agent ? policies.resolve({session: exec.agent.session}) : {mode: 'workspace-write', workspaceRoot: action.workspace};
     const dshEnv = exec && ctx.get('shellEnv') ? ctx.get('shellEnv').collect(exec) : undefined;
     try {
-      return await shell.run(shell.resolve({command: action.command, workdir: action.cwd, env: action.env,
-        timeoutMs: action.timeoutMs, stdoutMaxBytes: 512 * 1024, signal: action.signal, sandboxPolicy, dshEnv}));
+      const spec=shell.resolve({command: action.command, workdir: action.cwd, env: action.env,
+        timeoutMs: action.timeoutMs, stdoutMaxBytes: 512 * 1024, signal: action.signal, sandboxPolicy, dshEnv});
+      if(typeof shell.run==='function')return await shell.run(spec);
+      return await (await shell.execute(spec)).result();
     } catch (error) {
       // This is a local execution record, separate from metadata-only diagnostic exports.
       throw new ActionError('SHELL_FAILED', 'DSH 执行失败：' + String(error.message ?? error).slice(0,2000));

@@ -1,0 +1,52 @@
+[
+  {
+    "protocol": "openai",
+    "status": "PASS",
+    "wireBytesIdentical": true,
+    "turns": 2,
+    "nativeRead": true,
+    "usage": true,
+    "error": true,
+    "cancel": true,
+    "auth": true,
+    "exportPrivacy": true,
+    "keyScopeRestart": true,
+    "preferencePersistence": true,
+    "spillRestore": true,
+    "onOffWallMs": [
+      {
+        "enabled": false,
+        "wallMs": 390.27700000000004
+      },
+      {
+        "enabled": true,
+        "wallMs": 282.10410000000047
+      }
+    ]
+  },
+  {
+    "protocol": "anthropic",
+    "status": "PASS",
+    "wireBytesIdentical": true,
+    "turns": 2,
+    "nativeRead": true,
+    "usage": true,
+    "error": true,
+    "cancel": true,
+    "auth": true,
+    "exportPrivacy": true,
+    "keyScopeRestart": true,
+    "preferencePersistence": true,
+    "spillRestore": true,
+    "onOffWallMs": [
+      {
+        "enabled": false,
+        "wallMs": 387.55219999999827
+      },
+      {
+        "enabled": true,
+        "wallMs": 363.7149999999965
+      }
+    ]
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "protocol": "openai",
+    "independentCacheKey": "PASS",
+    "cases": [
+      {
+        "variant": "automatic",
+        "status": "PASS"
+      },
+      {
+        "variant": "long",
+        "status": "PASS"
+      },
+      {
+        "variant": "short-markers",
+        "status": "PASS"
+      },
+      {
+        "variant": "key-only",
+        "status": "PASS"
+      },
+      {
+        "variant": "key-long",
+        "status": "PASS"
+      },
+      {
+        "variant": "key-markers",
+        "status": "PASS"
+      },
+      {
+        "variant": "off-long",
+        "status": "PASS"
+      },
+      {
+        "variant": "native-tool-loop-and-restart-isolation",
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "protocol": "anthropic",
+    "independentCacheKey": "PASS",
+    "cases": [
+      {
+        "variant": "automatic",
+        "status": "PASS"
+      },
+      {
+        "variant": "long",
+        "status": "PASS"
+      }
+    ]
+  }
+]

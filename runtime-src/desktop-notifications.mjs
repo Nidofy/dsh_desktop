@@ -17,7 +17,7 @@ export class NotificationFeed {
     if(event.type==='turn/start'||event.type==='turn/end')clear(()=>true);
     if(event.type==='approval/decided')clear(row=>row.kind==='permission'&&row.pendingId===d.id);
     if(event.type==='tool/result'){
-      const ids=d.message?.content?.map(block=>block.toolCallId)??[];
+      const ids=d.message?.role==='tool'?[d.message.toolCallId]:d.message?.content?.map(block=>block.toolCallId)??[];
       clear(row=>row.kind==='input'&&ids.includes(row.pendingId));
     }
     let kind,pendingId;

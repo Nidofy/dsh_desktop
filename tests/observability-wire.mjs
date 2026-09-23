@@ -10,8 +10,11 @@ import {createRequire} from 'node:module';
 import {runSelfTestWire} from './self-test-wire.mjs';
 import {runCacheKeyWire} from './cache-key-wire.mjs';
 const resources=resolve(process.argv[2]??'runtime');
+const engineVersion=JSON.parse(readFileSync(join(resources,'dsh/node_modules/@deepseek-ai/dsh/package.json'),'utf8')).version;
+const sourceEngine=engineVersion==='0.1.7-alpha.2';
 const yaml=createRequire(join(resources,'dsh/package.json'))('yaml');
-mkdirSync('.build',{recursive:true});const root=mkdtempSync(resolve('.build/observability-wire-'));
+const fixtureBase=resolve(process.env.DSH_TEST_FIXTURE_ROOT??'.build');
+mkdirSync(fixtureBase,{recursive:true});const root=mkdtempSync(join(fixtureBase,'observability-wire-'));
 const pause=()=>new Promise(r=>setTimeout(r,100));
 const results=[];
 function events(dir,id){
@@ -23,7 +26,10 @@ function events(dir,id){
  }}walk(dir);return text.split('\n').filter(Boolean).map(line=>JSON.parse(line));
 }
 for(const protocol of ['openai','anthropic']) {
- const home=join(root,protocol);mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PRIVATE_TOOL_RESULT');
+ const environmentId='c-'+crypto.randomUUID().replaceAll('-','');
+ const home=join(root,sourceEngine?environmentId:protocol);mkdirSync(home,{recursive:true});writeFileSync(join(home,'fixture.txt'),'PRIVATE_TOOL_RESULT');
+ const dataRoot=sourceEngine?join(root,'data',environmentId):home;
+ if(sourceEngine)mkdirSync(dataRoot,{recursive:true});
  const requests=[],failures=[];let mode='normal',pending=false;
  let visionCalls=0;
  const server=http.createServer(async(req,res)=>{
@@ -72,6 +78,7 @@ for(const protocol of ['openai','anthropic']) {
  patch[1].config.providers['desktop-internal'].baseURL=`http://127.0.0.1:${server.address().port}${protocol==='openai'?'/v1':''}`;
  const overlay=join(home,'patch.json');writeFileSync(overlay,JSON.stringify(patch));
  const env={...process.env,PATH:`${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,DSH_HOME:join(home,'dsh'),DSH_DESKTOP_PATCH:overlay,DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'desktop-test-key',PI_CACHE_RETENTION:'long',NODE_NO_WARNINGS:'1',NODE_OPTIONS:'',NODE_PATH:''};
+ if(sourceEngine)Object.assign(env,{DSH_DESKTOP_ROOT:dataRoot,DSH_HOME:join(dataRoot,'dsh'),DSH_DESKTOP_ENVIRONMENT:environmentId});
  if(process.argv.includes('--self-test-vcs'))env.PATH=resolve('.build/hg-test-venv/Scripts')+';'+(process.env.PATH??process.env.Path??'');
  if(process.argv.includes('--feedback-ui')){
   env.PATH=process.env.PATH??process.env.Path??'';
@@ -103,7 +110,7 @@ for(const protocol of ['openai','anthropic']) {
  }
  try {
   await start();
-  const health=await api('health');assert.equal(health.contractVersion,1);assert.equal(health.coreReady,true);assert.equal(health.engineVersion,'0.1.5-rc.2');
+  const health=await api('health');assert.equal(health.contractVersion,1);assert.equal(health.coreReady,true);assert.equal(health.engineVersion,engineVersion);
   const idleControl=await control();assert.equal(idleControl.known,true);assert.equal(idleControl.running,0);assert.equal(idleControl.queued,0);assert.equal(idleControl.admission,'unsupported');
   assert.equal((await fetch(origin+'/desktop-diagnostics/api/health')).status,401,'health uses native authentication');
   assert.equal((await fetch(origin+'/desktop-diagnostics/api/health',{headers:{cookie,origin:'https://example.com'}})).status,403);
@@ -148,7 +155,12 @@ for(const protocol of ['openai','anthropic']) {
   const themeCss=await fetch(origin+'/desktop-diagnostics/theme.css',{headers:{cookie}});assert.equal(themeCss.status,200);assert((await themeCss.text()).includes('--dsw-alias-bg-base'));
   assert.equal((await fetch(origin+'/desktop-diagnostics/theme.js',{headers:{cookie}})).status,200);
   for(const [preference,fontSize] of [['dark',16],['light',12],['system',14]]){
-    const settingsPath=join(env.DSH_HOME,'settings.yaml'),doc=yaml.parseDocument(readFileSync(settingsPath,'utf8'));doc.setIn(['ui-theme'],{preference,fontSize});writeFileSync(settingsPath,String(doc));
+    const settingsPath=join(env.DSH_HOME,sourceEngine?'profiles/dsh-desktop/cordis.patch.yml':'settings.yaml'),doc=yaml.parseDocument(readFileSync(settingsPath,'utf8'));
+    if(sourceEngine){
+      const rows=doc.toJS();const existing=rows.find(row=>row.id==='ui-theme');
+      if(existing)existing.config={preference,fontSize};else rows.push({id:'ui-theme',config:{preference,fontSize}});
+      writeFileSync(settingsPath,yaml.stringify(rows));
+    }else{doc.setIn(['ui-theme'],{preference,fontSize});writeFileSync(settingsPath,String(doc));}
     const deadline=Date.now()+6000;let received;
     do{received=await api('appearance');if(received.preference===preference&&received.fontSize===fontSize)break;await pause();}while(Date.now()<deadline);
     assert.deepEqual(received,{preference,fontSize},'appearance follows the actual DSH settings provider');

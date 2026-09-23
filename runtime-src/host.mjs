@@ -14,6 +14,8 @@ import {migrateWorkspaceHistory} from './workspace-migration.mjs';
 import {failStartup,installStartupErrors} from './startup-errors.mjs';
 import {desktopControl} from './desktop-control.mjs';
 import {requireDesktopAdapter} from './harness-adapter.mjs';
+import {prepareSourceProfile} from './source-profile.mjs';
+import {diagnosticState} from './diagnostic-state.mjs';
 installStartupErrors();
 const input = createInterface({ input: process.stdin });
 // --import preload gates the real CLI entry; import.meta.main remains true in DSH.
@@ -33,7 +35,10 @@ await new Promise(resolve => input.on('line', line => {
   if (line.startsWith('snapshot ')) snapshotPipe.receive(line);
   if (line.startsWith('desktop-control ') && line.length<256) void desktopControl(line.slice(16));
 }));
-try { await requireDesktopAdapter(dirname(fileURLToPath(import.meta.url))); }
+let adapter;
+try { adapter=await requireDesktopAdapter(dirname(fileURLToPath(import.meta.url)),{
+  id:process.env.DSH_DESKTOP_ENVIRONMENT,root:process.env.DSH_DESKTOP_ROOT,home:process.env.DSH_HOME,
+});diagnosticState.engineVersion=adapter.version; }
 catch(error) { failStartup(error,'ADAPTER'); await new Promise(()=>{}); }
 // The supervisor has stopped the old engine before this start gate opens.
 // No settings watcher or old process can restore stale overrides afterward.
@@ -52,13 +57,19 @@ let patch;
 try {patch=process.env.DSH_DESKTOP_PATCH?JSON.parse(await readFile(process.env.DSH_DESKTOP_PATCH,'utf8')):[];if(!Array.isArray(patch))throw Error();}
 catch(error){failStartup(error,'SETTINGS');await new Promise(()=>{});}
 try {
-  configureCacheKeyBridge(dirname(fileURLToPath(import.meta.url)),patch);
+  if(adapter.desktopReady)configureCacheKeyBridge(dirname(fileURLToPath(import.meta.url)),patch);
 }
 catch(error) {
   const code=['DESKTOP_CACHE_KEY_POLICY_INVALID','DESKTOP_CACHE_KEY_POLICY_UNSUPPORTED'].includes(error?.code)?'CACHE_KEY_POLICY_UNSUPPORTED':'CACHE_KEY_ADAPTER_MISMATCH';
   console.log('dsh desktop error: '+code);process.exit(1);
 }
-try { await synchronizeDesktopSettings({home:process.env.DSH_HOME, patchFile:process.env.DSH_DESKTOP_PATCH, runtimeRoot:dirname(fileURLToPath(import.meta.url))}); }
+try {
+  if(adapter.desktopReady)await synchronizeDesktopSettings({home:process.env.DSH_HOME, patchFile:process.env.DSH_DESKTOP_PATCH, runtimeRoot:dirname(fileURLToPath(import.meta.url))});
+  else {
+    const args=await prepareSourceProfile({root:process.env.DSH_DESKTOP_ROOT,home:process.env.DSH_HOME,runtimeRoot:dirname(fileURLToPath(import.meta.url)),patch});
+    process.argv.splice(2,process.argv.length-2,...args);
+  }
+}
 catch(error) { failStartup(error,'SETTINGS'); await new Promise(()=>{}); }
 input.on('close', () => {
   snapshotPipe.close();

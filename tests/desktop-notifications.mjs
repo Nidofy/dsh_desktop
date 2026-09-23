@@ -15,6 +15,8 @@ event('approval/decided',{id:'p'});assert.equal(feed.snapshot().items.length,0,'
 event('tool/call',{name:'ask_user_question',callId:'q',arguments:'PRIVATE_QUESTION'});
 assert.equal(feed.snapshot().items[0].kind,'input');
 event('tool/result',{message:{content:[{toolCallId:'q',text:'PRIVATE_ANSWER'}]}});assert.equal(feed.snapshot().items.length,0);
+event('tool/call',{name:'ask_user_question',callId:'v4'});
+event('tool/result',{message:{role:'tool',toolCallId:'v4',content:[{type:'text',text:'PRIVATE_V4'}],isError:false}});assert.equal(feed.snapshot().items.length,0);
 event('turn/end',{reason:{kind:'completed'}});assert.equal(feed.snapshot().items[0].kind,'completed');
 const end=feed.snapshot();assert.equal(feed.snapshot(end.revision).items.length,0,'cursor consumes once');
 event('turn/start');assert.equal(feed.snapshot().items.length,0,'a new turn retires previous result');

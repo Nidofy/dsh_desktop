@@ -46,7 +46,7 @@ export function apply(ctx, config = {}) {
   // Contain initialization failures; action routes report them without breaking conversation.
   actionsReady.catch(() => {});
   const capture = new Capture({key:diagnosticState.key,configuration:{
-    desktopVersion:config.desktopVersion ?? 'development',dshVersion:'0.1.5-rc.2',
+    desktopVersion:config.desktopVersion ?? 'development',dshVersion:diagnosticState.engineVersion??'0.1.5-rc.2',
     cacheKeyBridgeVersion:CACHE_KEY_BRIDGE_VERSION,
     api:config.api ?? 'unknown',effectiveSpillBytes:diagnosticState.effectiveSpillBytes,
     effectiveSkillDescription:diagnosticState.effectiveSkillDescription,nodeVersion:process.version,

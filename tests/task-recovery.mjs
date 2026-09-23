@@ -16,6 +16,9 @@ assert.equal(state.status,'INTERRUPTED');assert.equal(recoveryView(state,false).
 assert.equal(state.lastTool.name,'shell','retain last confirmed completion, not guessed latest execution');
 assert(!JSON.stringify(state).includes('PRIVATE'),'no command, reasoning, or result body in projection');
 const checkpoint=structuredClone(state);assert.deepEqual(checkpoint,state,'state is durable JSON');
+event('turn/start',{turn:2});event('tool/call',{callId:'v4',name:'read'});
+event('tool/result',{message:{role:'tool',toolCallId:'v4',content:[{type:'text',text:'PRIVATE_V4'}],isError:false}});
+assert.equal(state.pendingTools.length,0);assert.equal(state.lastTool.name,'read');assert.equal(state.lastTool.status,'COMPLETED');
 event('turn/start',{turn:2});event('step/start',{turn:2,step:1});event('turn/end',{turn:2,reason:{kind:'interrupted'}});
 assert.equal(state.lastModel.status,'UNKNOWN');
 event('turn/start',{turn:3});

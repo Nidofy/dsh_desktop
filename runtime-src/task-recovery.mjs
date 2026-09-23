@@ -22,7 +22,7 @@ export function recoveryFold(state, event) {
       return next({pendingTools:[...state.pendingTools,{id:identity(d.callId),name:keep(d.name),seq:event.seq,time}]});
     }
     case 'tool/result': {
-      const result=d.message?.content?.find(b=>b.toolCallId);
+      const result=d.message?.role==='tool'?d.message:d.message?.content?.find(b=>b.toolCallId);
       if(!result)return state;
       const id=identity(result.toolCallId),found=state.pendingTools.find(t=>t.id===id);
       return next({pendingTools:state.pendingTools.filter(t=>t.id!==id),lastTool:{name:found?.name??'unknown',status:result.isError?'FAILED':'COMPLETED',time,seq:event.seq}});

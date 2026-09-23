@@ -7,6 +7,7 @@ import {storageAdmission} from './storage-admission.mjs';
 import {cacheHtml,cacheScript} from './cache-page.mjs';
 import {diagnosticState} from './diagnostic-state.mjs';
 import {CACHE_KEY_BRIDGE_VERSION} from './desktop-cache-key.mjs';
+import {readHarnessSetting} from './harness-settings.mjs';
 
 const ID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const FEATURES=['automaticCaching','promptCacheKey','cacheControl','longRetention'];
@@ -17,7 +18,7 @@ async function readJson(path,limit=65536){
 export function adapterCapabilities(profile){
   const api=profile?.api??'unknown',retention=profile?.cacheRetention??'native-default';
   return {api,retention,cacheControlFormat:profile?.compat?.cacheControlFormat??(api==='anthropic-messages'?'anthropic-native':'native-detection'),
-    source:'bundled-dsh-0.1.5-rc.2',independentCustomEndpointCacheKey:api==='openai-completions'?'DESKTOP_BRIDGE':'NOT_APPLICABLE',
+    source:'bundled-dsh-'+(diagnosticState.engineVersion??'0.1.5-rc.2'),independentCustomEndpointCacheKey:api==='openai-completions'?'DESKTOP_BRIDGE':'NOT_APPLICABLE',
     cacheKeyBridgeVersion:CACHE_KEY_BRIDGE_VERSION,cacheKeyMode:profile?.desktopCacheKey?.mode??'native',
     cacheKeyModels:profile?.desktopCacheKey?.models??[],cacheKeyPersistence:diagnosticState.keyPersistence,
     notes:api==='openai-completions'?[
@@ -31,7 +32,7 @@ export function installCacheCenter(ctx,home,key){
   const directory=join(home,'desktop-cache-probes'),declarationPath=join(home,'desktop-cache-capabilities.json');
   let declarations={},declarationWarning=null,writing=Promise.resolve();
   const ready=(async()=>{try{const value=await readJson(declarationPath);if(value.version!==1||!value.models||Array.isArray(value.models)||Object.keys(value.models).length>100)throw Error();declarations=value.models;}catch(error){if(error.code!=='ENOENT')declarationWarning='能力声明文件无法读取；当前显示未知，重新保存可修复。';}})();
-  const profile=()=>ctx.get('settings')?.get('llm-pi-ai')?.providers?.['desktop-internal'];
+  const profile=()=>readHarnessSetting(ctx,'llm-pi-ai')?.providers?.[diagnosticState.managedProvider??'desktop-internal'];
   const fingerprint=()=>{
     const current=profile();
     // Include credential rotation and routing without exposing these values.

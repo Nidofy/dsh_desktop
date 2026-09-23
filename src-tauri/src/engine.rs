@@ -152,7 +152,7 @@ impl Engine {
             active_profile_name: String::new(),
             active_home: root.join("dsh"),
             desktop_version: env!("CARGO_PKG_VERSION").into(),
-            dsh_version: "0.1.5-rc.2".into(),
+            dsh_version: "pending-verification".into(),
             node_version: "24.16.0".into(),
             windows_version: app
                 .state::<crate::browser_runtime::BrowserRuntime>()
@@ -196,7 +196,7 @@ impl Engine {
                 concat!(
                     "desktop=",
                     env!("CARGO_PKG_VERSION"),
-                    " dsh=0.1.5-rc.2 node=24.16.0 supervisor started"
+                    " node=24.16.0 supervisor started; engine identity pending verification"
                 ),
             );
             let mut completion: Option<Sender<Result<(), String>>> = None;
@@ -328,6 +328,10 @@ fn run(
     {
         return Err("Bundled runtime is missing. Re-extract the complete portable ZIP; see runtime path in Diagnostics.".into());
     }
+    let engine_package: serde_json::Value = serde_json::from_slice(&fs::read(runtime.join("dsh/node_modules/@deepseek-ai/dsh/package.json")).map_err(|_|"引擎版本文件不可读")?).map_err(|_|"引擎版本文件损坏")?;
+    let engine_version=engine_package["version"].as_str().ok_or("引擎版本缺失")?.to_owned();
+    if engine_package["name"]!="@deepseek-ai/dsh" || !matches!(engine_version.as_str(),"0.1.5-rc.2"|"0.1.7-alpha.2") { return Err("不支持的引擎组合".into()); }
+    if engine_version=="0.1.7-alpha.2" && crate::environments::id()=="stable" { return Err("源码候选只能在独立候选环境运行，请使用随包的候选启动入口。".into()); }
     // Share the state lock with credential cleanup while capturing the active
     // reference and reading its key; startup must not race collection.
     let mut active_state = engine.state.lock().map_err(|_| "Engine state unavailable")?;
@@ -343,6 +347,7 @@ fn run(
     {
         let state = &mut *active_state;
         state.active_profile_id = profile.id.clone();
+        state.dsh_version = engine_version.clone();
         state.active_credential_ref = profile.credential_ref.clone();
         state.active_profile_definition = serde_json::to_value(&profile).ok();
         state.active_profile_name = c.provider_name.clone();
@@ -373,6 +378,7 @@ fn run(
         .creation_flags(0x08000000)
         .env("DSH_HOME", &home)
         .env("DSH_DESKTOP_ROOT", &engine.root)
+        .env("DSH_DESKTOP_ENVIRONMENT", crate::environments::id())
         .env("DSH_TELEMETRY_DISABLED", "1")
         .env("DSH_DESKTOP_PATCH", engine.root.join("desktop.patch.json"))
         .env("DSH_DESKTOP_SETTINGS_OWNER",&settings_owner)
@@ -486,7 +492,7 @@ fn run(
         Some(pid),
         None,
     );
-    let mut http = crate::engine_http::Worker::new();
+    let mut http = crate::engine_http::Worker::new(engine_version);
     let mut url = None;
     let mut ready = false;
     let mut last_check = Instant::now() - Duration::from_secs(5);

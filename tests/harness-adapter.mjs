@@ -4,7 +4,7 @@ import {mkdir,mkdtemp,readFile,writeFile,symlink,cp,readdir} from 'node:fs/promi
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
-import {selectHarnessAdapter,requireDesktopAdapter,sourceProbeArguments,sourceProfile} from '../runtime-src/harness-adapter.mjs';
+import {selectHarnessAdapter,requireDesktopAdapter,sourceProbeArguments,sourceProfile,sourceCommit} from '../runtime-src/harness-adapter.mjs';
 import {startupErrorCode} from '../runtime-src/startup-errors.mjs';
 
 async function fixture(){
@@ -31,6 +31,17 @@ test('custom profile initializes once; restart preserves configuration and omits
   await writeFile(join(dir,'cordis.patch.yml'),'# synthetic user settings\n[]\n');
   assert(!(await sourceProbeArguments(f)).includes('--from-default-profile'));
   assert.equal(await readFile(join(dir,'cordis.patch.yml'),'utf8'),'# synthetic user settings\n[]\n');
+});
+test('source qualification requires isolated candidate identity and the reviewed source receipt',async()=>{
+  const base=await fixture(),id='c-'+'a'.repeat(32),root=join(base.root,id),home=join(root,'dsh');
+  await mkdir(root);const pkg=join(base.root,'resources/dsh/node_modules/@deepseek-ai/dsh');await mkdir(pkg,{recursive:true});
+  const runtime=join(base.root,'resources');
+  await writeFile(join(pkg,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:'0.1.7-alpha.2'}));
+  await writeFile(join(runtime,'harness-source-artifact.json'),JSON.stringify({status:'SOURCE_SMOKE_PASSED',source:{version:'0.1.7-alpha.2',commit:sourceCommit}}));
+  assert.equal((await requireDesktopAdapter(runtime,{id,root,home})).sessionWriter,4);
+  await assert.rejects(requireDesktopAdapter(runtime,{id:'stable',root,home}),{code:'HARNESS_ADAPTER_NOT_READY'});
+  await writeFile(join(runtime,'harness-source-artifact.json'),JSON.stringify({status:'SOURCE_SMOKE_PASSED',source:{version:'0.1.7-alpha.2',commit:'0'.repeat(40)}}));
+  await assert.rejects(requireDesktopAdapter(runtime,{id,root,home}),{code:'HARNESS_ADAPTER_IDENTITY'});
 });
 test('interrupted initialization is refused without deleting or repairing evidence',async()=>{
   const f=await fixture(),dir=join(f.home,'profiles',sourceProfile);await mkdir(dir,{recursive:true});

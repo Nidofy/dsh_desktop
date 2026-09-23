@@ -1,6 +1,6 @@
 // Versioned launch facts. Source probes are deliberately separate from desktop admission.
 import {readFile,lstat} from 'node:fs/promises';
-import {join,resolve,isAbsolute} from 'node:path';
+import {join,resolve,isAbsolute,basename} from 'node:path';
 
 export const harnessAdapterVersion = 1;
 export const sourceCommit = 'dad014b7efd3e1d76a36e6bd9646487d28d9037e';
@@ -17,11 +17,16 @@ export function selectHarnessAdapter(version) {
 }
 
 // Called before settings or migration writes. Full file integrity remains the supervisor's gate.
-export async function requireDesktopAdapter(runtimeRoot) {
+export async function requireDesktopAdapter(runtimeRoot, candidate) {
   const pkg=JSON.parse(await readFile(join(runtimeRoot,'dsh/node_modules/@deepseek-ai/dsh/package.json'),'utf8'));
   const adapter=selectHarnessAdapter(pkg.version);
   if (pkg.name!=='@deepseek-ai/dsh' || process.versions.node!==adapter.node) throw failure('HARNESS_ADAPTER_IDENTITY');
-  if (!adapter.desktopReady) throw failure('HARNESS_ADAPTER_NOT_READY');
+  if (!adapter.desktopReady) {
+    if(!candidate||!/^c-[a-f0-9]{32}$/.test(candidate.id??'')||basename(candidate.root??'')!==candidate.id)throw failure('HARNESS_ADAPTER_NOT_READY');
+    await sourceProbeArguments(candidate);
+    const receipt=JSON.parse(await readFile(join(runtimeRoot,'harness-source-artifact.json'),'utf8'));
+    if(receipt.source?.commit!==sourceCommit||receipt.source?.version!==adapter.version||receipt.status!=='SOURCE_SMOKE_PASSED')throw failure('HARNESS_ADAPTER_IDENTITY');
+  }
   return adapter;
 }
 

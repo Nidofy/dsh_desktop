@@ -8,7 +8,7 @@ pub enum Request { Health(Url), Events(String) }
 pub enum Reply { Health { transport: bool, core: bool }, Events(Option<Value>) }
 pub struct Worker { tx: SyncSender<Request>, rx: Receiver<Reply>, pending: bool }
 impl Worker {
-    pub fn new() -> Self {
+    pub fn new(engine_version: String) -> Self {
         let agent=ureq::AgentBuilder::new().timeout(Duration::from_secs(2)).redirects(0).build();
         Self::with_fetch(move |request| match request {
             Request::Health(url) => {
@@ -16,7 +16,7 @@ impl Worker {
                 // Page availability is recorded separately from core capability readiness.
                 let transport=page_available(&agent,&url);
                 let value=get_json(&agent,&format!("{}/desktop-diagnostics/api/health",url.origin().ascii_serialization()),4096);
-                let core=value.is_some_and(|v|v["contractVersion"]==1 && v["engineVersion"]=="0.1.5-rc.2" && v["coreReady"]==true);
+                let core=value.is_some_and(|v|v["contractVersion"]==1 && v["engineVersion"]==engine_version && v["coreReady"]==true);
                 Reply::Health{transport,core}
             }
             Request::Events(url) => Reply::Events(get_json(&agent,&url,32768)),
@@ -70,7 +70,7 @@ mod tests {
                 write!(socket,"HTTP/1.1 {status}\r\n{headers}Content-Length: {}\r\nConnection: close\r\n\r\n{body}",body.len()).unwrap();
             }
         });
-        let mut worker=Worker::new();assert!(worker.submit(Request::Health(url)));
+        let mut worker=Worker::new("0.1.5-rc.2".into());assert!(worker.submit(Request::Health(url)));
         let end=std::time::Instant::now()+Duration::from_secs(7);
         loop{if let Some(Reply::Health{transport,core})=worker.poll(){assert!(!transport);assert!(core);break;}
             assert!(std::time::Instant::now()<end);thread::sleep(Duration::from_millis(5));}

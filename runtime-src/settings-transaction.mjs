@@ -3,7 +3,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {join} from 'node:path';
 import {settingsProtection} from './settings-protection.mjs';
 
-const names=new Set(['settings.yaml','desktop-settings-revision.json','desktop-experiment-baseline.json']);
+const names=new Set(['settings.yaml','cordis.patch.yml','desktop-settings-revision.json','desktop-experiment-baseline.json']);
 const journalName='desktop-settings-transaction.json',fileLimit=2*1024*1024,journalLimit=24*1024*1024;
 const hash=text=>createHash('sha256').update(text).digest('hex');
 const failure=code=>Object.assign(Error(code),{code});
