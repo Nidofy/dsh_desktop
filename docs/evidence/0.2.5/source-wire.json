@@ -16,11 +16,11 @@
     "onOffWallMs": [
       {
         "enabled": false,
-        "wallMs": 390.27700000000004
+        "wallMs": 417.59540000000015
       },
       {
         "enabled": true,
-        "wallMs": 282.10410000000047
+        "wallMs": 513.4444999999996
       }
     ]
   },
@@ -41,11 +41,11 @@
     "onOffWallMs": [
       {
         "enabled": false,
-        "wallMs": 387.55219999999827
+        "wallMs": 383.0468999999939
       },
       {
         "enabled": true,
-        "wallMs": 363.7149999999965
+        "wallMs": 515.9771000000037
       }
     ]
   }

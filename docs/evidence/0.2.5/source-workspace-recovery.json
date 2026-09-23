@@ -1,0 +1,23 @@
+{
+  "runtime": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\source-qualification-s2\\resources",
+  "baseline": {
+    "code": null,
+    "ready": true,
+    "duplicate": true,
+    "offline": false
+  },
+  "fixed": {
+    "code": 0,
+    "ready": true,
+    "duplicate": false,
+    "offline": false
+  },
+  "checks": [
+    "duplicate invariant reproduced",
+    "original bytes preserved before repair",
+    "single backed-up repair",
+    "sessions and archive preserved",
+    "second boot idempotent"
+  ],
+  "status": "PASS"
+}

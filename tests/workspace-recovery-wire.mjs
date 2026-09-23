@@ -3,9 +3,10 @@ import {spawn} from 'node:child_process';
 import {mkdtemp,mkdir,writeFile,readFile,readdir} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {isSourceRuntime,sourceEnvironment,fixtureBase} from './runtime-fixture.mjs';
 const runtime=resolve(process.argv[2]??'runtime');
-await mkdir('.build',{recursive:true});
-const root=await mkdtemp(resolve('.build/workspace-recovery-wire-')),home=join(root,'dsh');
+await mkdir(fixtureBase(),{recursive:true});
+const fixture=await mkdtemp(join(fixtureBase(),'workspace-recovery-wire-')),root=isSourceRuntime(runtime)?join(fixture,'c-'+crypto.randomUUID().replaceAll('-','')):fixture,home=join(root,'dsh');
 await mkdir(join(home,'storages'),{recursive:true});
 const workspace=join(root,'project');await mkdir(workspace);
 const record={path:workspace,title:'Shared project',sessionIds:['session-a'],createdAt:'2026-09-20T00:00:00Z',updatedAt:'2026-09-20T00:00:00Z'};
@@ -15,6 +16,7 @@ await writeFile(file,original);
 const overlay=join(root,'desktop.patch.json');await writeFile(overlay,'[]');
 async function boot(host){
   const env={...process.env,DSH_HOME:home,DSH_DESKTOP_ROOT:root,DSH_DESKTOP_PATCH:overlay,DSH_TELEMETRY_DISABLED:'1',DSH_DESKTOP_LLM_KEY:'fixture',NODE_OPTIONS:'',NODE_PATH:'',NODE_NO_WARNINGS:'1'};
+  Object.assign(env,sourceEnvironment(runtime,root,home));
   for(const key of Object.keys(env))if(/^(DEEPSEEK_|OPENAI_|ANTHROPIC_|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY)/i.test(key))delete env[key];
   const args=['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href];
   if(host)args.push('--import',pathToFileURL(join(runtime,'host.mjs')).href);
@@ -32,7 +34,12 @@ async function boot(host){
   const code=await closed;clearTimeout(timeout);clearTimeout(killTimer);
   return {code,ready,duplicate:text.includes('is claimed by both workspace'),offline:text.includes('OFFLINE_TEST_DENIED')};
 }
-assert.deepEqual(await boot(false),{code:1,ready:false,duplicate:true,offline:false},'unmodified DSH rejects the exact reported duplicate-path invariant');
+const baseline=await boot(false);
+if(isSourceRuntime(runtime)){
+  // Cordis now isolates the failed workspace service while starting the HTTP host.
+  // A listening endpoint does not mean that duplicate workspace data was repaired.
+  assert.equal(baseline.ready,true);assert.equal(baseline.duplicate,true);assert.equal(baseline.offline,false);
+}else assert.deepEqual(baseline,{code:1,ready:false,duplicate:true,offline:false},'legacy DSH exits on the duplicate-path invariant');
 assert.equal(await readFile(file,'utf8'),original);
 const fixed=await boot(true);assert.equal(fixed.ready,true);assert.equal(fixed.code,0);assert.equal(fixed.offline,false);
 const repaired=JSON.parse(await readFile(file,'utf8'));
@@ -43,5 +50,6 @@ const backups=await readdir(join(home,'desktop-workspace-repairs'));assert.equal
 assert.equal(await readFile(join(home,'desktop-workspace-repairs',backups[0]),'utf8'),original);
 assert.equal((await boot(true)).ready,true);
 assert.equal((await readdir(join(home,'desktop-workspace-repairs'))).length,1);
-console.log('PASS native duplicate workspace startup: reproduced upstream rejection, automatic backed-up repair, session/archive preservation and second boot');
+await writeFile(join(fixture,'report.json'),JSON.stringify({runtime,baseline,fixed,checks:['duplicate invariant reproduced','original bytes preserved before repair','single backed-up repair','sessions and archive preserved','second boot idempotent'],status:'PASS'},null,2)+'\n');
+console.log('PASS Harness duplicate workspace startup: reproduced upstream service rejection, automatic backed-up repair, session/archive preservation and second boot');
 console.log('Evidence:',root);

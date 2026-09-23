@@ -8,14 +8,16 @@ import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {assessWirePrefix} from '../runtime-src/prefix-regression.mjs';
+import {isSourceRuntime,sourceEnvironment,fixtureBase,remapDesktopPatch} from './runtime-fixture.mjs';
 const resources=resolve(process.argv[2]??'runtime');
 const require=createRequire(join(resources,'dsh/package.json'));
-await mkdir('.build',{recursive:true});const root=await mkdtemp(resolve('.build/prefix-wire-'));
+const sourceEngine=isSourceRuntime(resources);await mkdir(fixtureBase(),{recursive:true});const root=await mkdtemp(join(fixtureBase(),'prefix-wire-'));
 const report={schemaVersion:1,status:'RUNNING',protocols:[],scope:'Pinned DSH + local synthetic HTTP; no provider cache effectiveness claim'};
 const pause=()=>new Promise(r=>setTimeout(r,100));
 const summary=['Primary Request and Intent','Key Technical Concepts','Files and Code','Errors and Fixes','Pending Jobs','Current Work','Next Step','Critical Context'].map(title=>'## '+title+'\n- Synthetic fixture; no user data.').join('\n\n');
 for(const protocol of ['openai','anthropic']){
-  const work=join(root,protocol,'workspace'),home=join(root,protocol,'home'),skillRoot=join(root,protocol,'skills');
+  const dataRoot=join(root,protocol,'c-'+crypto.randomUUID().replaceAll('-',''));
+  const work=join(root,protocol,'workspace'),home=sourceEngine?join(dataRoot,'dsh'):join(root,protocol,'home'),skillRoot=join(root,protocol,'skills');
   await mkdir(join(work,'.git'),{recursive:true});await mkdir(home,{recursive:true});await mkdir(skillRoot,{recursive:true});
   await writeFile(join(work,'AGENTS.md'),'SYNTHETIC_RULE_V1: Reply using only this fixture.\n');
   await writeFile(join(work,'CLAUDE.md'),'SYNTHETIC_CLAUDE_RULE: Keep the fixture local.\n');
@@ -26,6 +28,18 @@ for(const protocol of ['openai','anthropic']){
   // The web deployment mounts these plugins in the agent preset, not the host.
   // Copy the shipped standard composition and override only fixture discovery
   // and manual compaction budget. Never mutate the bundled preset installation.
+  let sourcePreset;
+  if(sourceEngine){
+    const {loadOverlayPatches}=await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-app-boot')).href);
+    sourcePreset=loadOverlayPatches('fixture',require.resolve('@deepseek-ai/dsh-web-app/presets/standard.patch.yml'))[0].insert[0];
+    sourcePreset.id='preset-prefix-fixture';sourcePreset.config.id='prefix-fixture';
+    const visit=rows=>{for(const row of rows){
+      if(row.name==='@deepseek-ai/dsh-skill-filesystem')row.config={includeDefaultRoots:false,customSkillDirs:[skillRoot],watchUsePolling:true,watchStabilityThresholdMs:100,watchPollIntervalMs:100};
+      if(row.name==='@deepseek-ai/dsh-compaction-basic')row.config={auto:false,retainTokens:0,maxTokens:1024,compactionRetries:0};
+      if(Array.isArray(row.config))visit(row.config);
+      if(row.name?.startsWith('@deepseek-ai/'))row.name=pathToFileURL(require.resolve(row.name)).href;
+    }};visit(sourcePreset.config.plugins);
+  }else{
   const presetDir=join(home,'.agent-presets','prefix-fixture');await mkdir(presetDir,{recursive:true});
   let preset=await readFile(join(resources,'dsh/node_modules/@deepseek-ai/dsh-agent-presets/presets/standard/agent.cordis.yml'),'utf8');
   preset=preset.replace("  name: '@deepseek-ai/dsh-skill-filesystem'","  name: '@deepseek-ai/dsh-skill-filesystem'\n  config:\n    includeDefaultRoots: false\n    customSkillDirs: ["+JSON.stringify(skillRoot)+"]\n    watchUsePolling: true\n    watchStabilityThresholdMs: 100\n    watchPollIntervalMs: 100");
@@ -33,6 +47,7 @@ for(const protocol of ['openai','anthropic']){
   preset=preset.replace(/name: '(@deepseek-ai\/[^']+)'/g,(_match,name)=>'name: '+JSON.stringify(pathToFileURL(require.resolve(name)).href));
   await writeFile(join(presetDir,'preset.yml'),'name: Synthetic prefix fixture\ndescription: Isolated regression over the shipped standard preset.\n');
   await writeFile(join(presetDir,'agent.cordis.yml'),preset);
+  }
   const requests=[],checks=[],errors=[];let phase='initial',retryLeft=0;
   const mock=http.createServer(async(req,res)=>{
     try{
@@ -62,6 +77,7 @@ for(const protocol of ['openai','anthropic']){
   });
   await new Promise(r=>mock.listen(0,'127.0.0.1',r));
   const patch=JSON.parse(await readFile(`.build/config-protocol-fixtures/${protocol}/desktop.patch.json`,'utf8'));
+  remapDesktopPatch(patch,resources);if(sourcePreset)patch.push({insert:[sourcePreset]});
   for(const row of patch)for(const plugin of row.insert??[])if(['desktop-observability','desktop-model-defaults','desktop-client'].includes(plugin.id))plugin.name=pathToFileURL(join(resources,{'desktop-observability':'desktop-observability.mjs','desktop-model-defaults':'model-defaults.mjs','desktop-client':'desktop-client/index.mjs'}[plugin.id])).href;
   const provider=patch.find(p=>p.id==='llm-pi-ai').config.providers['desktop-internal'];
   provider.baseURL=`http://127.0.0.1:${mock.address().port}${protocol==='openai'?'/v1':''}`;provider.retryPolicy={mode:'normal',maxRetries:1};
@@ -77,6 +93,7 @@ ctx.effect(()=>()=>{for(const dispose of disposers)dispose();});}
   patch.push({insert:[{id:'prefix-fixture-control',name:pathToFileURL(plugin).href}]});
   const overlay=join(home,'patch.json');await writeFile(overlay,JSON.stringify(patch));
   const env={...process.env,DSH_HOME:home,DSH_DESKTOP_PATCH:overlay,DSH_DESKTOP_LLM_KEY:'synthetic-prefix-key',DSH_TELEMETRY_DISABLED:'1',NODE_OPTIONS:'',NODE_PATH:'',HTTP_PROXY:'',HTTPS_PROXY:'',ALL_PROXY:'',NO_PROXY:'*'};
+  Object.assign(env,sourceEnvironment(resources,dataRoot,home));
   for(const key of Object.keys(env))if(/^(OPENAI_|ANTHROPIC_|DEEPSEEK_)/i.test(key))delete env[key];
   let child,output='',origin,cookie,sessionId,turn=0;
   async function start(){let launch;child=spawn(join(resources,'runtime/node.exe'),['--import',pathToFileURL(resolve('tests/offline-guard.mjs')).href,'--import',pathToFileURL(join(resources,'host.mjs')).href,join(resources,'dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'),'web','--patch',overlay,'--host','127.0.0.1','--port','0','--no-open'],{cwd:work,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
