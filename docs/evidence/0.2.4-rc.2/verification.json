@@ -1,0 +1,8 @@
+{
+  "nativeTestBinaryMatchesBuild": false,
+  "nativeSnapshotWirePassed": 1,
+  "buildId": "911532d0-60f1-4ef7-ab8b-7f1e52738b8c",
+  "rustPassed": 90,
+  "pointerAndControlPassed": 12,
+  "prefixWireCases": 38
+}

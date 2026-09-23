@@ -91,6 +91,10 @@ for(const protocol of ['openai','anthropic']) {
   assert(launch,'DSH startup: '+output.slice(-3000));launchUrl=launch;const response=await fetch(launch,{redirect:'manual'});cookie=response.headers.get('set-cookie').split(';')[0];origin=new URL(launch).origin;
  }
  async function stop(){if(!child||child.exitCode!==null)return;child.stdin.write('stop\n');const end=Date.now()+10000;while(child.exitCode===null&&Date.now()<end)await pause();if(child.exitCode===null)child.kill();}
+ async function control(action='status'){
+  const id=crypto.randomUUID().replaceAll('-','');child.stdin.write('desktop-control '+JSON.stringify({id,action})+'\n');const deadline=Date.now()+4000;
+  while(Date.now()<deadline){const value=output.split('\n').filter(l=>l.startsWith('dsh control: ')).map(l=>JSON.parse(l.slice(13))).find(v=>v.id===id);if(value)return value;await pause();}throw Error('Private control timeout');
+ }
  async function api(path,data,expected=200){const response=await fetch(origin+'/desktop-diagnostics/api/'+path,{method:data===undefined?'GET':'POST',headers:{cookie,origin,'content-type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)})});assert.equal(response.status,expected,await response.clone().text());return response.json();}
  async function rpc(method,request){const response=await fetch(origin+'/api/'+method,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args:{request}}})});const data=await response.json();assert(data.result?.ok,JSON.stringify(data));return data.result.value;}
  async function prompt(id,turn){
@@ -99,6 +103,11 @@ for(const protocol of ['openai','anthropic']) {
  }
  try {
   await start();
+  const health=await api('health');assert.equal(health.contractVersion,1);assert.equal(health.coreReady,true);assert.equal(health.engineVersion,'0.1.5-rc.2');
+  const idleControl=await control();assert.equal(idleControl.known,true);assert.equal(idleControl.running,0);assert.equal(idleControl.queued,0);assert.equal(idleControl.admission,'unsupported');
+  assert.equal((await fetch(origin+'/desktop-diagnostics/api/health')).status,401,'health uses native authentication');
+  assert.equal((await fetch(origin+'/desktop-diagnostics/api/health',{headers:{cookie,origin:'https://example.com'}})).status,403);
+  if(process.argv.includes('--health-only')){assert.equal(requests.length,0,'health never calls models');results.push({protocol,health:'PASS'});continue;}
   if(process.argv.includes('--vision-only')){
     async function settingsRpc(method,args){const response=await fetch(origin+'/api/'+method,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args}})});const value=await response.json();assert(value.result?.ok,JSON.stringify(value));return value.result.value;}
     const description=await settingsRpc('settings/describe',{}),vision=description.namespaces.find(n=>n.ns==='desktop-vision');assert(vision);
@@ -194,7 +203,8 @@ for(const protocol of ['openai','anthropic']) {
   mode='cancel';const cancelSession=await rpc('session/create',{cwd:home});
   await rpc('session/prompt',{sessionId:cancelSession.sessionId,requestId:crypto.randomUUID(),mode:'queue',content:[{type:'text',text:'PRIVATE_CANCEL_PROMPT'}]});
   const end=Date.now()+15000;while(!pending&&Date.now()<end)await pause();assert(pending);
-  await rpc('session/cancel',{sessionId:cancelSession.sessionId});
+  assert.ok((await control()).running>=1);
+  await control('cancel');
   let cancelled=false;for(let i=0;i<100;i++){cancelled=(await api('snapshot')).records.some(r=>r.status==='aborted');if(cancelled)break;await pause();}assert(cancelled,'cancel observed');
   // 0.1.7: actual tool/result correlation, bounded archive, guarded compare/export and experiment settings.
   mode='normal';const current=await api('snapshot');assert(current.tools.some(t=>t.name==='read'&&t.status==='completed'));

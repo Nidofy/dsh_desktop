@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "scaleFactor": 1.75,
+  "before": [
+    {
+      "originX": 612,
+      "originY": 437
+    }
+  ],
+  "after": [
+    {
+      "originX": 752,
+      "originY": 542
+    }
+  ],
+  "method": "native Window Pointer Events through sky.drag; actual host position and persisted settings"
+}

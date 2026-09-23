@@ -22,6 +22,9 @@ import {selfTestSessionPrefix} from './self-test.mjs';
 import {CACHE_KEY_BRIDGE_VERSION} from './desktop-cache-key.mjs';
 import {installTaskSnapshots} from './task-snapshot-integration.mjs';
 import {installDesktopWorkspace} from './desktop-workspace.mjs';
+import {desktopHealth} from './desktop-health.mjs';
+import {snapshotPipe} from './task-snapshot-bridge.mjs';
+import {installDesktopControl} from './desktop-control.mjs';
 
 export const name = 'desktop-observability';
 export const inject = ['llm','webServer','connection'];
@@ -36,6 +39,9 @@ export function apply(ctx, config = {}) {
   const changes=installChangeReview(ctx,diagnosticState.home);
   const readAppearance = installDesktopTheme(ctx, diagnosticState.home);
   const actionsReady = installProjectActions(ctx, diagnosticState.home);
+  installDesktopControl(ctx,actionsReady,[cache.probe,selfTest.runner]);
+  let actionsHealth = 'starting';
+  actionsReady.then(()=>{actionsHealth='ready';},()=>{actionsHealth='unavailable';});
   const artifacts=installArtifacts(ctx,diagnosticState.home,actionsReady);
   // Contain initialization failures; action routes report them without breaking conversation.
   actionsReady.catch(() => {});
@@ -130,6 +136,10 @@ export function apply(ctx, config = {}) {
     const url=new URL(req.url,'http://127.0.0.1');
     const json=(status,data)=>res.writeHead(status,{'content-type':'application/json; charset=utf-8'}).end(JSON.stringify(data));
     try {
+      if(req.method==='GET'&&url.pathname==='/desktop-diagnostics/api/health'){
+        const value=desktopHealth(ctx,{actions:actionsHealth,snapshotBridge:snapshotPipe.enabled});
+        json(value.coreReady?200:503,value);return;
+      }
       if(url.pathname.startsWith('/desktop-diagnostics/api/desktop/')){await desktop.handle(req,res,url);return;}
       if(url.pathname==='/desktop-diagnostics/self-test'||url.pathname==='/desktop-diagnostics/self-test.js'||url.pathname.startsWith('/desktop-diagnostics/api/self-test/')||(url.pathname==='/desktop-diagnostics/api/export'&&url.searchParams.has('selfTest'))){await selfTest.handle(req,res,url);return;}
       if(url.pathname==='/desktop-diagnostics/artifacts'||url.pathname==='/desktop-diagnostics/artifacts.js'||url.pathname.startsWith('/desktop-diagnostics/api/artifacts/')||(url.pathname==='/desktop-diagnostics/api/export'&&url.searchParams.has('artifact'))){await artifacts.handle(req,res,url);return;}

@@ -5,6 +5,11 @@ mod config;
 mod credential_cleanup;
 mod desktop_theme;
 mod engine;
+mod engine_control;
+mod environments;
+mod settings_owner;
+mod engine_http;
+mod engine_snapshots;
 mod logging;
 mod notifications;
 mod pets;
@@ -62,6 +67,7 @@ async fn credential_cleanup(
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = engine.save_lock.lock().map_err(|_| "凭据清理锁不可用")?;
         let state = engine.state.lock().map_err(|_| "引擎状态不可用")?;
+        if state.backend_health!="ready" {return Err("请等待连接就绪后再清理凭据；启动和恢复中的凭据暂时保留。".into());}
         if let Some(selection) = selection {
             serde_json::to_value(credential_cleanup::apply(&engine.root, &state.active_credential_ref, selection)?)
         } else {
@@ -75,6 +81,7 @@ async fn desktop_storage(
     profile_id: String,
     days: u32,
     selection: Option<Vec<storage::Selection>>,
+    ticket:Option<String>,
 ) -> Result<serde_json::Value, String> {
     let engine = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -85,6 +92,7 @@ async fn desktop_storage(
             profiles::legacy_home(&engine.root, &profile.id)?
         };
         if let Some(selection) = selection {
+            engine_control::authorize(&engine,ticket.as_deref())?;
             if selection.is_empty() || selection.len() > 200 {
                 return Err("每次选择 1–200 份记录".into());
             }
@@ -153,17 +161,16 @@ async fn save_connection_profile(
     .map_err(|_| "Connection save task failed".to_string())?
 }
 #[tauri::command]
-async fn delete_connection_profile(state: tauri::State<'_, Engine>, id: String, replacement_id: Option<String>, revision: u64) -> Result<profiles::Catalog, String> {
+async fn delete_connection_profile(state: tauri::State<'_, Engine>, id: String, replacement_id: Option<String>, revision: u64, ticket:Option<String>) -> Result<profiles::Catalog, String> {
     let engine=state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         let _save=engine.save_lock.lock().map_err(|_| "Configuration save lock unavailable")?;
         let running=engine.state.lock().map_err(|_| "Engine state unavailable")?.active_profile_id == id;
-        let catalog=profiles::remove(&engine.root,&id,replacement_id.as_deref(),revision)?;
         if running {
-            let (tx,rx)=std::sync::mpsc::channel();
-            engine.control.send(Control::RestartAndWait(tx)).map_err(|_| "连接已删除，请重新启动引擎")?;
-            rx.recv_timeout(std::time::Duration::from_secs(110)).map_err(|_| "连接已删除，引擎启动超时，请检查运行状态")??;
+            return Err("请先应用另一个连接，再删除此运行连接。最后一个连接可保留并编辑。".into());
         }
+        let _=ticket;
+        let catalog=profiles::remove(&engine.root,&id,replacement_id.as_deref(),revision)?;
         Ok(catalog)
     }).await.map_err(|_| "删除操作中断，请重新载入连接列表".to_string())?
 }
@@ -172,6 +179,7 @@ async fn activate_connection_profile(
     state: tauri::State<'_, Engine>,
     id: String,
     revision: u64,
+    ticket: Option<String>,
 ) -> Result<(), String> {
     let engine = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -189,14 +197,20 @@ async fn activate_connection_profile(
                 catalog.profiles.iter().find(|profile|profile.id==id).and_then(|profile|serde_json::to_value(profile).ok())==running.active_profile_definition
         };
         if already_applied { return Ok(()); }
-        profiles::activate(&engine.root, &id, revision)?;
+        engine_control::authorize(&engine,ticket.as_deref())?;
+        let profile=catalog.profiles.iter().find(|p|p.id==id).ok_or("连接已不存在，请重新载入。")?.clone();
+        let (runtime,previous)={let state=engine.state.lock().map_err(|_|"Engine state unavailable")?;
+            (PathBuf::from(&state.runtime_path),state.active_profile_definition.clone().and_then(|value|serde_json::from_value(value).ok()))};
+        config::preflight_runtime(&profile.connection,&runtime)?;
+        profiles::validate_network(&profile.network)?;
+        if profiles::key(&engine.root,&profile)?.is_empty(){return Err("此连接缺少凭据，请先保存 API Key。".into());}
         let (tx, rx) = std::sync::mpsc::channel();
         engine
             .control
-            .send(Control::RestartAndWait(tx))
+            .send(Control::Apply(engine::Apply{profile,previous,revision,reply:tx}))
             .map_err(|_| "Supervisor is unavailable")?;
         rx.recv_timeout(std::time::Duration::from_secs(110))
-            .map_err(|_| "连接已选择，但引擎启动超时；请查看诊断。".to_string())?
+            .map_err(|_| "连接应用结果尚未确认；请查看运行状态，不要连续重复应用。".to_string())?
     })
     .await
     .map_err(|_| "Connection activation task failed".to_string())?
@@ -250,6 +264,7 @@ async fn save_connection(
         if engine.root.join("connections.json").exists() {
             return Err("请通过多连接管理保存设置。".into());
         }
+        if engine.state.lock().map_err(|_|"引擎状态不可用")?.backend_pid.is_some(){return Err("请通过连接管理保存，再确认应用。".into());}
         config::save(&engine.root, &connection, &api_key)?;
         let (tx, rx) = std::sync::mpsc::channel();
         engine
@@ -263,11 +278,19 @@ async fn save_connection(
     .map_err(|_| "Configuration save task failed".to_string())?
 }
 #[tauri::command]
-fn restart_engine(state: tauri::State<Engine>) -> Result<(), String> {
-    state
-        .control
-        .send(Control::Restart)
-        .map_err(|_| "Supervisor is unavailable".into())
+async fn restart_engine(state: tauri::State<'_,Engine>,ticket:Option<String>,repair_workspaces:Option<bool>) -> Result<(), String> {
+    let engine=state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||{
+        let _lock=engine.save_lock.lock().map_err(|_|"配置锁不可用")?;
+        engine_control::authorize(&engine,ticket.as_deref())?;
+        engine.repair_workspaces.store(repair_workspaces.unwrap_or(false),std::sync::atomic::Ordering::SeqCst);
+        let(tx,rx)=std::sync::mpsc::channel();engine.control.send(Control::RestartAndWait(tx)).map_err(|_|"引擎管理已退出")?;
+        rx.recv_timeout(std::time::Duration::from_secs(110)).map_err(|_|"重启结果未确认，请检查运行状态")?
+    }).await.map_err(|_|"重启未完成".to_string())?
+}
+#[tauri::command]
+async fn engine_control(state:tauri::State<'_,Engine>,action:String)->Result<serde_json::Value,String>{
+    let engine=state.inner().clone();tauri::async_runtime::spawn_blocking(move||engine_control::inspect(&engine,&action)).await.map_err(|_|"任务检查未完成".to_string())?
 }
 #[tauri::command]
 fn open_logs(state: tauri::State<Engine>) -> Result<(), String> {
@@ -280,6 +303,10 @@ fn open_logs(state: tauri::State<Engine>) -> Result<(), String> {
         .spawn()
         .map_err(|_| "Cannot open log folder")?;
     Ok(())
+}
+#[tauri::command]
+async fn desktop_environments(action:String,id:Option<String>)->Result<serde_json::Value,String>{
+    tauri::async_runtime::spawn_blocking(move||environments::dispatch(&action,id.as_deref())).await.map_err(|_|"环境操作未完成，请重新检查".to_string())?
 }
 #[tauri::command]
 fn quit_app(app: tauri::AppHandle) {
@@ -309,6 +336,7 @@ fn restore_main(app: &tauri::AppHandle) {
     restore_window(app, label);
 }
 fn main() {
+    if let Err(error)=environments::initialize(){browser_runtime::show_startup_error(&error);return;}
     let Some(_instance) = process::Instance::acquire() else {
         return;
     };
@@ -346,20 +374,19 @@ fn main() {
             open_session_diagnostics,
             reset_diagnostic_key,
             restart_engine,
+            engine_control,
+            desktop_environments,
             open_logs,
             quit_app
         ])
         .setup(|app| {
-            let root = PathBuf::from(
-                std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is unavailable")?,
-            )
-            .join("DSHDesktop");
+            let root = environments::root()?;
             fs::create_dir_all(&root)?;
             let logs = logging::Logs::new(&root)?;
             let runtime = std::env::current_exe()?.parent().unwrap().join("resources");
             WebviewWindowBuilder::new(app, "shell", WebviewUrl::App("index.html".into()))
                 .data_directory(root.join("webview"))
-                .title("DSHDesktop — 设置")
+                .title(if environments::id()=="stable"{"DSHDesktop — 设置".to_string()}else{format!("DSHDesktop — 候选 {}",environments::id())})
                 .inner_size(780.0, 800.0)
                 .min_inner_size(600.0, 600.0)
                 .on_navigation(|u| {
@@ -445,7 +472,8 @@ fn main() {
                 let _ = engine::show_diagnostics(app);
             }
             "restart" => {
-                let _ = app.state::<Engine>().control.send(Control::Restart);
+                restore_window(app,"shell");
+                if let Some(w)=app.get_webview_window("shell"){let _=w.eval("window.dispatchEvent(new Event('desktop-restart-request'))");}
             }
             "quit" => app.exit(0),
             _ => {}

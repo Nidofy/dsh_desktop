@@ -153,6 +153,8 @@ pub struct Connection {
     pub models: Option<Vec<String>>,
     #[serde(default)]
     pub model_limits: std::collections::BTreeMap<String, ModelLimits>,
+    #[serde(default)]
+    pub model_capabilities: std::collections::BTreeMap<String, ModelCapability>,
     #[serde(default = "default_timeout")]
     pub timeout_ms: u32,
     #[serde(default = "default_timeout")]
@@ -173,6 +175,7 @@ impl Default for Connection {
             api: ApiFormat::default(),
             models: None,
             model_limits: Default::default(),
+            model_capabilities: Default::default(),
             timeout_ms: default_timeout(),
             stream_idle_timeout_ms: default_timeout(),
             cache: CacheSettings::default(),
@@ -180,20 +183,15 @@ impl Default for Connection {
     }
 }
 impl Connection {
+    pub fn preserve_legacy_capabilities(&mut self){
+        for id in self.model_ids(){if !self.model_capabilities.contains_key(&id){
+            let limits=self.model_limits.get(&id).copied().unwrap_or_else(||if matches!(id.to_ascii_lowercase().trim_end_matches("[1m]"),"glm-5.3"|"glm-5.3-flash"){ModelLimits{context_window:1000000,max_tokens:128000}}else{ModelLimits::default()});self.model_limits.entry(id.clone()).or_insert(limits);
+            self.model_capabilities.insert(id.clone(),if self.builtin_provider.is_some(){ModelCapability{source:"preset".into(),reasoning:None,binding:self.capability_binding(&id)}}else{ModelCapability{source:"legacy".into(),reasoning:Some(vec!["off","minimal","low","medium","high","xhigh","max"].into_iter().map(String::from).collect()),binding:self.capability_binding(&id)}});
+        }}
+    }
+    pub fn capability_binding(&self,id:&str)->String{use sha2::{Digest,Sha256};format!("{:x}",Sha256::digest(serde_json::to_vec(&(self.base_url.trim_end_matches('/'),&self.builtin_provider,self.api,id)).unwrap()))}
     pub fn limits(&self, id: &str) -> ModelLimits {
-        self.model_limits.get(id).copied().unwrap_or_else(|| {
-            if matches!(
-                id.to_ascii_lowercase().trim_end_matches("[1m]"),
-                "glm-5.3" | "glm-5.3-flash"
-            ) {
-                ModelLimits {
-                    context_window: 1000000,
-                    max_tokens: 128000,
-                }
-            } else {
-                ModelLimits::default()
-            }
-        })
+        self.model_limits.get(id).copied().unwrap_or_default()
     }
     pub fn model_ids(&self) -> Vec<String> {
         self.models.clone().unwrap_or_else(|| {
@@ -214,11 +212,32 @@ impl Connection {
         }
     }
 }
+#[derive(Clone,Serialize,Deserialize)]
+#[serde(rename_all="camelCase",deny_unknown_fields)]
+pub struct ModelCapability {
+    pub source:String,
+    #[serde(default)]pub binding:String,
+    #[serde(default)] pub reasoning:Option<Vec<String>>,
+}
 fn wide(value: &str) -> Vec<u16> {
     value.encode_utf16().chain(Some(0)).collect()
 }
 fn credential_target(base_url: &str) -> Vec<u16> {
-    wide(&format!("{TARGET}/{base_url}"))
+    wide(&format!("{}/{base_url}",credential_namespace()))
+}
+fn credential_namespace()->String{if crate::environments::id()=="stable"{TARGET.into()}else{format!("{TARGET}/environments/{}",crate::environments::id())}}
+pub(crate) fn delete_environment_credentials(id:&str)->Result<(),String>{
+    if !crate::environments::valid_id(id){return Err("环境编号无效".into());}
+    let prefix=format!("{TARGET}/environments/{id}/");
+    unsafe {
+        let mut count=0;let mut pointer=std::ptr::null_mut();
+        if CredEnumerateW(wide(&format!("{prefix}*")).as_ptr(),0,&mut count,&mut pointer)==0{return if std::io::Error::last_os_error().raw_os_error()==Some(1168){Ok(())}else{Err("无法检查候选环境凭据".into())};}
+        struct Allocation(*mut *mut CREDENTIALW);impl Drop for Allocation{fn drop(&mut self){unsafe{CredFree(self.0 as _)}}}let _allocation=Allocation(pointer);
+        if count>4096{return Err("环境凭据数量超过上限".into());}
+        for credential in std::slice::from_raw_parts(pointer,count as usize){let value=&**credential;if value.Type!=CRED_TYPE_GENERIC||value.TargetName.is_null(){continue;}let mut len=0;while len<32768&&*value.TargetName.add(len)!=0{len+=1;}if len==32768{return Err("凭据名称无效".into());}
+            let name=String::from_utf16_lossy(std::slice::from_raw_parts(value.TargetName,len));if name.starts_with(&prefix)&&CredDeleteW(value.TargetName,CRED_TYPE_GENERIC,0)==0&&std::io::Error::last_os_error().raw_os_error()!=Some(1168){return Err("候选环境凭据删除失败，可重试".into());}
+        }Ok(())
+    }
 }
 pub fn read_key(base_url: &str) -> Result<String, String> {
     if base_url.is_empty() {
@@ -289,7 +308,7 @@ pub(crate) struct CredentialMetadata {
 // Enumerate only immutable profile references, never legacy URL credentials or
 // the diagnostic HMAC key. No CredentialBlob is read or returned.
 pub(crate) fn profile_credentials() -> Result<Vec<CredentialMetadata>,String> {
-    let prefix=format!("{TARGET}/connection-profile-v1/");
+    let prefix=format!("{}/connection-profile-v1/",credential_namespace());
     let filter=wide(&format!("{prefix}*"));
     unsafe {
         let mut count=0u32;let mut pointer=std::ptr::null_mut();
@@ -330,10 +349,11 @@ pub fn load(root: &Path) -> Result<Connection, String> {
     if !path.exists() {
         return Ok(Connection::default());
     }
-    serde_json::from_slice(&fs::read(path).map_err(|_| "Cannot read connection configuration")?)
-        .map_err(|_| "Invalid connection configuration".into())
+    let mut c:Connection=serde_json::from_slice(&fs::read(path).map_err(|_| "Cannot read connection configuration")?).map_err(|_| "Invalid connection configuration")?;
+    c.preserve_legacy_capabilities();Ok(c)
 }
 pub fn validate(c: &Connection) -> Result<(), String> {
+    if c.model_capabilities.len()>100 || c.model_capabilities.iter().any(|(id,cap)|!c.model_ids().contains(id)||!matches!(cap.source.as_str(),"preset"|"server"|"user"|"legacy"|"unknown")||cap.reasoning.as_ref().is_some_and(|r|r.len()>7||r==&["off"]||r.iter().collect::<std::collections::HashSet<_>>().len()!=r.len()||r.iter().any(|v|!matches!(v.as_str(),"off"|"minimal"|"low"|"medium"|"high"|"xhigh"|"max")))){return Err("模型能力声明无效".into());}
     c.cache.validate(c.api)?;
     if !(1000..=7200000).contains(&c.timeout_ms)
         || !(1000..=7200000).contains(&c.stream_idle_timeout_ms)
@@ -433,7 +453,11 @@ pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), 
             "displayName":c.provider_name, "apiKeyEnv":KEY_ENV,"api":c.api,
             "baseURL":c.provider_base_url(),"models":c.model_ids().iter().map(|id| {
                 let limits = c.limits(id);
-                let mut model = preset.and_then(|p| p["models"].as_array()).and_then(|models| models.iter().find(|m|m["id"] == *id)).cloned().unwrap_or_else(||serde_json::json!({"id":id,"name":id,"reasoningEfforts":{"off":null,"minimal":"minimal","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}));
+                let mut model = preset.and_then(|p| p["models"].as_array()).and_then(|models| models.iter().find(|m|m["id"] == *id)).cloned().unwrap_or_else(||serde_json::json!({"id":id,"name":id}));
+                if let Some(cap)=c.model_capabilities.get(id){
+                    if let Some(efforts)=&cap.reasoning{model["reasoningEfforts"]=if efforts.is_empty(){serde_json::json!(false)}else{serde_json::Value::Object(efforts.iter().map(|e|(e.clone(),if e=="off"{serde_json::Value::Null}else{serde_json::json!(e)})).collect())};}
+                    else if cap.source=="unknown" {model["reasoningEfforts"]=serde_json::json!(false);}
+                }
                 model["contextWindow"] = limits.context_window.into();
                 model["maxTokens"] = limits.max_tokens.into();
                 model
@@ -470,9 +494,53 @@ pub fn write_overlay(root: &Path, c: &Connection, runtime: &Path) -> Result<(), 
     )
     .map_err(|_| "Cannot save native DSH overlay".into())
 }
+/// Check the optional pinned bridge before retiring the working backend. Native
+/// policy deliberately does not depend on this adapter's source fingerprint.
+pub fn preflight_runtime(c: &Connection, runtime: &Path) -> Result<(), String> {
+    use sha2::{Digest,Sha256};
+    validate(c)?;
+    if c.cache.key_mode == CacheKeyMode::Native || c.api != ApiFormat::OpenAi { return Ok(()); }
+    let file=runtime.join("dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js");
+    if fs::metadata(&file).map_err(|_|"缓存适配器缺失，当前连接保持不变。")?.len()>2*1024*1024 {
+        return Err("缓存适配器不匹配，当前连接保持不变。".into());
+    }
+    let bytes=fs::read(file).map_err(|_|"缓存适配器无法读取，当前连接保持不变。")?;
+    if format!("{:x}",Sha256::digest(bytes))!="1f787eb5cd3d0308e7a2563cdb2b8cc2c1fc153fe06b55d39439fb2446059483" {
+        return Err("缓存适配器不匹配。请使用完整配套运行时，或选择原生缓存键策略；当前连接保持不变。".into());
+    }
+    Ok(())
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn unknown_model_has_no_inferred_reasoning_and_binding_is_route_specific(){
+        let repo=Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();let dir=repo.join(".build").join(format!("capabilities-{}",crate::profiles::new_id().unwrap()));fs::create_dir_all(&dir).unwrap();
+        let mut c=Connection{provider_name:"Fixture".into(),base_url:"http://localhost:9000/v1".into(),model:"glm-5.3".into(),..Default::default()};
+        let binding=c.capability_binding("glm-5.3");c.model_capabilities.insert("glm-5.3".into(),ModelCapability{source:"unknown".into(),binding:binding.clone(),reasoning:None});
+        validate(&c).unwrap();write_overlay(&dir,&c,&repo.join("runtime")).unwrap();
+        let overlay:serde_json::Value=serde_json::from_slice(&fs::read(dir.join("desktop.patch.json")).unwrap()).unwrap();
+        assert_eq!(overlay[1]["config"]["providers"]["desktop-internal"]["models"][0]["reasoningEfforts"],false);
+        c.base_url="http://localhost:9001/v1".into();assert_ne!(binding,c.capability_binding("glm-5.3"));c.base_url="http://localhost:9000/v1".into();c.api=ApiFormat::Anthropic;assert_ne!(binding,c.capability_binding("glm-5.3"));
+        for values in [vec!["off"],vec!["high","high"],vec!["imaginary"]]{c.model_capabilities.get_mut("glm-5.3").unwrap().reasoning=Some(values.into_iter().map(String::from).collect());assert!(validate(&c).is_err());}
+    }
+    #[test]
+    fn preflight_refuses_changed_bridge_before_config_mutation() {
+        let repo=Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let root=repo.join(".build").join(format!("cache-preflight-{}",std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let mut connection=Connection{provider_name:"Fixture".into(),base_url:"http://127.0.0.1:9000/v1".into(),model:"fixture".into(),..Default::default()};
+        preflight_runtime(&connection,&root).unwrap();
+        connection.cache.key_mode=CacheKeyMode::Off;
+        assert!(preflight_runtime(&connection,&root).is_err());
+        let adapter=root.join("dsh/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js");
+        fs::create_dir_all(adapter.parent().unwrap()).unwrap();fs::write(&adapter,"changed adapter").unwrap();
+        assert!(preflight_runtime(&connection,&root).is_err());
+        assert!(!root.join("desktop.patch.json").exists());assert!(!root.join("connections.json").exists());
+        preflight_runtime(&connection,&repo.join("runtime")).unwrap();
+        connection.cache.key_mode=CacheKeyMode::Native;
+        preflight_runtime(&connection,&root).unwrap();
+    }
     #[test]
     fn bundled_provider_presets_keep_model_capabilities() {
         let presets: Vec<serde_json::Value> = serde_json::from_str(include_str!("../generated/provider-catalog.json")).unwrap();
@@ -513,7 +581,7 @@ mod tests {
                 if markers && api == ApiFormat::Anthropic {
                     continue;
                 }
-                let c = Connection {
+                let mut c = Connection {
                     api,
                     models: Some(vec!["glm-5.3-flash".into(), "glm-5.3".into()]),
                     cache: CacheSettings {
@@ -523,6 +591,7 @@ mod tests {
                     },
                     ..legacy.clone()
                 };
+                c.preserve_legacy_capabilities();
                 let dir = root
                     .join(".build/cache-profile-fixtures")
                     .join(if api == ApiFormat::OpenAi {
@@ -561,6 +630,7 @@ mod tests {
     #[test]
     fn independent_cache_key_is_explicit_and_model_scoped() {
         let mut c: Connection = serde_json::from_str(r#"{"providerName":"Cache fixture","baseUrl":"http://localhost:9000/v1","model":"glm-5.3","models":["glm-5.3-flash","glm-5.3"]}"#).unwrap();
+        c.preserve_legacy_capabilities();
         assert_eq!(c.cache.key_mode, CacheKeyMode::Native);
         c.cache.key_mode = CacheKeyMode::Session;
         assert!(validate(&c).is_err());
@@ -634,7 +704,7 @@ mod tests {
         ] {
             let dir = root.join(name);
             fs::create_dir_all(&dir).unwrap();
-            let c = Connection {
+            let mut c = Connection {
                 api,
                 models: Some(vec!["glm-5.3-flash".into(), "glm-5.3".into()]),
                 model: "glm-5.3".into(),
@@ -657,6 +727,9 @@ mod tests {
                 .into(),
                 ..legacy.clone()
             };
+            // This fixture represents an existing connection, loaded through
+            // the same explicit legacy migration as production catalogues.
+            c.preserve_legacy_capabilities();
             write_overlay(
                 &dir,
                 &c,
@@ -727,6 +800,9 @@ mod tests {
             r#"{"providerName":"Old","baseUrl":"http://localhost/v1","model":"glm-5.3","models":["glm-5.3","glm-5.3-flash"]}"#,
         ] {
             let mut c: Connection = serde_json::from_str(json).unwrap();
+            assert_eq!(c.limits("glm-5.3"),ModelLimits::default(),"new unknown model names do not infer limits");
+            c.preserve_legacy_capabilities();
+            assert_eq!(c.model_capabilities["glm-5.3"].source,"legacy");
             assert_eq!(
                 c.limits("glm-5.3"),
                 ModelLimits {

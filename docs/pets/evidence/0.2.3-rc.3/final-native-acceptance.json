@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "version": "0.2.3-rc.3",
+  "status": "PASS",
+  "buildId": "4fac8183-2c8d-4e15-8153-d1253f880712",
+  "exeSha256": "e4849e511667ef2910521e2a15f01f99d819180720b80b5e1afe94c8cfa31ab3",
+  "nativeSettingsEnable": true,
+  "nativeCountSequence": [
+    0,
+    1,
+    2,
+    3,
+    2,
+    3,
+    0,
+    3
+  ],
+  "narrowSettingsWidth": 600,
+  "restartPetCount": 3,
+  "menuExitProcessCount": 19,
+  "settingsExitProcessCount": 19,
+  "remainingProcesses": 0,
+  "directoryFiles": 26850,
+  "archiveFiles": 26851,
+  "unmeasured": [
+    "multi-monitor mixed DPI",
+    "physical touch and pen",
+    "long-running enterprise environment"
+  ],
+  "userDataModified": false
+}

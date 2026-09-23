@@ -7,6 +7,9 @@ export function startupErrorCode(error,stage='BOOT') {
   if(['EACCES','EPERM'].includes(error?.code))return 'BOOT_ACCESS_DENIED';
   if(['MODULE_NOT_FOUND','ERR_MODULE_NOT_FOUND'].includes(error?.code))return 'BOOT_MODULE_MISSING';
   if(error?.code==='EADDRINUSE')return 'BOOT_ADDRESS_IN_USE';
+  if(stage==='SETTINGS'&&message.startsWith('atomic-write: timed out waiting for the writer lock'))return 'BOOT_SETTINGS_LOCKED';
+  if(error?.code==='SETTINGS_TRANSACTION_CONFLICT')return 'BOOT_SETTINGS_CONFLICT';
+  if(['SETTINGS_TRANSACTION_UNREADABLE','SETTINGS_TRANSACTION_INVALID','SETTINGS_TRANSACTION_PENDING','SETTINGS_PROTECTION_UNAVAILABLE'].includes(error?.code))return 'BOOT_SETTINGS_RECOVERY';
   if(stage==='SETTINGS')return 'BOOT_SETTINGS_INVALID';
   if(stage==='PREFERENCES')return 'BOOT_PREFERENCES_INVALID';
   return 'BOOT_UNEXPECTED';

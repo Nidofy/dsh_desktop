@@ -41,11 +41,14 @@ impl Drop for Job {
 pub struct Instance(HANDLE);
 impl Instance {
     pub fn acquire() -> Option<Self> {
+        Self::for_environment(crate::environments::id())
+    }
+    pub fn for_environment(environment:&str)->Option<Self>{
         use windows_sys::Win32::{
             Foundation::{GetLastError, ERROR_ALREADY_EXISTS},
             System::Threading::CreateMutexW,
         };
-        let name: Vec<u16> = "Local\\DSHDesktop-0.1\0".encode_utf16().collect();
+        let name: Vec<u16> = if environment=="stable"{"Local\\DSHDesktop-0.1\0".into()}else{format!("Local\\DSHDesktop-environment-{environment}\0")}.encode_utf16().collect();
         unsafe {
             let handle = CreateMutexW(std::ptr::null(), 0, name.as_ptr());
             if handle.is_null() {

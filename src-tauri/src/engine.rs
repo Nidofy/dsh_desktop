@@ -2,7 +2,7 @@ use crate::{config, logging::Logs, process::Job, profiles};
 use serde::Serialize;
 use std::{
     fs,
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufRead, BufReader, Write},
     os::windows::process::CommandExt,
     path::PathBuf,
     process::{Child, Command, Stdio},
@@ -19,6 +19,10 @@ use url::Url;
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostics {
+    pub environment_id:String,
+    pub engine_epoch:String,
+    pub last_successful_stage:String,
+    pub failure:Option<Failure>,
     #[serde(skip)]
     pub active_credential_ref: String,
     #[serde(skip)]
@@ -42,13 +46,25 @@ pub struct Diagnostics {
     pub backend_pid: Option<u32>,
     pub backend_port: Option<u16>,
     pub backend_health: String,
+    pub transport_ready: bool,
+    pub core_ready: bool,
     pub detail: String,
 }
+#[derive(Clone,Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct Failure {pub id:String,pub phase:String,pub component:String,pub reason:String,pub retryable:bool,pub desktop_version:String,pub engine_version:String,pub last_successful_stage:String}
 pub enum Control {
-    Restart,
+    Inspect{id:String,action:String,reply:Sender<serde_json::Value>},
     RestartAndWait(Sender<Result<(), String>>),
+    Apply(Apply),
     Maintenance(Box<dyn FnOnce() + Send>),
     Stop,
+}
+pub struct Apply {
+    pub profile: profiles::Profile,
+    pub previous: Option<profiles::Profile>,
+    pub revision: u64,
+    pub reply: Sender<Result<(), String>>,
 }
 #[derive(Clone)]
 pub struct Engine {
@@ -58,6 +74,9 @@ pub struct Engine {
     pub done: Arc<Mutex<Receiver<()>>>,
     pub save_lock: Arc<Mutex<()>>,
     pub storage_quota: crate::storage_quota::Quota,
+    pub snapshot_workers: Arc<std::sync::atomic::AtomicUsize>,
+    pub switch_ticket: Arc<Mutex<Option<crate::engine_control::Ticket>>>,
+    pub repair_workspaces:Arc<std::sync::atomic::AtomicBool>,
 }
 struct Running {
     child: Child,
@@ -104,9 +123,14 @@ fn startup_failure(line: &str) -> Option<&'static str> {
         "BOOT_MODULE_MISSING" => "引擎依赖缺失或旧模块链接失效。请使用包含 resources 的完整验证目录启动。",
         "BOOT_ADDRESS_IN_USE" => "引擎端口被占用，请重启引擎。",
         "BOOT_SETTINGS_INVALID" => "DSH 设置无法载入或同步。请检查数据目录中的 dsh/settings.yaml 与 desktop.patch.json，原设置已保留。",
+        "BOOT_SETTINGS_CONFLICT" => "未完成的配置切换与当前文件有冲突，已停止恢复。请保留 settings.yaml 和 desktop-settings-transaction.json，并从备份确认需要保留的配置。",
+        "BOOT_SETTINGS_RECOVERY" => "配置切换的恢复记录无法读取或解密，现有记录已保留。请使用原 Windows 账户重试，并检查本机 PowerShell 和数据目录权限。",
+        "BOOT_SETTINGS_LOCKED" => "设置写入锁仍被占用，请先退出旧 DSH 进程。异常退出后的遗留锁需确认原进程已结束再处理；现有配置与事务记录均保留。",
+        "CACHE_KEY_POLICY_UNSUPPORTED" => "当前连接不支持所选独立缓存键策略。请在连接设置中选择原生缓存键策略，或检查 OpenAI 格式及已确认模型列表。",
         "BOOT_PREFERENCES_INVALID" => "诊断偏好无法载入，请检查数据目录中的诊断设置与访问权限。",
         "BOOT_UNEXPECTED" => "DSH 引擎启动异常。请在运行状态中复制诊断信息，并提供日志目录内的 desktop.log。",
         "BOOT_WORKSPACE_INCONSISTENT" => "工作区记录存在冲突，引擎未能启动。请保留数据目录，并提供启动日志以修复工作区索引。",
+        "WORKSPACE_VERSION_UNSUPPORTED" => "当前引擎不支持此工作区存储版本，迁移未执行。请使用对应版本打开原数据，或在独立候选环境中验证。",
         _ => return None,
     })
 }
@@ -115,6 +139,9 @@ impl Engine {
         let (tx, rx) = mpsc::channel();
         let (done_tx, done_rx) = mpsc::channel();
         let state = Arc::new(Mutex::new(Diagnostics {
+            environment_id:crate::environments::id().into(),
+            engine_epoch:String::new(),
+            last_successful_stage:"host-ready".into(),failure:None,
             active_credential_ref: String::new(),
             active_profile_definition: None,
             active_profile_needs_apply: false,
@@ -146,10 +173,15 @@ impl Engine {
             backend_pid: None,
             backend_port: None,
             backend_health: "starting".into(),
+            transport_ready: false,
+            core_ready: false,
             detail: "Starting bundled DeepSeek Harness…".into(),
         }));
         let engine = Self {
             storage_quota: crate::storage_quota::Quota::new(root.clone()),
+            snapshot_workers: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
+            switch_ticket: Arc::new(Mutex::new(None)),
+            repair_workspaces:Arc::new(std::sync::atomic::AtomicBool::new(false)),
             root,
             state,
             control: tx,
@@ -167,19 +199,30 @@ impl Engine {
                 ),
             );
             let mut completion: Option<Sender<Result<(), String>>> = None;
+            let mut applying: Option<Apply> = None;
+            let mut fallback: Option<profiles::Profile> = None;
             loop {
-                match run(&app, &worker, &runtime, &logs, &rx, &mut completion) {
+                match run(&app, &worker, &runtime, &logs, &rx, &mut completion, &mut applying, fallback.take()) {
+                    Ok(Control::Inspect{reply,..})=>{let _=reply.send(serde_json::json!({"known":false}));}
                     Ok(Control::Stop) => break,
-                    Ok(Control::Restart) => {}
                     Ok(Control::RestartAndWait(reply)) => {
                         if let Some(old) = completion.replace(reply) {
                             let _ = old.send(Err("Restart was superseded".into()));
                         }
                     }
+                    Ok(Control::Apply(request)) => applying=Some(request),
                     Ok(Control::Maintenance(action)) => {
                         worker.maintenance(action);
                     }
                     Err(message) => {
+                        worker.record_failure(&message,&logs);
+                        if let Some(request)=applying.take() {
+                            // No catalogue change until core readiness. Saved edits
+                            // remain saved; fallback uses the exact old live definition.
+                            fallback=request.previous;
+                            let _=request.reply.send(Err(if fallback.is_some(){format!("连接应用失败：{message} 默认连接未改变，恢复结果见运行状态。 ")}else{message.clone()}));
+                            if fallback.is_some(){logs.write("desktop.log","connection apply failed; restoring previous live profile");continue;}
+                        }
                         if let Some(reply) = completion.take() {
                             let _ = reply.send(Err(message.clone()));
                         }
@@ -189,18 +232,20 @@ impl Engine {
                             let _ = w.show();
                             let _ = w.set_focus();
                         }
-                        match rx.recv() {
-                            Ok(Control::Restart) => {}
-                            Ok(Control::RestartAndWait(reply)) => completion = Some(reply),
+                        loop {match rx.recv() {
+                            Ok(Control::Inspect{reply,..})=>{let _=reply.send(serde_json::json!({"known":false}));continue;}
+                                    Ok(Control::RestartAndWait(reply)) => completion = Some(reply),
+                            Ok(Control::Apply(request)) => applying=Some(request),
                             Ok(Control::Maintenance(action)) => worker.maintenance(action),
-                            _ => break,
-                        }
+                            _ => {let _=done_tx.send(());return;},
+                        }break;}
                     }
                 }
             }
             if let Some(reply) = completion {
                 let _ = reply.send(Err("Engine stopped before restart completed".into()));
             }
+            if let Some(request)=applying {let _=request.reply.send(Err("连接应用未完成，引擎已停止；默认连接保持不变。".into()));}
             logs.write("desktop.log", "backend job closed; supervisor stopped");
             let _ = done_tx.send(());
         });
@@ -209,9 +254,17 @@ impl Engine {
     fn update(&self, health: &str, detail: &str, pid: Option<u32>, port: Option<u16>) {
         let mut s = self.state.lock().unwrap();
         s.backend_health = health.into();
+        if health != "ready" { s.transport_ready=false; s.core_ready=false; }
         s.detail = detail.into();
         s.backend_pid = pid;
         s.backend_port = port;
+        if health=="ready"{s.last_successful_stage="core-ready".into();}
+    }
+    fn record_failure(&self,message:&str,logs:&Logs){
+        let mut s=self.state.lock().unwrap();
+        let reason=if message.contains("缓存"){"CACHE_CAPABILITY"}else if message.contains("设置")||message.contains("配置"){"CONFIGURATION"}else if message.contains("CA"){"CERTIFICATE"}else if message.contains("工作区"){"WORKSPACE_COMPATIBILITY"}else if message.contains("快照"){"SNAPSHOT"}else if message.contains("超时"){"TIMEOUT"}else{"ENGINE_UNAVAILABLE"};
+        let failure=Failure{id:profiles::new_id().unwrap_or_else(|_|"unavailable".into()),phase:if s.backend_health=="ready"{"running"}else{"startup"}.into(),component:"desktop-supervisor".into(),reason:reason.into(),retryable:!matches!(reason,"CONFIGURATION"|"WORKSPACE_COMPATIBILITY"|"CACHE_CAPABILITY"),desktop_version:s.desktop_version.clone(),engine_version:s.dsh_version.clone(),last_successful_stage:s.last_successful_stage.clone()};
+        if let Ok(line)=serde_json::to_string(&failure){logs.write("desktop.log",&line);}s.failure=Some(failure);
     }
     fn maintenance(&self, action: Box<dyn FnOnce() + Send>) {
         // run() has returned and its Running/Job guards have been dropped.
@@ -241,7 +294,18 @@ fn run(
     logs: &Logs,
     rx: &Receiver<Control>,
     completion: &mut Option<Sender<Result<(), String>>>,
+    applying: &mut Option<Apply>,
+    fallback: Option<profiles::Profile>,
 ) -> Result<Control, String> {
+    // The old process is gone, but a bounded snapshot may be finishing an
+    // atomic file write. Do not start a new writer until that lane has drained.
+    // Stop remains serviceable while draining, including on a stalled disk.
+    let drain=Instant::now();
+    while engine.snapshot_workers.load(std::sync::atomic::Ordering::SeqCst)!=0 {
+        if let Ok(control)=rx.try_recv(){if let Control::Inspect{reply,..}=control{let _=reply.send(serde_json::json!({"known":false}));continue;}if let Some(request)=applying.take(){let _=request.reply.send(Err("连接应用被控制请求中断，默认连接保持不变。".into()));}return Ok(control);}
+        if drain.elapsed()>Duration::from_secs(20){return Err("旧引擎快照写入尚未结束，未启动新引擎。请稍后重试。".into());}
+        thread::sleep(Duration::from_millis(50));
+    }
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.destroy();
     }
@@ -267,10 +331,10 @@ fn run(
     // reference and reading its key; startup must not race collection.
     let mut active_state = engine.state.lock().map_err(|_| "Engine state unavailable")?;
     let catalog = profiles::load(&engine.root)?;
-    let profile = profiles::active(&catalog)?;
+    let profile = applying.as_ref().map(|a|&a.profile).or(fallback.as_ref()).unwrap_or(profiles::active(&catalog)?).clone();
     let c = &profile.connection;
     config::write_overlay(&engine.root, &c, runtime)?;
-    let key = profiles::key(&engine.root, profile)?;
+    let key = profiles::key(&engine.root, &profile)?;
     if !c.base_url.is_empty() && key.is_empty() {
         return Err("当前连接缺少凭据，请在设置中保存 API Key。".into());
     }
@@ -279,12 +343,15 @@ fn run(
         let state = &mut *active_state;
         state.active_profile_id = profile.id.clone();
         state.active_credential_ref = profile.credential_ref.clone();
-        state.active_profile_definition = serde_json::to_value(profile).ok();
+        state.active_profile_definition = serde_json::to_value(&profile).ok();
         state.active_profile_name = c.provider_name.clone();
         state.active_home = home.clone();
         state.snapshot_navigation = None;
     }
     drop(active_state);
+    if crate::settings_owner::recover(&engine.root)?{logs.write("desktop.log","recovered owned startup settings lock after confirmed child exit");}
+    let settings_owner=profiles::new_id()?;
+    engine.state.lock().map_err(|_|"引擎状态不可用")?.engine_epoch=settings_owner.clone();
     let workspace = engine.root.join("workspace");
     fs::create_dir_all(&home).map_err(|_| "Cannot create DSH home")?;
     fs::create_dir_all(&workspace).map_err(|_| "Cannot create default workspace")?;
@@ -307,6 +374,8 @@ fn run(
         .env("DSH_DESKTOP_ROOT", &engine.root)
         .env("DSH_TELEMETRY_DISABLED", "1")
         .env("DSH_DESKTOP_PATCH", engine.root.join("desktop.patch.json"))
+        .env("DSH_DESKTOP_SETTINGS_OWNER",&settings_owner)
+        .env("DSH_DESKTOP_REPAIR_WORKSPACES",if engine.repair_workspaces.swap(false,std::sync::atomic::Ordering::SeqCst){"1"}else{"0"})
         .env(config::KEY_ENV, key)
         .env("NODE_NO_WARNINGS", "1")
         .env_remove("NODE_OPTIONS")
@@ -332,6 +401,7 @@ fn run(
     let (url_tx, url_rx) = mpsc::channel();
     let (startup_error_tx, startup_error_rx) = mpsc::channel();
     let (snapshot_tx, snapshot_rx) = mpsc::sync_channel::<String>(64);
+    let(control_tx,control_rx)=mpsc::sync_channel::<serde_json::Value>(4);
     let mut snapshot_bridge = crate::task_snapshots::TaskBridge::new()?;
     snapshot_bridge.quota = Some(engine.storage_quota.clone());
     engine
@@ -344,6 +414,7 @@ fn run(
     let out_log = logs.clone();
     thread::spawn(move || {
         for line in BufReader::new(stdout).lines().map_while(Result::ok) {
+            if let Some(data)=line.strip_prefix("dsh control: "){if data.len()<1024{if let Ok(value)=serde_json::from_str(data){let _=control_tx.try_send(value);}}continue;}
             if let Some(reason) = startup_failure(&line) {
                 out_log.write("desktop.log", &line);
                 let _ = startup_error_tx.send(reason.to_string());
@@ -394,6 +465,7 @@ fn run(
     });
     let pid = child.id();
     let mut process = Running { child, _job: job };
+    crate::settings_owner::record(&engine.root,&crate::settings_owner::Owner{pid,token:settings_owner})?;
     let diagnostic_key = config::diagnostic_key(false).ok();
     let start_message = format!(
         "start {}\n",
@@ -406,25 +478,38 @@ fn run(
         .unwrap()
         .write_all(start_message.as_bytes())
         .map_err(|_| "Cannot signal runtime start")?;
+    let snapshots=crate::engine_snapshots::Worker::new(engine.clone(),home.clone(),snapshot_bridge,snapshot_rx);
     engine.update(
         "starting",
         "Waiting for authenticated HTTP readiness…",
         Some(pid),
         None,
     );
-    let agent = ureq::AgentBuilder::new()
-        .timeout(Duration::from_secs(2))
-        .build();
+    let mut http = crate::engine_http::Worker::new();
     let mut url = None;
     let mut ready = false;
-    let mut last_check = Instant::now();
+    let mut last_check = Instant::now() - Duration::from_secs(5);
     let mut last_ui_poll = Instant::now();
     let mut last_focus_revision = 0;
     let mut last_desktop_revision = 0;
     let mut notification_sink = None;
     let mut misses = 0;
+    let mut query:Option<(String,Instant,Sender<serde_json::Value>)>=None;
     loop {
+        if let Some((id,at,reply))=query.take(){
+            if let Ok(value)=control_rx.try_recv(){if value["id"]==id {let _=reply.send(value);}else{query=Some((id,at,reply));}}
+            else if at.elapsed()>Duration::from_secs(3){let _=reply.send(serde_json::json!({"known":false}));}
+            else{query=Some((id,at,reply));}
+        }
         if let Ok(control) = rx.try_recv() {
+            if let Control::Inspect{id,action,reply}=control {
+                if !ready||query.is_some(){let _=reply.send(serde_json::json!({"known":false}));}
+                else{let line=format!("desktop-control {}\n",serde_json::json!({"id":id,"action":action}));
+                    if process.child.stdin.as_mut().is_some_and(|input|input.write_all(line.as_bytes()).is_ok()){query=Some((id,Instant::now(),reply));}
+                    else{let _=reply.send(serde_json::json!({"known":false}));}}
+                continue;
+            }
+            if let Some(request)=applying.take(){let _=request.reply.send(Err("连接应用被控制请求中断，默认连接保持不变。".into()));}
             engine.update("restarting", "正在停止旧引擎并应用设置…", Some(pid), None);
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.hide();
@@ -446,19 +531,15 @@ fn run(
             }
             return Err(format!("DSH 引擎意外退出（退出码 {}）。请打开运行状态查看日志，或点击重启引擎。", status.code().map(|v|v.to_string()).unwrap_or_else(||"未知".into())));
         }
-        // Process one bounded private request per tick. Never block on save_lock:
-        // connection activation may hold it while waiting for this loop to stop.
-        if let Ok(line) = snapshot_rx.try_recv() {
-            let guard = engine.save_lock.try_lock().ok();
-            if let Some(reply) = snapshot_bridge.handle(&home, &line, guard.is_some()) {
+        if let Ok(reply) = snapshots.replies.try_recv() {
                 if let Some(input) = process.child.stdin.as_mut() {
                     input
-                        .write_all(reply.as_bytes())
+                        .write_all(reply.line.as_bytes())
                         .map_err(|_| "Snapshot supervisor pipe closed")?;
                 }
-                let navigation = snapshot_bridge.navigation.take();
+                let navigation = reply.navigation;
                 if let Ok(mut state) = engine.state.lock() {
-                    state.snapshot_status = snapshot_bridge.last_status.clone();
+                    state.snapshot_status = reply.status;
                     if navigation.is_some() { state.snapshot_navigation = navigation.clone(); }
                 }
                 if navigation.is_some() {
@@ -467,77 +548,37 @@ fn run(
                         let _ = window.set_focus();
                     }
                 }
-            }
         }
         if let Ok(found) = url_rx.try_recv() {
             url = Some(found);
         }
-        if !ready {
-            if start.elapsed() > Duration::from_secs(90) {
-                return Err("Startup timed out after 90 seconds. Check runtime integrity and application execution policy, then restart.".into());
-            }
-            if let Some(u) = &url {
-                if agent
-                    .get(u.as_str())
-                    .call()
-                    .is_ok_and(|r| r.status() == 200)
-                {
-                    show_main(app, u.clone())?;
-                    engine.update("ready", "Native DSH Web UI is ready", Some(pid), u.port());
-                    notification_sink = Some(crate::notifications::Sink::new(
-                        app.clone(),
-                        u.port().unwrap(),
-                        logs.clone(),
-                    ));
-                    if let Some(reply) = completion.take() {
-                        let _ = reply.send(Ok(()));
-                    }
-                    logs.write(
-                        "desktop.log",
-                        &format!(
-                            "backend ready pid={pid} port={} startup_ms={}",
-                            u.port().unwrap(),
-                            start.elapsed().as_millis()
-                        ),
-                    );
-                    ready = true;
-                    if let Some(w) = app.get_webview_window("shell") {
-                        if !c.base_url.is_empty() {
-                            let _ = w.hide();
-                        }
-                    }
-                }
-            }
-        } else if last_check.elapsed() > Duration::from_secs(5) {
-            last_check = Instant::now();
-            if let Some(u) = &url {
-                if agent
-                    .get(&format!("{}/", u.origin().ascii_serialization()))
-                    .call()
-                    .is_ok_and(|r| r.status() == 200)
-                {
-                    misses = 0;
-                } else {
-                    misses += 1;
-                }
-                if misses >= 3 {
-                    return Err(
-                        "Backend HTTP health failed three times. Restart Engine to recover.".into(),
-                    );
-                }
-            }
+        if !ready && start.elapsed() > Duration::from_secs(90) {
+            return Err("引擎核心服务就绪超时，请打开运行状态检查或重试。".into());
         }
-        if ready && last_ui_poll.elapsed() >= Duration::from_secs(1) {
-            last_ui_poll = Instant::now();
-            if let Some(u) = &url {
-                let endpoint = format!(
-                    "{}/desktop-diagnostics/api/recovery/desktop-events?pets={}{}",
-                    u.origin().ascii_serialization(),if crate::pets::enabled(app){1}else{0},crate::pets::cursor(app)
-                );
-                if let Ok(response) = agent.get(&endpoint).call() {
-                    if let Ok(value) = serde_json::from_reader::<_, serde_json::Value>(
-                        response.into_reader().take(32768),
-                    ) {
+        if let Some(reply)=http.poll() {
+            match reply {
+                crate::engine_http::Reply::Health{transport,core} => {
+                    if let Ok(mut state)=engine.state.lock(){state.transport_ready=transport;state.core_ready=core;}
+                    if !ready && core && transport {
+                        let u=url.as_ref().ok_or("Engine URL unavailable")?;
+                        show_main(app,u.clone())?;
+                        if let Some(request)=applying.as_ref(){profiles::activate(&engine.root,&request.profile.id,request.revision)?;}
+                        engine.update("ready","DSH 核心服务已就绪",Some(pid),u.port());
+                        notification_sink=Some(crate::notifications::Sink::new(app.clone(),u.port().unwrap(),logs.clone()));
+                        if let Some(reply)=completion.take(){let _=reply.send(Ok(()));}
+                        if let Some(request)=applying.take(){let _=request.reply.send(Ok(()));}
+                        logs.write("desktop.log",&format!("backend ready pid={pid} port={} startup_ms={}",u.port().unwrap(),start.elapsed().as_millis()));
+                        ready=true;
+                        if !c.base_url.is_empty(){if let Some(w)=app.get_webview_window("shell"){let _=w.hide();}}
+                    } else if ready {
+                        // A missing homepage does not kill an otherwise working core.
+                        if core {misses=0;} else {misses+=1;}
+                        if let Ok(mut state)=engine.state.lock(){state.detail=if !core {"核心服务暂不可达，正在重试…"}else if !transport {"核心服务正常，工作区页面暂不可达"}else{"DSH 核心服务已就绪"}.into();}
+                        if misses>=3{return Err("引擎核心服务连续三次无法确认，请重启引擎。".into());}
+                    }
+                }
+                crate::engine_http::Reply::Events(Some(value)) => {
+                    if let Some(u)=&url {
                         if let Some(pets)=value.get("pets"){if let Some(port)=u.port(){crate::pets::update(app,port,pets.clone());}}
                         if let Some(revision) = value["desktop"]["revision"].as_u64() {
                             if revision > last_desktop_revision {
@@ -564,6 +605,15 @@ fn run(
                         }
                     }
                 }
+                crate::engine_http::Reply::Events(None)=>{}
+            }
+        }
+        if let Some(u)=&url {
+            if last_check.elapsed()>=Duration::from_secs(if ready {5}else{1}) {
+                if http.submit(crate::engine_http::Request::Health(u.clone())){last_check=Instant::now();}
+            } else if ready && last_ui_poll.elapsed()>=Duration::from_secs(1) {
+                let endpoint=format!("{}/desktop-diagnostics/api/recovery/desktop-events?pets={}{}",u.origin().ascii_serialization(),if crate::pets::enabled(app){1}else{0},crate::pets::cursor(app));
+                if http.submit(crate::engine_http::Request::Events(endpoint)){last_ui_poll=Instant::now();}
             }
         }
         thread::sleep(Duration::from_millis(100));
@@ -605,7 +655,7 @@ fn show_main(app: &tauri::AppHandle, url: Url) -> Result<(), String> {
         .menu(menu)
         .initialization_script(include_str!("../generated/desktop-theme.js"))
         .data_directory(app.state::<Engine>().root.join("webview"))
-        .title("DeepSeek Harness — DSHDesktop")
+        .title(if crate::environments::id()=="stable"{"DeepSeek Harness — DSHDesktop".to_string()}else{format!("DSHDesktop — 候选 {}",crate::environments::id())})
         .inner_size(1280.0, 860.0)
         .min_inner_size(900.0, 600.0)
         .on_navigation(move |next| next.origin() == origin)

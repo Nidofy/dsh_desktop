@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "restoredPreviousPosition": true,
+  "before": [
+    {
+      "height": 208,
+      "id": "screenshot-0",
+      "originX": 559,
+      "originY": 402,
+      "width": 240,
+      "zIndex": 0
+    }
+  ],
+  "after": [
+    {
+      "height": 208,
+      "id": "screenshot-0",
+      "originX": 699,
+      "originY": 507,
+      "width": 240,
+      "zIndex": 0
+    }
+  ]
+}

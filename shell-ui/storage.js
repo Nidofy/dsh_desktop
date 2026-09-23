@@ -100,7 +100,8 @@
     busy = true; profileBusy = true; profileControls(); $('connection-fields').disabled = true; controls();
     $('storage-status').textContent = '正在停止引擎并清理所选记录。完成后重新启动，不自动重发任务。'; $('storage-receipts').replaceChildren();
     try {
-      const receipts = await invoke('desktop_storage',{profileId:scannedProfile,days:Number($('storage-days').value),selection});
+      const ticket=await window.confirmEngineChange('停止引擎并清理所选记录');
+      const receipts = await invoke('desktop_storage',{profileId:scannedProfile,days:Number($('storage-days').value),selection,ticket});
       for (const row of receipts) { const p = document.createElement('p'); p.textContent = `${row.status === 'DELETED' ? '已清理' : row.status === 'PARTIAL' ? '部分完成' : '未清理'} · ${row.id} · ${row.deletedFiles} 个文件 / ${size(row.freedBytes)} · ${row.message}`; $('storage-receipts').append(p); }
       const p = document.createElement('p'); p.textContent = '清理结束，引擎正在重新启动。请查看顶部引擎状态；失败或部分完成的记录不会自动重试。'; $('storage-receipts').prepend(p);
     } catch(error) { $('storage-receipts').textContent = `清理结果未确认：${error}。重新扫描并检查引擎状态，不自动重试。`; }

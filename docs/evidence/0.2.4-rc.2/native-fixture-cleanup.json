@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "credentials": [
+    {
+      "target": "DSHDesktop/InternalLLM/connection-profile-v1/p-99fda3c01ce24452a8a41523c4a24c05",
+      "removedOrAbsent": true
+    },
+    {
+      "target": "DSHDesktop/InternalLLM/connection-profile-v1/p-04de17bc00a2401db019a5d621afea9d",
+      "removedOrAbsent": true
+    },
+    {
+      "target": "DSHDesktop/InternalLLM/environments/c-9c5219c3822a864592d6834ce3393c2a/desktop-diagnostics-v1",
+      "removedOrAbsent": true
+    }
+  ]
+}

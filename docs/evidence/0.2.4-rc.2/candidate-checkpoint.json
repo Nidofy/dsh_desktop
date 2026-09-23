@@ -1,0 +1,17 @@
+{
+  "markerNotMounted": true,
+  "candidateId": "c-9c5219c3822a864592d6834ce3393c2a",
+  "checkpointMatchesSource": true,
+  "activeCandidateWorkspaceUnchanged": true,
+  "manifest": {
+    "bytes": 235,
+    "credentialsIncluded": false,
+    "files": 3,
+    "mounted": false,
+    "projectFilesIncluded": false,
+    "schemaVersion": 1,
+    "source": "stable/storages"
+  },
+  "result": "PASS",
+  "candidateHasConnections": false
+}

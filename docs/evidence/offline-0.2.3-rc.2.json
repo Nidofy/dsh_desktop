@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "desktopVersion": "0.2.3-rc.2",
+  "status": "OFFLINE_ARCHIVE_VERIFIED",
+  "buildId": "910e369d-212f-491a-b7f6-8ce8b101b4e4",
+  "archive": "dist/DSHDesktop-0.2.3-rc.2-win-x64-portable.zip",
+  "bytes": 444407486,
+  "sha256": "ed53d6daca4d4ab9363f535939d3ca79afa04ef6758d9c01290a0fb7c9772740",
+  "verifiedArchiveFiles": 26845,
+  "log": ".build/pet-023-offline-20260923.log",
+  "checks": [
+    "source/build receipt match",
+    "runtime integrity and pinned WebView2",
+    "restricted PATH, bundled runtime, loopback transport",
+    "native file read/edit and PowerShell",
+    "session persistence across restart",
+    "invalid key, unreachable URL, model error and stream timeout",
+    "actual ZIP contents match staged package"
+  ],
+  "fieldAcceptance": "PARTIAL_SEE_PETS_MILESTONES",
+  "published": false
+}

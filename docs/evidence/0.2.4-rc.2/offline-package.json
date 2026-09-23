@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "desktopVersion": "0.2.4-rc.2",
+  "buildId": "911532d0-60f1-4ef7-ab8b-7f1e52738b8c",
+  "archive": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.4-rc.2-win-x64-portable.zip",
+  "bytes": 445551799,
+  "sha256": "071726b55529d23c93ed9d1a0b42cc258cf6c37d909d7483154448edf94adf0c",
+  "verifiedArchiveFiles": 26929,
+  "checks": [
+    "build receipt",
+    "runtime integrity",
+    "pinned WebView2",
+    "offline tool smoke",
+    "session persistence",
+    "API negative cases",
+    "actual ZIP entry hashes",
+    "published checksum"
+  ],
+  "limitations": [
+    "Clean VM and WebView network egress acceptance not performed by this packaging run"
+  ],
+  "completedAt": "2026-09-23T14:16:59.9245739+08:00"
+}

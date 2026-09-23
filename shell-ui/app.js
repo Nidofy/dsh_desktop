@@ -30,7 +30,7 @@ async function refresh() {
     $('health').textContent = d.backendHealth;
     $('detail').textContent = d.detail;
     $('profile-status').textContent = d.activeProfileId ? `当前引擎：${d.activeProfileName} · ${d.backendHealth}` : '引擎尚未载入连接';
-    report = Object.entries(d).map(([k,v]) => `${k}: ${v ?? '—'}`).join('\n');
+    report = Object.entries(d).map(([k,v]) => `${k}: ${v!=null&&typeof v==='object'?JSON.stringify(v):v??'—'}`).join('\n');
     $('diagnostics').textContent = report;
     document.dispatchEvent(new CustomEvent('desktop-diagnostics-updated',{detail:d}));
   } catch { $('detail').textContent = '无法读取桌面诊断信息'; }
@@ -68,7 +68,7 @@ function updateModelRows() {
 function updateCacheKeyRows() {
   for (const field of document.querySelectorAll('.cache-key-model')) field.disabled = $('api').value !== 'openai-completions' || $('cache-key-mode').value !== 'session';
 }
-function addModel(id = '', selected = false, limits, cacheKeyAllowed = false) {
+function addModel(id = '', selected = false, limits, cacheKeyAllowed = false, capability) {
   const row = document.createElement('div'); row.className = 'model-row';
   const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'default-model'; radio.checked = selected;
   const label = document.createElement('label'); label.className = 'default-model'; label.append(radio, '默认');
@@ -86,7 +86,7 @@ function addModel(id = '', selected = false, limits, cacheKeyAllowed = false) {
     label.append(field); capacity.append(label); return field;
   };
   const isGlm = value => /^glm-5\.3(?:-flash)?(?:\[1m\])?$/i.test(value.trim());
-  const defaults = () => isGlm(input.value) ? [1000000,128000] : [32768,4096];
+  const defaults = () => [32768,4096];
   const context = numberField('上下文容量（tokens）', 'context-window', limits?.contextWindow ?? defaults()[0], 1024, 100000000);
   const output = numberField('最大输出（tokens）', 'max-tokens', limits?.maxTokens ?? defaults()[1], 1, 99999999);
   let limitsEdited = !!limits;
@@ -103,13 +103,17 @@ function addModel(id = '', selected = false, limits, cacheKeyAllowed = false) {
   context.oninput = output.oninput = () => { limitsEdited = true; sync(); }; sync();
   presetLabel.append(preset); capacity.append(presetLabel);
   const note = document.createElement('small'); note.className = 'capacity-note';
-  note.textContent = 'GLM 5.3 默认 1M / 128,000；其他模型回退为 32,768 / 4,096。请按服务限制调整。';
+  note.textContent = '容量为客户端保护上限，请按服务文档调整。模型名称不会自动确定网关能力。';
+  row.capability=capability??{source:builtinProvider?'preset':'unknown',reasoning:null};
+  const capabilityLabel=document.createElement('label');capabilityLabel.textContent=`能力来源：${row.capability.source} · 推理档位`;
+  const reasoning=document.createElement('select');for(const [value,text] of [['keep','保留当前声明'],['none','未知 / 不发送推理参数'],['off,low,medium,high','已确认：off / low / medium / high'],['off,minimal,low,medium,high,xhigh,max','已确认：全部档位']])reasoning.add(new Option(text,value));
+  reasoning.onchange=()=>{row.capability=reasoning.value==='keep'?(capability??{source:'unknown',reasoning:null}):{source:'user',reasoning:reasoning.value==='none'?[]:reasoning.value.split(',')};};capabilityLabel.append(reasoning);capacity.append(capabilityLabel);
   const glmPreset = document.createElement('button'); glmPreset.type = 'button'; glmPreset.className = 'secondary glm-preset'; glmPreset.textContent = 'GLM：1M 上下文 / 128,000 最大输出';
   glmPreset.onclick = () => { context.value = '1000000'; output.value = '128000'; limitsEdited = true; sync(); };
   const suffix = document.createElement('button'); suffix.type = 'button'; suffix.className = 'secondary suffix-fix';
   suffix.textContent = '移除 [1m] 后缀并设为 1M / 128,000';
   const updateSuffix = () => { suffix.hidden = !/^glm-.*\[1m\]$/i.test(input.value.trim()); glmPreset.hidden = !isGlm(input.value); };
-  input.oninput = () => { cacheKey.checked = false; if (!limitsEdited) { [context.value,output.value] = defaults(); sync(); } updateSuffix(); }; updateSuffix();
+  input.oninput = () => { row.capability={source:'unknown',reasoning:null};reasoning.value='none';cacheKey.checked = false; if (!limitsEdited) { [context.value,output.value] = defaults(); sync(); } updateSuffix(); }; updateSuffix();
   suffix.onclick = () => { cacheKey.checked = false; input.value = input.value.trim().replace(/\[1m\]$/i, ''); context.value = '1000000'; output.value = '128000'; limitsEdited = true; sync(); updateSuffix(); markProfileDirty(); };
   row.append(label, input, remove, capacity, note, glmPreset, suffix, keyLabel); $('models').append(row); updateModelRows(); updateCacheKeyRows();
   return input;
@@ -182,7 +186,7 @@ function renderProfile(id) {
   $('ca-file').value = profile?.network.caFile ?? '';
   proxyFields();
   const models = c.models ?? (c.model ? [c.model] : ['']);
-  for (const id of models.length ? models : ['']) addModel(id, id === c.model, c.modelLimits?.[id], c.cache?.keyModels?.includes(id));
+  for (const id of models.length ? models : ['']) addModel(id, id === c.model, c.modelLimits?.[id], c.cache?.keyModels?.includes(id),c.modelCapabilities?.[id]);
   updateEndpoint(); $('connection-fields').disabled = false; profileDirty = false; profileControls();
   $('message').textContent = $('settings').hidden ? '' : profile ? 'API Key 留空可保留现有密钥。' : '填写连接和模型后保存。';
 }
@@ -229,13 +233,14 @@ $('settings').addEventListener('change', markProfileDirty);
 $('models').addEventListener('click', event => { if (event.target.closest('button')) markProfileDirty(); });
 $('activate-profile').onclick = async () => {
   profileBusy = true; profileControls(); $('connection-fields').disabled = true;
-  $('message').textContent = '正在停止当前引擎并启动所选连接…';
+    $('message').textContent = '正在检查并应用连接，核心服务就绪后生效…';
   try {
-    await invoke('activate_connection_profile', {id:selectedProfile,revision:catalog.revision});
+    const ticket=await window.confirmEngineChange('应用所选连接');
+    await invoke('activate_connection_profile', {id:selectedProfile,revision:catalog.revision,ticket});
     renderCatalog(await invoke('connection_profiles'), selectedProfile);
     await refresh();
     $('message').textContent = '连接已就绪，工作区与会话已保留。';
-  } catch(e) { $('message').textContent = `${e} 请检查诊断，或重新载入后切回原连接。`; }
+    } catch(e) { $('message').textContent = String(e); }
   finally { profileBusy = false; $('connection-fields').disabled = false; profileControls(); }
 };
 loadProfiles();
@@ -258,12 +263,15 @@ $('settings').addEventListener('submit',async event=>{
       contextWindow: Number(row.querySelector('.context-window').value),
       maxTokens: Number(row.querySelector('.max-tokens').value)
     }]));
-    const updated = await invoke('save_connection_profile',{id:selectedProfile,revision:catalog.revision,connection:{builtinProvider,providerName:$('provider').value.trim(),baseUrl:$('url').value.trim(),api:$('api').value,models,model:models[selected],modelLimits,timeoutMs:Number($('request-timeout').value)*1000,streamIdleTimeoutMs:Number($('idle-timeout').value)*1000,cache:{retention:$('cache-retention').value,anthropicMarkers:$('cache-markers').checked,keyMode:$('cache-key-mode').value,keyModels}},network:{proxyMode:$('proxy-mode').value,proxyUrl:$('proxy-mode').value==='explicit'?$('proxy-url').value.trim():'',noProxy:$('proxy-mode').value==='explicit'?$('no-proxy').value.trim():'',caFile:$('ca-file').value.trim()},apiKey:$('key').value});
+    const modelCapabilities=Object.fromEntries(rows.map((row,i)=>[models[i],row.capability]));
+    const updated = await invoke('save_connection_profile',{id:selectedProfile,revision:catalog.revision,connection:{builtinProvider,providerName:$('provider').value.trim(),baseUrl:$('url').value.trim(),api:$('api').value,models,model:models[selected],modelLimits,modelCapabilities,timeoutMs:Number($('request-timeout').value)*1000,streamIdleTimeoutMs:Number($('idle-timeout').value)*1000,cache:{retention:$('cache-retention').value,anthropicMarkers:$('cache-markers').checked,keyMode:$('cache-key-mode').value,keyModels}},network:{proxyMode:$('proxy-mode').value,proxyUrl:$('proxy-mode').value==='explicit'?$('proxy-url').value.trim():'',noProxy:$('proxy-mode').value==='explicit'?$('no-proxy').value.trim():'',caFile:$('ca-file').value.trim()},apiKey:$('key').value});
     renderCatalog(updated,selectedProfile ?? updated.profiles.find(p=>!catalog.profiles.some(old=>old.id===p.id)).id);
     $('key').value=''; $('settings').hidden=true;await refresh();$('message').textContent='连接已保存。点击提供方旁的“应用”生效。';
   } catch(e){$('message').textContent=String(e);} finally{profileBusy=false;$('connection-fields').disabled=false;profileControls();}
 });
-for(const [id,cmd] of [['logs','open_logs'],['restart','restart_engine'],['quit','quit_app']]) $(id).onclick=()=>invoke(cmd).catch(e=>{$('message').textContent=String(e);});
+for(const [id,cmd] of [['logs','open_logs'],['quit','quit_app']]) $(id).onclick=()=>invoke(cmd).catch(e=>{$('message').textContent=String(e);});
+async function requestRestart(repairWorkspaces=false){if(profileBusy)return;profileBusy=true;try{const ticket=await window.confirmEngineChange(repairWorkspaces===true?'修复重复工作区并重启':'重启引擎');await invoke('restart_engine',{ticket,repairWorkspaces:repairWorkspaces===true});}catch(e){$('message').textContent=String(e);}finally{profileBusy=false;}}
+$('restart').onclick=()=>requestRestart();$('repair-workspaces').onclick=()=>requestRestart(true);window.addEventListener('desktop-restart-request',()=>requestRestart());
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(report);$('message').textContent='Diagnostics copied';}catch{$('message').textContent='请选中诊断信息复制';}};
 refresh();setInterval(refresh,1000);
 $('session-diagnostics').onclick=()=>invoke('open_session_diagnostics').catch(e=>{$('message').textContent=String(e);});
@@ -274,6 +282,7 @@ $('session-diagnostics').after(resetKey);
 $('delete-profile').onclick=()=>{
   const selected=catalog.profiles.find(p=>p.id===selectedProfile);
   if(!selected || profileBusy || profileDirty)return;
+  if(selectedProfile===latestDiagnostics?.activeProfileId){$('message').textContent='请先应用另一个连接，再删除当前运行连接。';return;}
   const active=selectedProfile===catalog.activeId,others=catalog.profiles.filter(p=>p.id!==selectedProfile);
   $('delete-profile-summary').textContent=`删除“${selected.connection.providerName}”？工作区、会话和历史记录保留。`+(active?' 当前连接将停止，请先结束运行中的任务。':'');
   $('delete-replacement-label').hidden=!active || !others.length;

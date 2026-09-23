@@ -1,0 +1,459 @@
+{
+  "resources": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.4-rc.2-win-x64\\resources",
+  "defaults": false,
+  "actualLockTest": false,
+  "results": [
+    {
+      "protocol": "openai",
+      "scenario": "progress",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 13100,
+      "requests": 1,
+      "expected": "completed",
+      "terminal": {
+        "kind": "completed"
+      },
+      "control": {
+        "id": "5817c62650384289a8ebce60e63736c5",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "COMPLETED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "no-headers",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2702,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "9d22c1e7d3d0448cbbc62b24afe31041",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "header-stall",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2697,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "0b809fdb776b490280c00dbd957dfff2",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "heartbeats",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2717,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "ac3e9a03b8ba49609288941178a64eca",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "mid-reset",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 506,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "terminated",
+          "code": "TRANSPORT"
+        }
+      },
+      "control": {
+        "id": "8ba212aa323448f192c1c6bec41579b7",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "mid-stall",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2708,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "2104059c2db3462892c891c712a41a91",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "openai",
+      "scenario": "cancel-progress",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 9216,
+      "requests": 1,
+      "expected": "aborted",
+      "terminal": {
+        "kind": "aborted",
+        "reason": {
+          "kind": "user"
+        }
+      },
+      "control": {
+        "id": "a969cdd6a6c24c6ea097c80a71c32ce5",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "CANCELLED",
+      "cancellation": {
+        "before": {
+          "id": "6c737cbc8aa34f1694b92bcda508558a",
+          "known": true,
+          "running": 1,
+          "queued": 0,
+          "waiting": 0,
+          "actions": 0,
+          "checks": 0,
+          "admission": "unsupported"
+        },
+        "ack": {
+          "id": "8d686a61567d4d95b88f0d45cc1500f1",
+          "known": true,
+          "running": 1,
+          "queued": 0,
+          "waiting": 0,
+          "actions": 0,
+          "checks": 0,
+          "admission": "unsupported"
+        }
+      },
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "progress",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 13098,
+      "requests": 1,
+      "expected": "completed",
+      "terminal": {
+        "kind": "completed"
+      },
+      "control": {
+        "id": "7f5ebbee49204810872e7b190feb5048",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "COMPLETED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "no-headers",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2712,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "cfdf1a9c797546b5824f0b11992a9e65",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "header-stall",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2717,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "4c70eee65d9148c489bba3c67d857a6a",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "heartbeats",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2699,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "3a512e970b4d4525b5fd5963fb895f63",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "mid-reset",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 514,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "terminated",
+          "code": "TRANSPORT"
+        }
+      },
+      "control": {
+        "id": "e67a736343bb49d69a4b806f6fb42849",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "mid-stall",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 2690,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 2500ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "70c0d6e707434b58bd51496abd45de93",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    },
+    {
+      "protocol": "anthropic",
+      "scenario": "cancel-progress",
+      "timeoutMs": 6000,
+      "idleMs": 2500,
+      "elapsedMs": 9216,
+      "requests": 1,
+      "expected": "aborted",
+      "terminal": {
+        "kind": "aborted",
+        "reason": {
+          "kind": "user"
+        }
+      },
+      "control": {
+        "id": "38e4fd1c37d245c28a0ecea980396fd9",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "CANCELLED",
+      "cancellation": {
+        "before": {
+          "id": "b5f78b3aea9c4dafb68e44db7746f154",
+          "known": true,
+          "running": 1,
+          "queued": 0,
+          "waiting": 0,
+          "actions": 0,
+          "checks": 0,
+          "admission": "unsupported"
+        },
+        "ack": {
+          "id": "e03dbb2597e840d1a9d7a34de8577bb1",
+          "known": true,
+          "running": 1,
+          "queued": 0,
+          "waiting": 0,
+          "actions": 0,
+          "checks": 0,
+          "admission": "unsupported"
+        }
+      },
+      "backendAlive": true,
+      "pass": true
+    }
+  ]
+}

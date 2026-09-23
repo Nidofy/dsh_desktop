@@ -1,11 +1,12 @@
 import {cp,mkdir,readdir,readFile,writeFile} from 'node:fs/promises';
 import './stage-pets.mjs';
+import {syncRootModules} from './runtime-module-sync.mjs';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url)),source=join(root,'runtime-src'),target=join(root,'runtime');
 await mkdir(target,{recursive:true});
-for(const name of await readdir(source))if(name.endsWith('.mjs'))await cp(join(source,name),join(target,name));
+await syncRootModules(source,target);
 await cp(join(source,'desktop-client'),join(target,'desktop-client'),{recursive:true});
 await cp(join(source,'desktop-environment'),join(target,'desktop-environment'),{recursive:true});
 await cp(join(root,'assets/pets/xiaojing/package'),join(target,'pets/xiaojing'),{recursive:true,filter:path=>!(/\.(html|md|png)$/i.test(path)||path.endsWith('checksums.json'))});

@@ -1,12 +1,13 @@
 // Reconcile only the desktop-owned provider before the official CLI reads settings.
-import {readFile, mkdir} from 'node:fs/promises';
+import {readFile, mkdir,open} from 'node:fs/promises';
 import {createHash, randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {diagnosticState} from './diagnostic-state.mjs';
+import {settingsTransaction,readSettingsFile} from './settings-transaction.mjs';
 
-export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot}) {
+export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot, transactionOptions}) {
   if (!home || !patchFile) return;
   const patch = JSON.parse(await readFile(patchFile, 'utf8'));
   const selection = patch.find(row => row.id === 'agent-default-model')?.config;
@@ -22,14 +23,19 @@ export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot})
   const {parseDocument} = require('yaml');
   const {withFileLock, writeFileAtomic} = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-atomic-write')).href);
   const filename = join(home, 'settings.yaml');
-  const marker = join(home, 'desktop-settings-revision.json');
   const fingerprint = createHash('sha256').update(JSON.stringify({provider,selection})).digest('hex');
-  const readOptional = async file => {
-    try { return await readFile(file, 'utf8'); } catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
-  };
   await mkdir(home, {recursive:true, mode:0o700});
   await withFileLock(filename, async () => {
-    const text = await readOptional(filename);
+    const owner=process.env.DSH_DESKTOP_SETTINGS_OWNER;
+    if(/^p-[a-f0-9]{32}$/.test(owner??'')){
+      const lock=await open(filename+'.lock','r+');try{await lock.writeFile('DSHDesktop-startup:'+owner);await lock.sync();}finally{await lock.close();}
+    }
+    const transaction=settingsTransaction(home,writeFileAtomic,transactionOptions);
+    await transaction.recover();
+    // Validate bounded regular files even when no previous transaction exists.
+    const originals={};
+    for(const name of ['settings.yaml','desktop-settings-revision.json','desktop-experiment-baseline.json'])originals[name]=await readSettingsFile(home,name);
+    const text = originals['settings.yaml']??'';
     const doc = parseDocument(text);
     if (doc.errors.length) throw new Error('Cannot synchronize invalid DSH settings.yaml; original file was preserved');
     const data = doc.toJS() ?? {};
@@ -38,7 +44,7 @@ export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot})
         (data['llm-pi-ai']?.providers !== undefined && !isMap(data['llm-pi-ai'].providers))) {
       throw new Error('Cannot synchronize malformed DSH model settings; original file was preserved');
     }
-    const previousMarker = await readOptional(marker);
+    const previousMarker = originals['desktop-settings-revision.json']??'';
     const previous=previousMarker?JSON.parse(previousMarker):{};
     const changed = previous.fingerprint !== fingerprint;
     const previousRoute=Object.hasOwn(previous,'route')?previous.route??undefined:'desktop-internal';
@@ -46,20 +52,24 @@ export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot})
     let dirty = false;
     // A catalog route can also have a native DSH configuration. Restore it
     // when this desktop connection stops owning the route.
-    const restore=(path,value)=>{if(value===undefined||value===null)doc.deleteIn(path);else doc.setIn(path,value);};
+    const restore=(path,value,present)=>{if(!present)doc.deleteIn(path);else doc.setIn(path,value);};
     let original=previous.original??null;
     let originalSelection=previous.originalSelection??null;
+    let originalPresent=previous.originalPresent??(previous.original!=null);
+    let originalSelectionPresent=previous.originalSelectionPresent??(previous.originalSelection!=null);
     if(previousRoute!==route){
-      if(data['llm-pi-ai']?.providers?.[previousRoute]){
-        restore(['llm-pi-ai','providers',previousRoute],original);dirty=true;
+      if(previousRoute&&doc.hasIn(['llm-pi-ai','providers',previousRoute])){
+        restore(['llm-pi-ai','providers',previousRoute],original,originalPresent);dirty=true;
       }
-      if(data['agent-default-model']?.provider===previousRoute){restore(['agent-default-model'],originalSelection);dirty=true;}
+      if(data['agent-default-model']?.provider===previousRoute){restore(['agent-default-model'],originalSelection,originalSelectionPresent);dirty=true;}
+      originalPresent=Boolean(route&&route!=='desktop-internal'&&doc.hasIn(['llm-pi-ai','providers',route]));
+      originalSelectionPresent=doc.hasIn(['agent-default-model']);
       original=route&&route!=='desktop-internal'?data['llm-pi-ai']?.providers?.[route]??null:null;
       originalSelection=nodeValue(['agent-default-model'])??null;
     }
     diagnosticState.managedProvider=route;
     const retired=new Set(previous.retiredProviders??[]);
-    if(previousRoute&&previousRoute!==route){if(previous.original)retired.delete(previousRoute);else retired.add(previousRoute);}
+    if(previousRoute&&previousRoute!==route){if(previous.originalPresent??(previous.original!=null))retired.delete(previousRoute);else retired.add(previousRoute);}
     if(route)retired.delete(route);
     diagnosticState.retiredManagedProviders=[...retired];
     if(provider && JSON.stringify(nodeValue(['llm-pi-ai','providers',route]))!==JSON.stringify(provider)){
@@ -72,8 +82,7 @@ export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot})
       doc.setIn(['agent-default-model'], {...selection,...(effort ? {reasoningEffort:effort} : {})});
       dirty = true;
     }
-    const baselineFile=join(home,'desktop-experiment-baseline.json');
-    const baselineText=await readOptional(baselineFile), baseline=baselineText?JSON.parse(baselineText):{};
+    const baselineText=originals['desktop-experiment-baseline.json']??'', baseline=baselineText?JSON.parse(baselineText):{};
     let baselineChanged=false;
     for(const [modeKey,plugin,field,native,compact,stateKey] of [
       ['spillMode','spill-policy','maxInlineBytes',50000,24000,'effectiveSpillBytes'],
@@ -86,13 +95,13 @@ export async function synchronizeDesktopSettings({home, patchFile, runtimeRoot})
       if(desired!==undefined&&doc.getIn(path)!==desired){doc.setIn(path,desired);dirty=true;}
       diagnosticState[stateKey]=doc.getIn(path)??patch.find(row=>row.id===plugin)?.config?.[field]??native;
     }
-    // Persist the original values before changing settings, including absence of a key.
-    if(baselineChanged)await writeFileAtomic(baselineFile,JSON.stringify(baseline),{mode:0o600,dirMode:0o700});
+    const changes={};
+    if(baselineChanged)changes['desktop-experiment-baseline.json']=JSON.stringify(baseline);
     if (dirty) {
       if (text) await writeFileAtomic(join(home, 'desktop-settings-backups', `${Date.now()}-${randomUUID()}.yaml`), text, {mode:0o600,dirMode:0o700});
-      await writeFileAtomic(filename, String(doc), {mode:0o600,dirMode:0o700});
+      changes['settings.yaml']=String(doc);
     }
-    // Commit last: an interrupted synchronization retries safely on the next start.
-    if (changed) await writeFileAtomic(marker, JSON.stringify({fingerprint,route:route??null,original,originalSelection,retiredProviders:[...retired]}), {mode:0o600,dirMode:0o700});
+    if (changed) changes['desktop-settings-revision.json']=JSON.stringify({fingerprint,route:route??null,original,originalPresent,originalSelection,originalSelectionPresent,retiredProviders:[...retired]});
+    await transaction.commit(changes,originals);
   });
 }

@@ -56,7 +56,7 @@ fn valid_id(id: &str) -> bool {
                 .bytes()
                 .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
 }
-fn new_id() -> Result<String, String> {
+pub(crate) fn new_id() -> Result<String, String> {
     let mut bytes = [0u8; 16];
     unsafe {
         use windows_sys::Win32::Security::Cryptography::{
@@ -179,9 +179,10 @@ pub fn load(root: &Path) -> Result<Catalog, String> {
     {
         return Err("Connection catalog too large".into());
     }
-    let catalog: Catalog =
+    let mut catalog: Catalog =
         serde_json::from_slice(&fs::read(path).map_err(|_| "Cannot read connection catalog")?)
             .map_err(|_| "Invalid connection catalog; original file preserved")?;
+    for p in &mut catalog.profiles {p.connection.preserve_legacy_capabilities();}
     validate_catalog(&catalog)?;
     Ok(catalog)
 }
@@ -269,11 +270,13 @@ fn migrate_legacy_key(
 pub fn save(
     root: &Path,
     id: Option<String>,
-    connection: Connection,
+    mut connection: Connection,
     network: Network,
     api_key: &str,
     revision: u64,
 ) -> Result<Catalog, String> {
+    for model in connection.model_ids(){let binding=connection.capability_binding(&model);let cap=connection.model_capabilities.entry(model).or_insert(config::ModelCapability{source:"unknown".into(),reasoning:None,binding:String::new()});
+        if !cap.binding.is_empty()&&cap.binding!=binding{cap.source="unknown".into();cap.reasoning=None;}cap.binding=binding;}
     config::validate(&connection)?;
     validate_network(&network)?;
     let mut c = load(root)?;

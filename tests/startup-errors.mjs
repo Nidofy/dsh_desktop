@@ -7,6 +7,9 @@ assert.equal(startupErrorCode({code:'EPERM',message:'secret'}),'BOOT_ACCESS_DENI
 assert.equal(startupErrorCode(new Error('not a symlink or dsh-managed module proxy')),'BOOT_MODULE_LINK');
 assert.equal(startupErrorCode(new Error('workspace domain is inconsistent: private path')),'BOOT_WORKSPACE_INCONSISTENT');
 assert.equal(startupErrorCode(new Error('private-setting'),'SETTINGS'),'BOOT_SETTINGS_INVALID');
+assert.equal(startupErrorCode({code:'SETTINGS_TRANSACTION_CONFLICT',message:'private-setting'},'SETTINGS'),'BOOT_SETTINGS_CONFLICT');
+assert.equal(startupErrorCode({code:'SETTINGS_PROTECTION_UNAVAILABLE',message:'private-setting'},'SETTINGS'),'BOOT_SETTINGS_RECOVERY');
+assert.equal(startupErrorCode(new Error('atomic-write: timed out waiting for the writer lock at private-path'),'SETTINGS'),'BOOT_SETTINGS_LOCKED');
 const module=pathToFileURL(resolve('runtime-src/startup-errors.mjs')).href;
 for(const code of ["throw Error('secret-provider-response')","Promise.reject(Error('secret-provider-response'))"]){
   const result=spawnSync(process.execPath,['--input-type=module','-e',`import {installStartupErrors} from ${JSON.stringify(module)};installStartupErrors();${code}`],{encoding:'utf8',windowsHide:true});

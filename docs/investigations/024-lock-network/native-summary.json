@@ -1,0 +1,85 @@
+{
+  "desktopVersion": "0.2.4-rc.2",
+  "manualLockReportedByUser": true,
+  "actualSleepTest": false,
+  "modelEndpoint": "synthetic-loopback",
+  "events": [
+    {
+      "type": "turn/start",
+      "time": 1790143215367,
+      "seq": 4,
+      "reason": null
+    },
+    {
+      "type": "step/start",
+      "time": 1790143215429,
+      "seq": 6,
+      "reason": null
+    },
+    {
+      "type": "step/end",
+      "time": 1790143395576,
+      "seq": 16,
+      "reason": null
+    },
+    {
+      "type": "turn/end",
+      "time": 1790143395576,
+      "seq": 17,
+      "reason": {
+        "kind": "completed"
+      }
+    },
+    {
+      "type": "turn/start",
+      "time": 1790143680748,
+      "seq": 19,
+      "reason": null
+    },
+    {
+      "type": "step/start",
+      "time": 1790143680801,
+      "seq": 21,
+      "reason": null
+    },
+    {
+      "type": "step/end",
+      "time": 1790143680818,
+      "seq": 24,
+      "reason": null
+    },
+    {
+      "type": "turn/end",
+      "time": 1790143680818,
+      "seq": 25,
+      "reason": {
+        "kind": "error",
+        "error": {
+          "message": "Connection error.",
+          "code": "TRANSPORT"
+        }
+      }
+    }
+  ],
+  "requests": [
+    {
+      "startedAt": "2026-09-23T06:00:15.560Z",
+      "isTitle": false,
+      "chunks": 178,
+      "finished": true,
+      "closed": true,
+      "finishedAt": "2026-09-23T06:03:15.570Z",
+      "closedAt": "2026-09-23T06:03:15.571Z"
+    },
+    {
+      "startedAt": "2026-09-23T06:00:15.563Z",
+      "isTitle": true,
+      "chunks": 0,
+      "finished": true,
+      "closed": false,
+      "finishedAt": "2026-09-23T06:00:15.567Z"
+    }
+  ],
+  "maxHeartbeatGapMs": 1017,
+  "evidenceScope": "One Windows machine; user reported locking/unlocking. OS audit events unavailable; exact lock interval not independently timestamped."
+}

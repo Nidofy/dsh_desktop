@@ -21,9 +21,9 @@ export function installTaskSnapshots(ctx, pipe = snapshotPipe) {
     const decision = await next(), {agent,turn,signal} = payload, header = agent.session.header;
     if (decision.kind !== 'enter' || !decision.messages?.length || header.origin === 'subagent' || !header.cwd || !pipe.enabled || stopped.signal.aborted) return decision;
     const k = key(header.id,turn);
-    if (turns.has(k)) { await turns.get(k).start; return decision; }
+    if (turns.has(k)) { const existing=turns.get(k);await existing.start;return existing.status==='UNCONFIRMED'?{kind:'reject'}:decision; }
     const state = {done:false, workspace:workspaceKey(header.cwd), status:'PENDING', capture:null, start:null};
-    if (!remember(k,state)) return decision;
+    if (!remember(k,state)) return {kind:'reject'};
     state.start = (async () => {
       // An immediately queued next turn cannot overtake the previous end sample.
       await endings.get(state.workspace);
@@ -39,7 +39,9 @@ export function installTaskSnapshots(ctx, pipe = snapshotPipe) {
       } catch { state.status='UNCONFIRMED'; void abandon(requestId); }
     })();
     await state.start;
-    return decision;
+    // Armed protection must be confirmed before any model/tool step is admitted.
+    // An unavailable supervisor cannot be mistaken for a disabled file scope.
+    return state.status==='UNCONFIRMED'?{kind:'reject'}:decision;
   });
   ctx.on('session/event', (session,event) => {
     if (event.type !== 'turn/end' || session.header.origin === 'subagent') return;

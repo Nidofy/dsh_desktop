@@ -34,7 +34,7 @@ f.handlers['session/event'](f.session,{type:'turn/end',data:{turn:1}});await pau
 const next=f.enter(2);await pause(0);assert.equal(f.calls.filter(c=>c.action==='begin').length,1,'next turn waits for end receipt');
 f.unblock();await next;assert.deepEqual(f.calls.map(c=>c.action),['begin','confirm','end','begin','confirm']);
 assert.equal(f.manager.status('test-session',1),'SEALED');
-const failed=fixture();failed.fail();await failed.enter(1);failed.handlers['session/event'](failed.session,{type:'turn/end',data:{turn:1}});await pause(0);
+const failed=fixture();failed.fail();assert.equal((await failed.enter(1)).kind,'reject');assert.equal((await failed.enter(1)).kind,'reject');failed.handlers['session/event'](failed.session,{type:'turn/end',data:{turn:1}});await pause(0);
 assert.equal(failed.manager.status('test-session',1),'UNCONFIRMED');assert(!failed.calls.some(c=>c.action==='end'));assert(failed.calls.some(c=>c.action==='abandon'));
 const off=fixture();off.disable();await off.enter(1);assert.equal(off.calls.length,1);assert.equal(off.manager.status('test-session',1),'DISABLED');
 const sub=fixture();sub.session.header.origin='subagent';await sub.enter(1);assert.equal(sub.calls.length,0);

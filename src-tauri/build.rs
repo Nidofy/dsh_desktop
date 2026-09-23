@@ -25,6 +25,8 @@ fn main() {
             "open_session_diagnostics",
             "reset_diagnostic_key",
             "restart_engine",
+            "engine_control",
+            "desktop_environments",
             "open_logs",
             "quit_app",
         ]),

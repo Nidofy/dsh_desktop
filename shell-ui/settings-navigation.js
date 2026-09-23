@@ -6,6 +6,7 @@
     ['snapshots', '文件快照', ['task-snapshots', 'snap-records-section']],
     ['storage', '存储管理', ['desktop-storage']],
     ['maintenance', '备份与凭据', ['profile-recovery', 'credential-cleanup']],
+    ['environments','候选环境',['environments-section']],
     ['diagnostics', '运行状态', ['runtime-status-section']],
   ];
   const nav = document.getElementById('settings-tabs');

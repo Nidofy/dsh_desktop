@@ -5,6 +5,8 @@ import {join,dirname,resolve} from 'node:path';
 import {writeAtomic} from './project-actions.mjs';
 
 const profileId=/^p-[a-f0-9]{32}$/;
+export const workspaceMigration={migrationId:'desktop-shared-workspace-v2',sourceVersion:2,targetVersion:2,repairId:'duplicate-path-v1'};
+const incompatible=()=>Object.assign(Error('Unsupported workspace storage version'),{code:'WORKSPACE_VERSION_UNSUPPORTED'});
 async function optionalStat(path){try{return await lstat(path);}catch(error){if(error.code==='ENOENT')return null;throw error;}}
 async function regular(path){const info=await optionalStat(path);if(info && (info.isSymbolicLink() || !info.isFile()))throw Error('Migration source is not a regular file');return info;}
 async function hash(path){const digest=createHash('sha256');for await(const chunk of createReadStream(path))digest.update(chunk);return digest.digest('hex');}
@@ -43,7 +45,8 @@ async function collect(root,relative='',out=[]){
 async function workspaceDocument(path){
   const info=await regular(path);if(!info)return null;if(info.size>16*1024*1024)throw Error('Workspace list too large');
   const data=JSON.parse(await readFile(path,'utf8'));
-  if(data?.unit?.name!=='workspace' || data.unit.version!==2 || !Array.isArray(data.global?.workspaceIds) || !data.tables?.workspaces)throw Error('Unsupported workspace list');
+  if(data?.unit?.name!=='workspace' || data.unit.version!==workspaceMigration.sourceVersion)throw incompatible();
+  if(!Array.isArray(data.global?.workspaceIds) || !data.tables?.workspaces || typeof data.tables.workspaces!=='object' || Array.isArray(data.tables.workspaces))throw Error('Unsupported workspace list');
   return data;
 }
 export function mergeWorkspaces(current,incoming){
@@ -106,19 +109,43 @@ async function repairWorkspaceDuplicates(home){
 }
 // Runs only after the previous engine has stopped, before the new CLI boots.
 // Old profile homes remain intact; a completed source is never re-imported.
-export async function migrateWorkspaceHistory({root,home}){
+export async function migrateWorkspaceHistory({root,home,repairDuplicates=false}){
   if(!root)return {migrated:0};
   if(resolve(home)!==resolve(root,'dsh'))throw Error('Shared workspace home mismatch');
   await mkdir(home,{recursive:true});
-  // Also repairs homes already marked migrated by earlier desktop versions.
-  const repaired=await repairWorkspaceDuplicates(home);
   const statePath=join(home,'desktop-workspace-migration.json');
-  let state={version:1,completed:[]};
-  if(await regular(statePath)){state=JSON.parse(await readFile(statePath,'utf8'));if(state.version!==1 || !Array.isArray(state.completed))throw Error('Invalid migration record');}
-  const profiles=join(root,'profiles');const info=await optionalStat(profiles);if(!info)return {migrated:0,repaired};
-  if(info.isSymbolicLink() || !info.isDirectory())throw Error('Invalid profiles directory');
+  let state={version:2,migrationId:workspaceMigration.migrationId,completed:[],repairs:[]};
+  const stateInfo=await regular(statePath);
+  if(stateInfo){
+    if(stateInfo.size>1024*1024)throw Error('Migration record too large');
+    state=JSON.parse(await readFile(statePath,'utf8'));
+    if(![1,2].includes(state.version) || !Array.isArray(state.completed) || state.completed.length>10000 || state.completed.some(id=>typeof id!=='string'||!profileId.test(id)))throw Error('Invalid migration record');
+    if(state.version===1)state={...state,version:2,migrationId:workspaceMigration.migrationId,repairs:[]};
+    if(state.migrationId!==workspaceMigration.migrationId || !Array.isArray(state.repairs) || state.repairs.some(id=>id!==workspaceMigration.repairId))throw Error('Invalid migration record');
+  }
+  // Validate every participating format before any repair, copy or checkpoint.
+  // A future source must not cause partial writes to today's shared home.
+  await safeParents(home,'storages/workspace.json');
+  await workspaceDocument(join(home,'storages','workspace.json'));
+  const profiles=join(root,'profiles');const info=await optionalStat(profiles);
+  if(info && (info.isSymbolicLink() || !info.isDirectory()))throw Error('Invalid profiles directory');
+  const entries=info?(await readdir(profiles,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name)):[];
+  for(const entry of entries){
+    if(!profileId.test(entry.name)||state.completed.includes(entry.name))continue;
+    if(!entry.isDirectory()||entry.isSymbolicLink())throw Error('Invalid profile directory');
+    const source=join(profiles,entry.name,'dsh');const si=await optionalStat(source);if(!si)continue;
+    if(!si.isDirectory()||si.isSymbolicLink())throw Error('Invalid profile home');
+    await safeParents(source,'storages/workspace.json');
+    await workspaceDocument(join(source,'storages','workspace.json'));
+  }
+  let repaired=0;
+  if(repairDuplicates||!state.repairs.includes(workspaceMigration.repairId)){
+    repaired=await repairWorkspaceDuplicates(home);
+    state.repairs=[workspaceMigration.repairId];
+    await writeAtomic(statePath,JSON.stringify(state));
+  }
   let migrated=0;
-  for(const entry of (await readdir(profiles,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){
+  for(const entry of entries){
     if(!profileId.test(entry.name) || state.completed.includes(entry.name))continue;
     if(!entry.isDirectory() || entry.isSymbolicLink())throw Error('Invalid profile directory');
     const source=join(profiles,entry.name,'dsh');const sourceInfo=await optionalStat(source);if(!sourceInfo)continue;

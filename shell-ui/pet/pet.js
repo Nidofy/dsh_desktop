@@ -2,6 +2,7 @@ import {frameAt} from './animation.js';
 import {Presentation,bubbles} from './state.js';
 import {Gestures,LookDirection} from './gestures.js';
 import {IdleSchedule,bubbleText,idleMood} from './idle.js';
+import {DragQueue} from './drag.js';
 import builtinManifest from './assets/xiaojing/manifest.js';
 import builtinExtension from './assets/xiaojing/extensions/manifest.js';
 const {invoke}=window.__TAURI__.core,{listen}=window.__TAURI__.event;
@@ -43,21 +44,24 @@ const disposeSettings=await listen('pet-settings',e=>settings(e.payload));
 const disposeResource=await listen('pet-resource-changed',()=>loadResource(model.settings.resource));
 const snapshot=await invoke('pet_snapshot');settings(snapshot.settings);model.accept(snapshot.state);await loadResource(snapshot.settings.resource);draw();
 function react(trigger){if(!model.settings.interaction)return;const fallback={'head-tap':'waving','long-press':'waving','body-tap':'jumping'},id=extension.triggers[trigger]??fallback[trigger];model.interact(id);command('interact');draw();}
+const dragging=new DragQueue((action,target)=>invoke('pet_action',{action,target}),()=>{nativeDragging=false;model.drag=null;gesture.reset();bubble.textContent='拖动未完成，请重试';draw();},()=>{bubbleVisible=null;draw();});
 const gesture=new Gestures((kind,p)=>{
  if(kind==='double')command('navigate');
  if(kind==='tap')react(p.y<5+198*.4?'head-tap':'body-tap');
  if(kind==='long')react('long-press');
- if(kind==='drag'){nativeDragging=true;model.drag=model.settings.interaction?(extension.triggers.drag??(p.dx<0?'running-left':'running-right')):p.dx<0?'running-left':'running-right';canvas.dataset.dragDirection=p.dx<0?'left':'right';draw();command('drag').finally(()=>{nativeDragging=false;gesture.reset();model.drag=null;delete canvas.dataset.dragDirection;command('position');draw();});}
- if(kind==='drag-end'||kind==='drag-cancel'){model.drag=null;command('position');draw();}
+ if(kind==='drag'){nativeDragging=true;model.drag=model.settings.interaction?(extension.triggers.drag??(p.dx<0?'running-left':'running-right')):p.dx<0?'running-left':'running-right';dragging.start();draw();}
+ if(kind==='drag-move')dragging.move();
+ if(kind==='drag-end'||kind==='drag-cancel'){dragging.finish();nativeDragging=false;model.drag=null;draw();}
 },{doubleMs:snapshot.doubleMs||350});
 const point=e=>{const b=canvas.getBoundingClientRect();return {id:e.pointerId,type:e.pointerType,button:e.button,x:(e.clientX-b.left)/scale,y:(e.clientY-b.top)/scale};};
-canvas.addEventListener('pointerdown',e=>{gesture.down(point(e));if(gesture.active)canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerdown',e=>{gesture.down(point(e));if(gesture.active){dragging.prepare({x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);}});
 canvas.addEventListener('pointermove',e=>{const p=point(e);gesture.move(p);if(!gesture.active&&['mouse','pen'].includes(e.pointerType)&&!e.buttons){hover=look.update(p.x-96,p.y-104);draw();}});
-canvas.addEventListener('pointerup',e=>{gesture.up(point(e));if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);});
-canvas.addEventListener('pointercancel',()=>{if(!nativeDragging)gesture.reset();});canvas.addEventListener('lostpointercapture',()=>{if(gesture.active&&!nativeDragging)gesture.reset();});window.addEventListener('blur',()=>{if(!nativeDragging)gesture.reset();});
+canvas.addEventListener('pointerup',e=>{gesture.up(point(e));dragging.finish();if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);});
+const cancelPointer=()=>{gesture.reset();dragging.finish();};
+canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',()=>{if(gesture.active)cancelPointer();});window.addEventListener('blur',cancelPointer);
 canvas.addEventListener('pointerleave',()=>{hover=null;look.reset();draw();});bubble.onclick=()=>command('navigate');
 const menu=document.createElement('div');menu.id='menu';menu.hidden=true;for(const [name,label]of [['pin','固定当前会话'],['unpin','自动跟随'],['hide','隐藏这只宠物']]){const button=document.createElement('button');button.textContent=label;button.onclick=()=>{menu.hidden=true;command(name);};menu.append(button);}document.body.append(menu);
 canvas.addEventListener('contextmenu',e=>{e.preventDefault();gesture.reset();menu.hidden=!menu.hidden;});
-document.addEventListener('visibilitychange',()=>{start=Date.now();model.reaction=null;gesture.reset();draw();});
-window.addEventListener('pagehide',()=>{clearTimeout(timer);gesture.reset();dispose();disposeSettings();disposeResource();});
+document.addEventListener('visibilitychange',()=>{start=Date.now();model.reaction=null;cancelPointer();draw();});
+window.addEventListener('pagehide',()=>{clearTimeout(timer);cancelPointer();dispose();disposeSettings();disposeResource();});
 invoke('pet_ready',{decoded:true}).catch(()=>{});

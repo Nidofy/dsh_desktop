@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 3,
+  "enabled": true,
+  "instances": [
+    {
+      "id": "1",
+      "enabled": true,
+      "resource": "xiaojing",
+      "x": 429.7142857142857,
+      "y": 309.7142857142857,
+      "monitor": "\\\\.\\DISPLAY1",
+      "scale": 1.0,
+      "pinned": null,
+      "profile": null,
+      "interaction": true,
+      "look": true,
+      "moodEnabled": false,
+      "affinity": 0,
+      "mood": "normal",
+      "lastInteractionMs": 0,
+      "bubble": {
+        "placement": "top",
+        "fontSize": 14,
+        "durationMs": 5000,
+        "theme": "dark",
+        "templates": {}
+      }
+    }
+  ]
+}

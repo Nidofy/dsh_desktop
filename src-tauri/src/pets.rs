@@ -14,6 +14,7 @@ pub struct Controller {
     pub assets_lock: Mutex<()>,
     assignments: Mutex<HashMap<String, Value>>,
     seen: Mutex<VecDeque<String>>,
+    dragging: Mutex<HashMap<String, (tauri::PhysicalPosition<f64>, tauri::PhysicalPosition<i32>)>>,
     pub warning: Option<String>,
     future: bool,
 }
@@ -27,6 +28,7 @@ impl Controller {
             assets_lock: Mutex::new(()),
             assignments: Mutex::new(HashMap::new()),
             seen: Mutex::new(VecDeque::new()),
+            dragging: Mutex::new(HashMap::new()),
             warning: loaded.warning,
             future: loaded.future,
         }
@@ -313,6 +315,7 @@ pub fn reconcile(app: &tauri::AppHandle) -> Result<(), String> {
                     .skip_taskbar(true)
                     .resizable(false)
                     .focused(false)
+                    .visible(false)
                     .on_navigation(|u| {
                         matches!(u.host_str(), Some("localhost" | "tauri.localhost"))
                             && matches!(u.scheme(), "http" | "tauri")
@@ -330,6 +333,7 @@ pub fn reconcile(app: &tauri::AppHandle) -> Result<(), String> {
         }
         let _ = w.set_size(tauri::LogicalSize::new(240. * p.scale, 256. * p.scale));
         position(&w, p)?;
+        w.show().map_err(|_| "桌宠窗口无法显示")?;
         let _ = w.emit("pet-settings", p);
     }
     Ok(())
@@ -348,7 +352,22 @@ pub fn pet_ready(window: tauri::WebviewWindow, decoded: bool) {
     }
 }
 #[tauri::command]
-pub fn pet_settings(
+pub async fn pet_settings(
+    app: tauri::AppHandle,
+    settings: Option<Config>,
+    base: Option<Config>,
+    reset_positions: Option<Vec<String>>,
+    reset_moods: Option<Vec<String>>,
+) -> Result<Value, String> {
+    // WebView2 creation from a synchronous IPC command deadlocks the Windows
+    // event loop (including Quit). Keep native window work off that thread.
+    tauri::async_runtime::spawn_blocking(move || {
+        apply_settings(app, settings, base, reset_positions, reset_moods)
+    })
+    .await
+    .map_err(|_| "桌宠设置未完成，请重试".to_string())?
+}
+fn apply_settings(
     app: tauri::AppHandle,
     settings: Option<Config>,
     base: Option<Config>,
@@ -418,12 +437,15 @@ pub fn pet_snapshot(app: tauri::AppHandle, window: tauri::WebviewWindow) -> Resu
     )
 }
 #[tauri::command]
-pub fn pet_action(
+pub async fn pet_action(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     action: String,
     target: Option<Value>,
 ) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || apply_action(app,window,action,target)).await.map_err(|_|"桌宠操作未完成".to_string())?
+}
+fn apply_action(app:tauri::AppHandle,window:tauri::WebviewWindow,action:String,target:Option<Value>)->Result<(),String>{
     let id = window.label().strip_prefix("pet-").ok_or("桌宠窗口无效")?;
     let c = app.state::<Controller>();
     if ["navigate", "pin"].contains(&action.as_str()) {
@@ -477,8 +499,29 @@ pub fn pet_action(
         return Ok(());
     }
     if action == "drag" {
-        return window.start_dragging().map_err(|_| "无法拖动".into());
+        let origin=window.outer_position().map_err(|_|"窗口位置不可用")?;
+        // IPC can arrive after a fast pointer has already reached its endpoint.
+        // Preserve the actual pointer-down client location instead of sampling
+        // the late global cursor as the starting position.
+        let anchor=target.as_ref().ok_or("拖动起点缺失")?;
+        let x=anchor["x"].as_f64().filter(|v|v.is_finite()&&*v>=0.&&*v<=4096.).ok_or("拖动起点无效")?;
+        let y=anchor["y"].as_f64().filter(|v|v.is_finite()&&*v>=0.&&*v<=4096.).ok_or("拖动起点无效")?;
+        let factor=window.scale_factor().map_err(|_|"窗口比例不可用")?;
+        let client=window.inner_position().map_err(|_|"窗口位置不可用")?;
+        let cursor=tauri::PhysicalPosition::new(client.x as f64+x*factor,client.y as f64+y*factor);
+        c.dragging.lock().unwrap().insert(id.into(),(cursor,origin));
+        return Ok(());
     }
+    if action == "drag-move" {
+        // Sample only in response to this window's captured pointer events.
+        // Physical coordinates avoid mixed-DPI CSS/screen coordinate conversion.
+        if let Some((cursor,origin))=c.dragging.lock().unwrap().get(id).copied(){
+            let current=window.cursor_position().map_err(|_|"指针位置不可用")?;
+            window.set_position(tauri::PhysicalPosition::new(origin.x+(current.x-cursor.x).round() as i32,origin.y+(current.y-cursor.y).round() as i32)).map_err(|_|"窗口移动失败")?;
+        }
+        return Ok(());
+    }
+    if action=="drag-end" {c.dragging.lock().unwrap().remove(id);}
     let mut config = c.settings.lock().unwrap();
     let p = config
         .instances
@@ -492,6 +535,13 @@ pub fn pet_action(
                 .and_then(|t| t["height"].as_u64())
                 .filter(|h| *h <= 160)
                 .ok_or("气泡尺寸无效")?;
+            if c.dragging.lock().unwrap().contains_key(id){return Ok(());}
+            // Preserve the current physical position instead of snapping back
+            // to the last persisted position whenever a bubble is measured.
+            if let (Ok(pos), Ok(Some(m)))=(window.outer_position(),window.current_monitor()){
+                p.x=(pos.x-m.work_area().position.x) as f64/m.scale_factor();
+                p.y=(pos.y-m.work_area().position.y) as f64/m.scale_factor();p.monitor=m.name().cloned();
+            }
             window
                 .set_size(tauri::LogicalSize::new(
                     240. * p.scale,
@@ -500,7 +550,7 @@ pub fn pet_action(
                 .map_err(|_| "气泡尺寸不可用")?;
             return position(&window, p);
         }
-        "position" => {
+        "position" | "drag-end" => {
             if let (Ok(pos), Ok(Some(m))) = (window.outer_position(), window.current_monitor()) {
                 p.x = (pos.x - m.work_area().position.x) as f64 / m.scale_factor();
                 p.y = (pos.y - m.work_area().position.y) as f64 / m.scale_factor();

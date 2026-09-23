@@ -1,6 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {Gestures,LookDirection} from '../shell-ui/pet/gestures.js';import {Presentation} from '../shell-ui/pet/state.js';import {validateInteractions} from '../shell-ui/pet/interactions.js';
 function harness(){let now=0,seq=0;const tasks=new Map(),events=[];const g=new Gestures((...e)=>events.push(e),{now:()=>now,schedule:(f,ms)=>{tasks.set(++seq,{f,at:now+ms});return seq;},cancel:id=>tasks.delete(id)});return{g,events,tick(ms){now+=ms;for(const [id,t]of [...tasks])if(t.at<=now){tasks.delete(id);t.f();}}};}
+test('default timers never use the gesture object as a browser timer receiver',()=>{
+ const originalSet=globalThis.setTimeout,originalClear=globalThis.clearTimeout,events=[];let scheduled=0,cancelled=0;
+ try{globalThis.setTimeout=function(){assert.ok(this===undefined||this===globalThis,'Window timer called with illegal receiver');scheduled++;return scheduled;};globalThis.clearTimeout=function(){assert.ok(this===undefined||this===globalThis,'Window timer called with illegal receiver');cancelled++;};
+ const g=new Gestures(kind=>events.push(kind)),p={id:1,type:'mouse',button:0,x:10,y:10};g.down(p);g.move({...p,x:40});g.up(p);g.down(p);g.up(p);g.reset();assert.deepEqual(events,['drag','drag-end']);assert.ok(scheduled>=3);assert.ok(cancelled>0);
+ }finally{globalThis.setTimeout=originalSet;globalThis.clearTimeout=originalClear;}
+});
 for(const type of ['mouse','touch','pen'])test(type+' gesture conflict/cancel/long/drag',()=>{
  const h=harness(),p={id:1,x:30,y:40,type,button:0};h.g.down(p);h.g.up(p);h.tick(100);h.g.down(p);h.g.up(p);h.tick(400);assert.deepEqual(h.events.map(e=>e[0]),['double']);
  h.g.down(p);h.tick(650);h.g.up(p);h.tick(400);assert.equal(h.events.at(-1)[0],'long');

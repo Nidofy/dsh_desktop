@@ -1,0 +1,17 @@
+[
+  {
+    "errorId": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+    "status": "unavailable-or-no-events",
+    "log": "System"
+  },
+  {
+    "errorId": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+    "status": "unavailable-or-no-events",
+    "log": "System"
+  },
+  {
+    "errorId": "NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand",
+    "status": "unavailable-or-no-events",
+    "log": "Security"
+  }
+]

@@ -1,8 +1,10 @@
 // No global listeners/hooks. Injectable clocks keep conflicts/cancellation deterministic.
 export class Gestures {
- constructor(emit,{now=Date.now,schedule=setTimeout,cancel=clearTimeout,doubleMs=350,longMs=650,threshold=6}={}){Object.assign(this,{emit,now,schedule,cancel,doubleMs,longMs,threshold});this.active=null;this.pending=null;this.last=null;}
+ // Window timers require their browser receiver. Storing a bare setTimeout on
+ // this object and calling this.schedule throws "Illegal invocation" in WebView2.
+ constructor(emit,{now=Date.now,schedule=(fn,ms)=>setTimeout(fn,ms),cancel=id=>clearTimeout(id),doubleMs=350,longMs=650,threshold=6}={}){Object.assign(this,{emit,now,schedule,cancel,doubleMs,longMs,threshold});this.active=null;this.pending=null;this.last=null;}
  down(p){if(this.active){this.reset();return;}if(!['mouse','touch','pen'].includes(p.type)||p.button!==0)return;this.active={...p,at:this.now(),drag:false,long:false};this.longTimer=this.schedule(()=>{if(this.active&&!this.active.drag){this.clearTap();this.active.long=true;this.emit('long',this.active);}},this.longMs);}
- move(p){const a=this.active;if(!a||a.id!==p.id)return;if(!a.drag&&Math.hypot(p.x-a.x,p.y-a.y)>=this.threshold){this.cancel(this.longTimer);this.clearTap();a.drag=true;this.emit('drag',{...p,dx:p.x-a.x});}}
+ move(p){const a=this.active;if(!a||a.id!==p.id)return;if(!a.drag&&Math.hypot(p.x-a.x,p.y-a.y)>=this.threshold){this.cancel(this.longTimer);this.clearTap();a.drag=true;this.emit('drag',{...p,dx:p.x-a.x});}else if(a.drag)this.emit('drag-move',p);}
  up(p){const a=this.active;if(!a||a.id!==p.id)return;this.cancel(this.longTimer);this.active=null;if(a.drag){this.emit('drag-end',p);return;}if(a.long)return;
   if(this.last&&this.now()-this.last.at<=this.doubleMs&&this.last.type===p.type&&Math.hypot(p.x-this.last.x,p.y-this.last.y)<=this.threshold*2){this.clearTap();this.emit('double',p);return;}
   this.clearTap();this.last={...p,at:this.now()};this.pending=this.schedule(()=>{this.pending=null;this.last=null;this.emit('tap',p);},this.doubleMs);

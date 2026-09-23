@@ -73,3 +73,20 @@ assert.equal((await migrateWorkspaceHistory({root:noProfiles,home:join(noProfile
 const pending=structuredClone(damaged);pending.global.pendingMutation={operation:'delete',workspaceId:'old'};
 assert.throws(()=>mergeWorkspaces(null,pending),/mutation must recover/);
 console.log('PASS same-directory identity merge, session union, completed migration repair, exact backup, idempotence and ambiguous identity refusal');
+
+// A completed repair is not silently rerun on later user data. The explicit
+// stopped-engine repair entry still retains the exact new damaged document.
+await put(duplicateHome,'storages/workspace.json',original);
+assert.equal((await migrateWorkspaceHistory({root:duplicateRoot,home:duplicateHome})).repaired,0);
+assert.equal(await readFile(join(duplicateHome,'storages/workspace.json'),'utf8'),original);
+assert.equal((await migrateWorkspaceHistory({root:duplicateRoot,home:duplicateHome,repairDuplicates:true})).repaired,1);
+for(const incoming of [false,true]){
+  const r=await mkdtemp(resolve('.build/workspace-unknown-')),h=join(r,'dsh');
+  await put(h,'storages/workspace.json',incoming?damaged:{...damaged,unit:{name:'workspace',version:99}});
+  if(incoming)await put(join(r,'profiles','p-'+'d'.repeat(32),'dsh'),'storages/workspace.json',{...damaged,unit:{name:'workspace',version:99}});
+  const bytes=await readFile(join(h,'storages/workspace.json'));
+  await assert.rejects(migrateWorkspaceHistory({root:r,home:h}),e=>e.code==='WORKSPACE_VERSION_UNSUPPORTED');
+  assert.deepEqual(await readFile(join(h,'storages/workspace.json')),bytes);
+  assert.deepEqual((await readdir(h)).sort(),['storages'],'future format must not publish a repair, backup or checkpoint');
+}
+console.log('PASS migration version bounds: future shared/source formats byte-identical; repair once and explicit repair');

@@ -1,0 +1,11 @@
+{
+  "nativeDrag": true,
+  "earlierDevelopmentBinaryDiffers": true,
+  "exe": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.4-rc.2-win-x64\\DSHDesktop.exe",
+  "result": "PASS",
+  "buildOutputMatches": true,
+  "nativeExit": true,
+  "buildId": "911532d0-60f1-4ef7-ab8b-7f1e52738b8c",
+  "nativeRestartPosition": true,
+  "sha256": "60b6efae4c2ed6e89349bd1ea2a9bf6d114f292956752c52abbea1d27d1185a3"
+}

@@ -1,0 +1,12 @@
+{
+  "expected": {
+    "originX": 752,
+    "originY": 542
+  },
+  "actual": [
+    {
+      "originX": 752,
+      "originY": 542
+    }
+  ]
+}

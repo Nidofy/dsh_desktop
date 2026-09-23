@@ -124,8 +124,8 @@ pub fn prepare() -> Result<BrowserRuntime, String> {
 }
 
 pub fn write_startup_log(message: &str) {
-    if let Some(root) = std::env::var_os("LOCALAPPDATA") {
-        if let Ok(logs) = Logs::new(&PathBuf::from(root).join("DSHDesktop")) {
+    if let Ok(root) = crate::environments::root() {
+        if let Ok(logs) = Logs::new(&root) {
             logs.write("desktop.log", message);
         }
     }

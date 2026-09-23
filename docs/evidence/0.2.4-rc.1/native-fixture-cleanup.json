@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "credentials": [
+    {
+      "target": "DSHDesktop/InternalLLM/connection-profile-v1/p-aa6535bdd8ef420bb96d525594a8cd87",
+      "removedOrAbsent": true
+    },
+    {
+      "target": "DSHDesktop/InternalLLM/connection-profile-v1/p-5cb70c9bab4c46648f2ddfb4e13dfce2",
+      "removedOrAbsent": true
+    }
+  ]
+}

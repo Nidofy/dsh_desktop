@@ -23,6 +23,8 @@
     "allow-open-session-diagnostics",
     "allow-reset-diagnostic-key",
     "allow-restart-engine",
+    "allow-engine-control",
+    "allow-desktop-environments",
     "allow-open-logs",
     "allow-quit-app",
     "allow-pet-settings",

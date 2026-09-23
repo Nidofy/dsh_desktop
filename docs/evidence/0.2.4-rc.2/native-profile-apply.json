@@ -1,0 +1,14 @@
+{
+  "method": "Native UI explicit confirmation; catalogue updated after core ready",
+  "beforeRevision": 1,
+  "controlCounts": {
+    "actions": 0,
+    "queued": 0,
+    "running": 0,
+    "checks": 0,
+    "waiting": 0
+  },
+  "afterRevision": 2,
+  "activeProfile": "Fixture B",
+  "result": "PASS"
+}

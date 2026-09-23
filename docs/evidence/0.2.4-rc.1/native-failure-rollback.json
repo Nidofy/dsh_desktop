@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "fault": "invalid fixture CA",
+  "defaultUnchanged": true,
+  "catalogRevisionUnchanged": true,
+  "oldBackendRestarted": true,
+  "historySentinelUnchanged": true
+}

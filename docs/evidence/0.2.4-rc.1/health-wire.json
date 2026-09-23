@@ -1,0 +1,10 @@
+[
+  {
+    "protocol": "openai",
+    "health": "PASS"
+  },
+  {
+    "protocol": "anthropic",
+    "health": "PASS"
+  }
+]

@@ -22,12 +22,16 @@ if ($LASTEXITCODE -ne 0) { throw 'Cannot capture release build inputs' }
 if ($LASTEXITCODE -ne 0) { throw 'Release build provenance contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/runtime-integrity.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Runtime integrity contracts failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/runtime-module-sync.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Runtime module staging contracts failed' }
 $verificationShell = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh.exe' } else { 'powershell.exe' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/distribution-verifier.mjs (Join-Path $PSHOME $verificationShell)
 if ($LASTEXITCODE -ne 0) { throw 'Standalone distribution verifier contracts failed' }
 & "$PSScriptRoot/../tests/archive-integrity.ps1"
 & (Join-Path $root 'runtime/runtime/node.exe') tests/settings-sync.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Native settings synchronization tests failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/settings-transaction.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Settings transaction recovery tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/model-defaults.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Desktop model selection migration failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/workspace-migration.mjs
@@ -48,6 +52,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Project Actions tests failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Desktop appearance tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/task-recovery.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Task recovery projection tests failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/desktop-health.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Desktop core readiness contracts failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') --test tests/desktop-control.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Desktop switch control and pet drag contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/storage-admission.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Shared storage admission and completion persistence failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/task-snapshot-bridge.mjs
@@ -56,6 +64,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Task snapshot private pipe and admission contr
 if ($LASTEXITCODE -ne 0) { throw 'Desktop notification tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') --test tests/pet-animation.test.mjs tests/pet-state.test.mjs tests/pet-interaction.test.mjs tests/pet-extension.test.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Pet regression failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/pet-settings-ui.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Pet settings UI contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/pet-packages.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Pet package validation failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/pet-package-manager.mjs
@@ -88,6 +98,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Native known-provider catalog failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/known-provider-switch.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Known-provider session continuity failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') tests/known-provider-switch.mjs --managed-cache-key
+if ($LASTEXITCODE -ne 0) { throw 'Known-provider managed cache key regression failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/profile-network.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Profile network tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/protocol-models.mjs

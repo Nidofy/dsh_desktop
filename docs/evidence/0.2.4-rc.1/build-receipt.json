@@ -1,0 +1,1440 @@
+{
+  "schemaVersion": 1,
+  "kind": "desktop-build-receipt",
+  "id": "fa0fd9ee-21ea-444c-a094-7acddcc71473",
+  "desktopVersion": "0.2.4-rc.1",
+  "startedAt": "2026-09-23T03:05:49.787Z",
+  "inputs": [
+    {
+      "path": ".cargo/config.toml",
+      "bytes": 81,
+      "sha256": "53329a3ce3b81a3bcb1c083a46a8d47a09a459b457c8f2f5441fd13d9445d8b3"
+    },
+    {
+      "path": "assets/icon-source.png",
+      "bytes": 2360973,
+      "sha256": "228b70003a22184d3522930feb4618fe5559af2e14a92fb77a2f583de0149152"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/README.md",
+      "bytes": 1213,
+      "sha256": "4b7325a3a18e9cc22432500738df8d5e6c47aa00d43121e9039629d431af0ffd"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/assemble.py",
+      "bytes": 3228,
+      "sha256": "beb25a0edd20e83f8d5f76889f6cdca08b4802298107e4aafb5b4baae7aadce7"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/checksums.json",
+      "bytes": 1113,
+      "sha256": "639b8604b509fa7e900a80bbfcabcf022dac6ebc8a3c70170c2974dac2b7a423"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/contact-sheet.png",
+      "bytes": 532920,
+      "sha256": "d62aada962f92d34bcb5c7b121f69eeed2327903829cbb05bf65f8b7ea2ab493"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/dragged-preview.webp",
+      "bytes": 127670,
+      "sha256": "5d8609d4fb188016e8a9ec0d18a1178fd5e19013b28c1f461dd530e0d22afab9"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/dragged.png",
+      "bytes": 158549,
+      "sha256": "ac3013cf370d9350ccf929c72ea801a70ccf22628330c11950929f62846cc1ef"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/dragged.webp",
+      "bytes": 113994,
+      "sha256": "d8290a4b4ec6565f623a4f34c9500151d2d821fb870b894d07e167de520fc8e4"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/happy-preview.webp",
+      "bytes": 173224,
+      "sha256": "c1c9d1405deef70db03200fe5ae256984f4eb5d96b4e578e618f11eeea5ab231"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/happy.png",
+      "bytes": 213690,
+      "sha256": "437b91f3a35583086b07ea14349bf52ca464f141dcfba190164cbd3db9f42377"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/happy.webp",
+      "bytes": 153180,
+      "sha256": "cabd1c4e89457ba2d3964580fbe9bebc3a53d4d3a64bfe3988117488a9a8b423"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/interactions.json",
+      "bytes": 1802,
+      "sha256": "cbfc2c9abe03fe3593406772b547adc43834984b39712f849aaa9ebe64e711e9"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/pat-preview.webp",
+      "bytes": 166382,
+      "sha256": "cfe9b06792d2cbb11d8bc9f042bd2dc3ffb3a9c6e52d4c4d2e0e3c6c6c8e9c8b"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/pat.png",
+      "bytes": 207075,
+      "sha256": "b97d49160a80d1b822c6314f5ca2e908908a0687aa49dd862e0610f9c034bbf0"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/pat.webp",
+      "bytes": 147192,
+      "sha256": "efd9984fc279ac2755443ba93709351d4e174216e53e63b68a11a398e00df6ea"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/preview.html",
+      "bytes": 1080,
+      "sha256": "c38c160462deb2ddd032cabd4f510e3b160a8edc3439aeae71635ac459b08a06"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/sources/dragged.png",
+      "bytes": 1802896,
+      "sha256": "dfcda4eae03ab30508c887f82d3b5eec74929521575551dfb66243bffe459264"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/sources/happy-v2.png",
+      "bytes": 1620650,
+      "sha256": "8bf15dfe02a4c20eaca0d36b26a77ce6b0db11223c2b6f578a486818ccc5adc1"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/sources/happy.png",
+      "bytes": 1953993,
+      "sha256": "42f3d864d9ae9409b5aeba10bf42ca6202718e3f832c962fa906c8aed4170815"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/sources/pat-v2.png",
+      "bytes": 1664619,
+      "sha256": "374b3744282de601710fb494fccb5c2fc4ebc9aab5dcd707a84ed090a90489ad"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/sources/pat.png",
+      "bytes": 2049141,
+      "sha256": "3a0b3f63b527e3078143a8b8f9f1f3879e89c81afffec984f24b5b93b58549ec"
+    },
+    {
+      "path": "assets/pets/xiaojing/extensions/visual-record.json",
+      "bytes": 3483,
+      "sha256": "77576c92f2346a8a19718cafd131e7f4cdbd99fabd1f42667b689d6d1534b2ae"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/DEVELOPMENT-PROMPT.md",
+      "bytes": 7450,
+      "sha256": "a5788150d66d1bc36953ac3668bdc3fb944c0c55b2ab9e47352624b483820da4"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/INTEGRATION.md",
+      "bytes": 22883,
+      "sha256": "23e0dfc1904ccc8b6a2dd51de3f59fc46f2a3fa3549a65950d93fefb2e47536f"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/README.md",
+      "bytes": 2631,
+      "sha256": "23bc7cd40bd13ebcba22ebfed2aef90d786b383a6364baf2dda002efa139a034"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/asset-manifest.json",
+      "bytes": 3047,
+      "sha256": "5619d511ff55b6eb21c6fb249a19ed8cbdb0f54d2591fd3e246d483a79346dec"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/atlas-layout.json",
+      "bytes": 1679,
+      "sha256": "ea22a67962bb6bdfde42455c20893ee8093c3be18e4a716178bf4977638908c8"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/checksums.json",
+      "bytes": 1598,
+      "sha256": "03826b12f10a9d2121c4927e56bacdf31f880c2303688e15e98d2082afb16810"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/pet.json",
+      "bytes": 224,
+      "sha256": "c5e599227d0515c8b90fef36a5f7805f30acf89b18f5a62cc6f77e409df351a2"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/portrait.png",
+      "bytes": 1363244,
+      "sha256": "bbe2562f7cb74ded65b64a84cc14e4960043ff0a98f1f7251732e31b80ab6380"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/preview.html",
+      "bytes": 4945,
+      "sha256": "e642c17f2ead99b01a540dcec2d5ba5aef29d62eb5321dd055f2a9a4cef2053a"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/spritesheet.png",
+      "bytes": 3971684,
+      "sha256": "a80974ed54560d8277ab5a98dd905790c03bc68eecd1ede0b439d8224d1e747c"
+    },
+    {
+      "path": "assets/pets/xiaojing/package/spritesheet.webp",
+      "bytes": 2991256,
+      "sha256": "be2917666223cb692fcf62fc9bc1df33aca3cb5a5d53165fb46aa98d364a65bd"
+    },
+    {
+      "path": "assets/wallpaper-transparent.png",
+      "bytes": 1744117,
+      "sha256": "d4aa139cf93fedf73ac928995e2d691690c27e55ea745e28a677190b40e3c2eb"
+    },
+    {
+      "path": "build-deps/package-lock.json",
+      "bytes": 345563,
+      "sha256": "0ac768018fa9b4843dc1ed5961db0202a93b45e02be3a3319e13c53f8a438ae5"
+    },
+    {
+      "path": "build-deps/package.json",
+      "bytes": 65,
+      "sha256": "988aaac212bde63df8c349566347d5e9a410d912cf0c24698aa61adc0e9f457a"
+    },
+    {
+      "path": "desktop-theme/inject.js",
+      "bytes": 1456,
+      "sha256": "ffde411bf8cf06525e6fb74d965bbea6615609a1bcc1cd1b12dcbc292689a18e"
+    },
+    {
+      "path": "runtime-src/artifacts-integration.mjs",
+      "bytes": 5957,
+      "sha256": "12ad3908c1e303b3c292c61ac999b7f1c6a73f98345bf9b180e4f45b7c0a2523"
+    },
+    {
+      "path": "runtime-src/artifacts-page.mjs",
+      "bytes": 5813,
+      "sha256": "3ff5a3107b6fd55b6d75f96a5262b3766064ba46085b4c0ad87c145b87926cf8"
+    },
+    {
+      "path": "runtime-src/cache-center.mjs",
+      "bytes": 11052,
+      "sha256": "57b4d47a2ee2f06c0bd76aac98d8c993aabc0acfbb12db8166367574a53a5b73"
+    },
+    {
+      "path": "runtime-src/cache-page.mjs",
+      "bytes": 10794,
+      "sha256": "d7a0f496dd39841ef68e2cb964f70d6094cd5faba48955701c83913e9347e638"
+    },
+    {
+      "path": "runtime-src/cache-probe.mjs",
+      "bytes": 10176,
+      "sha256": "ff011b4d91d9956182e231ac914b153817e79d13faf0d3059d3f4a04346adb16"
+    },
+    {
+      "path": "runtime-src/change-draft.mjs",
+      "bytes": 5042,
+      "sha256": "46df8a45e8cbe88fd27da7107ac42dc7bced2e645ba16d7c6604f67a21df2333"
+    },
+    {
+      "path": "runtime-src/change-review-integration.mjs",
+      "bytes": 7569,
+      "sha256": "5512c71b85f5bd26778c06cea0cdcbbd03fb8bde3489d8d722b74b42a76782ba"
+    },
+    {
+      "path": "runtime-src/change-review-page.mjs",
+      "bytes": 16549,
+      "sha256": "3129bcefc9272e2e7586d9e593e2f7ab4c4aabc1810ffa49498b2d49147b19ab"
+    },
+    {
+      "path": "runtime-src/change-review.mjs",
+      "bytes": 19261,
+      "sha256": "302ecfa1e93173b0b7d9917a8dbeecdb6e80863a9a881bea713ee5322cd5b8c5"
+    },
+    {
+      "path": "runtime-src/comparison-page.mjs",
+      "bytes": 10484,
+      "sha256": "933b2f463caa1cfc928082275ebfbcccade7e4546b06e2158fffb02878ed2272"
+    },
+    {
+      "path": "runtime-src/desktop-artifacts.mjs",
+      "bytes": 8313,
+      "sha256": "d0e8de7633ece2cb101383950332dd38f68dbe1d0a269c9cc8b798b06dc7109d"
+    },
+    {
+      "path": "runtime-src/desktop-cache-key-bridge.mjs",
+      "bytes": 3406,
+      "sha256": "5e2402677ed84d1225b9abca94b0a55f9a9e5139b130c95f3ffddbb4afceab0d"
+    },
+    {
+      "path": "runtime-src/desktop-cache-key.mjs",
+      "bytes": 1818,
+      "sha256": "79117352445bbb647a0fe0fee05a43be4965b31e0a7a8d910a6c88d6d84f3191"
+    },
+    {
+      "path": "runtime-src/desktop-client/client.js",
+      "bytes": 9645,
+      "sha256": "f5254294ef808a0bdf9c1a4b2029b0b253ba8481d09a83e39349f31543390a6e"
+    },
+    {
+      "path": "runtime-src/desktop-client/index.mjs",
+      "bytes": 102,
+      "sha256": "1b62037c7711c90e6488b9fa9d4e081dfcc168e14c07807f2cc9a48bfd1bdea0"
+    },
+    {
+      "path": "runtime-src/desktop-client/package.json",
+      "bytes": 662,
+      "sha256": "7b7dcd224f69684275ddfa59f6eb6968ff3d4d4e09564a96bf699ad860f9a2f9"
+    },
+    {
+      "path": "runtime-src/desktop-environment/client.js",
+      "bytes": 19366,
+      "sha256": "273f7e5851a03b184925174eebc57cdf5d02257c740bb805a329e4c076705b0b"
+    },
+    {
+      "path": "runtime-src/desktop-environment/index.mjs",
+      "bytes": 522,
+      "sha256": "de60dd2a3d4c9ce6388f36266bf436601ada7953798da27a5b2d91f2aa5f4916"
+    },
+    {
+      "path": "runtime-src/desktop-environment/package.json",
+      "bytes": 406,
+      "sha256": "74dfdd6409824fc0dacbba88aa047a511c33f03455917e1cec19f3877a3654e4"
+    },
+    {
+      "path": "runtime-src/desktop-health.mjs",
+      "bytes": 661,
+      "sha256": "346176928ff71503efae5f83f52947f05718465af4e6318df7d9653a9e449191"
+    },
+    {
+      "path": "runtime-src/desktop-network.mjs",
+      "bytes": 1316,
+      "sha256": "9a9dc7c43e4a1d8f1e1064b601448d2186cb60c76bf6645d79d210fea606e698"
+    },
+    {
+      "path": "runtime-src/desktop-notifications.mjs",
+      "bytes": 3363,
+      "sha256": "9c21d6f216488b3a8c396aa166ca9919a1be25ea343fb9892df20eac4879baba"
+    },
+    {
+      "path": "runtime-src/desktop-observability.mjs",
+      "bytes": 19488,
+      "sha256": "465e334db278ad550ff25fbe94c2feab81a56801cb9ac6dd71226778d08b8b0b"
+    },
+    {
+      "path": "runtime-src/desktop-prompt-stability.mjs",
+      "bytes": 1714,
+      "sha256": "aceab5e30d521c18f439116f0a761319c4c15b00b82245ca793a5090557d6c37"
+    },
+    {
+      "path": "runtime-src/desktop-theme-assets.mjs",
+      "bytes": 26147,
+      "sha256": "109c40e8898b912d957424be6bef89c7d09c8ab955fccb71882cf1fd15b26d2c"
+    },
+    {
+      "path": "runtime-src/desktop-theme.mjs",
+      "bytes": 1261,
+      "sha256": "87c7990c0c0b6562ef7cbc74da85cbbd74491413087ef54717c8da0197116e1a"
+    },
+    {
+      "path": "runtime-src/desktop-vision.mjs",
+      "bytes": 3083,
+      "sha256": "a9bdef59313eb89f6ad31578fe8b6db9dc6caa5a471c2061b1414f7c69013468"
+    },
+    {
+      "path": "runtime-src/desktop-workspace.mjs",
+      "bytes": 5992,
+      "sha256": "047e0768665cdaaaf95ef39c61605f54b4b834577766d5b99db3ab12e1a817e4"
+    },
+    {
+      "path": "runtime-src/diagnostic-capture.mjs",
+      "bytes": 10383,
+      "sha256": "42ab2a552e3b0e3063a74d56e5ebbd8afaee51e93998544e9b0993968c2df41e"
+    },
+    {
+      "path": "runtime-src/diagnostic-comparison.mjs",
+      "bytes": 10031,
+      "sha256": "c57d28d609f7574568795387d56b2d9118c525f2e8f43edaf53fe07fc390532a"
+    },
+    {
+      "path": "runtime-src/diagnostic-page.mjs",
+      "bytes": 13699,
+      "sha256": "18cd316268103b3f0ccc170c3277d57d0c4e26fc8982865ec6f50c97bb3565db"
+    },
+    {
+      "path": "runtime-src/diagnostic-state.mjs",
+      "bytes": 1999,
+      "sha256": "06ac49f7bb02e2e08987d8df4b749f2a1eeb9a619ec13cd004c4d2c192992f89"
+    },
+    {
+      "path": "runtime-src/diagnostic-store.mjs",
+      "bytes": 2127,
+      "sha256": "446b11ea4d53b11d85587c6f8c5f8e06559b2c193dc462131566974f4fc6bc0c"
+    },
+    {
+      "path": "runtime-src/diagnostic-tools.mjs",
+      "bytes": 1926,
+      "sha256": "d5b988a1b3232e499e0c0f68021b641813517a27996f7f46047ad992429dc3cf"
+    },
+    {
+      "path": "runtime-src/environment-repository.mjs",
+      "bytes": 7597,
+      "sha256": "6a1faad997bcac11345dd40f3ae6c338dfe99f7fd91732b6814463d1868f4514"
+    },
+    {
+      "path": "runtime-src/host.mjs",
+      "bytes": 3502,
+      "sha256": "ec2521b78e22e623996a7a6965d46975efc26e98227a51b44c7ed566eae87581"
+    },
+    {
+      "path": "runtime-src/model-defaults.mjs",
+      "bytes": 1764,
+      "sha256": "0a2ae428340a9eacb3b7d27d985c0c7da50f6be42e0476a0a3de2c9b514954c3"
+    },
+    {
+      "path": "runtime-src/pet-packages.mjs",
+      "bytes": 17809,
+      "sha256": "d82ae8ec2bf6991425d6a8e5b3e16072fd56b1c69f9d22b5c51d4eb1f282bdcf"
+    },
+    {
+      "path": "runtime-src/pet-state.mjs",
+      "bytes": 3627,
+      "sha256": "849882b64ea2e708a3950de5d90471cf84f383381dabec6de7c211ab468d375f"
+    },
+    {
+      "path": "runtime-src/prefix-regression.mjs",
+      "bytes": 4021,
+      "sha256": "eddcdc43b52ce8ba2f5d8a16abab1e05b160e3249d820518d4914c0a8171bd01"
+    },
+    {
+      "path": "runtime-src/project-actions-integration.mjs",
+      "bytes": 5904,
+      "sha256": "ce3455050b8ab0e214b2874408f4d886c033327cf0e4771af4d16ea55bc2af7a"
+    },
+    {
+      "path": "runtime-src/project-actions-page.mjs",
+      "bytes": 9448,
+      "sha256": "fe3a54d4410c1301063a15470baf858eb9b1aee6f48cd2382de95680e2392743"
+    },
+    {
+      "path": "runtime-src/project-actions.mjs",
+      "bytes": 15668,
+      "sha256": "a70609782e7b8b0865ffa8996ea80dfe08897685d0c56619bbd275452c73bbb0"
+    },
+    {
+      "path": "runtime-src/repo-summary.mjs",
+      "bytes": 3681,
+      "sha256": "f50f94645e9bee0af2161013291dff58d457107e0d96e227a030be839a929a46"
+    },
+    {
+      "path": "runtime-src/runtime-integrity.mjs",
+      "bytes": 5129,
+      "sha256": "c851bedaa95df959919c38dcf3ea9cc153ea63e1c53aba50db61f5a0a3089c81"
+    },
+    {
+      "path": "runtime-src/self-test-center.mjs",
+      "bytes": 3619,
+      "sha256": "f9919f43e0d42a32925554793e41822472753461c55385c4ac806f8244cdd581"
+    },
+    {
+      "path": "runtime-src/self-test-local.mjs",
+      "bytes": 12113,
+      "sha256": "dfe8ebe812c46c59728d8485a0e474031fc7e7fbdb88769bc804a6eaf2b09063"
+    },
+    {
+      "path": "runtime-src/self-test-page.mjs",
+      "bytes": 9688,
+      "sha256": "becc8cb95ec0fb1dc0c30d68d1729891c17d58d4da06a6c9c5c4dc293964c2ae"
+    },
+    {
+      "path": "runtime-src/self-test-provider.mjs",
+      "bytes": 4488,
+      "sha256": "f61096eafe6feb50d9f5a5c4705bc75ef9833d0d5c4f1e3652bf1e38d0bc6928"
+    },
+    {
+      "path": "runtime-src/self-test.mjs",
+      "bytes": 10942,
+      "sha256": "fd0a9dda5760627034d9538c639ae91b1956b7f548f519f5e61b6153e86bc7d4"
+    },
+    {
+      "path": "runtime-src/settings-protection.mjs",
+      "bytes": 1994,
+      "sha256": "dacc84973d5b17e007cf37a0d57c4b8f5fbc9dddcde72bc87165de0b56f85964"
+    },
+    {
+      "path": "runtime-src/settings-sync.mjs",
+      "bytes": 7699,
+      "sha256": "fd408aa619e8c3812b6d45f6dcb15679303daa0a1860bd48272e7955dea72d90"
+    },
+    {
+      "path": "runtime-src/settings-transaction.mjs",
+      "bytes": 5359,
+      "sha256": "1c51f016237b6d5c03e4fc852f762332938c98bbab6904f32207164794e2b6a4"
+    },
+    {
+      "path": "runtime-src/startup-errors.mjs",
+      "bytes": 1714,
+      "sha256": "209f20c861e05ab9f0066595af7def041df53ee15c9ded754c91d3deeb295493"
+    },
+    {
+      "path": "runtime-src/storage-admission.mjs",
+      "bytes": 3597,
+      "sha256": "8ec6cbbbf49393f3c7e0169fd15fff1f48860c9e07a1e08f616477c7fd5941c7"
+    },
+    {
+      "path": "runtime-src/task-recovery-integration.mjs",
+      "bytes": 7081,
+      "sha256": "bd53ec899c24bbb52c626de937a877b25504d1924ee617f73090cc04a9f13d05"
+    },
+    {
+      "path": "runtime-src/task-recovery-page.mjs",
+      "bytes": 7325,
+      "sha256": "880fae34b92bd064a2a3394e11ea417a402b37b437683d5a2b79759665bba36e"
+    },
+    {
+      "path": "runtime-src/task-recovery.mjs",
+      "bytes": 3618,
+      "sha256": "1e5410f4a72b241d1856b8359151bf8f3615d8a3e95e4c03bb4e4bf437de93ad"
+    },
+    {
+      "path": "runtime-src/task-snapshot-bridge.mjs",
+      "bytes": 2205,
+      "sha256": "b1465992a1108a229a396548e198cd5188b3cfebebd31e65f6fcbdc134299f72"
+    },
+    {
+      "path": "runtime-src/task-snapshot-integration.mjs",
+      "bytes": 4285,
+      "sha256": "95b4fa588250d547e2faf9a4568d08950e05b4a7f79662865f939924b76d103d"
+    },
+    {
+      "path": "runtime-src/vision-provider.mjs",
+      "bytes": 3834,
+      "sha256": "9b405910524f4fc57da3059169d1b68061e6e4507b3a38e7194bd723e615f927"
+    },
+    {
+      "path": "runtime-src/workspace-migration.mjs",
+      "bytes": 11510,
+      "sha256": "ff316c2c58a36f9f1e33b4f90d2091742f666fe4d2192d4a0909d5ba38339fd0"
+    },
+    {
+      "path": "scripts/build-windows.ps1",
+      "bytes": 10117,
+      "sha256": "058b0c987c8e421c1606e73a6c4551e14fb5624a9c053ec0850a4f8231f6c59b"
+    },
+    {
+      "path": "scripts/experiment-process.mjs",
+      "bytes": 2886,
+      "sha256": "7c85d47d9f729519506d1986820e67f00e90d310f315ce5503d5b8edae9e6dc8"
+    },
+    {
+      "path": "scripts/experiment-runner.mjs",
+      "bytes": 16640,
+      "sha256": "5b83beda8e1711d5b4230c45107421095a73e7b63e1e99550f2914d5a3010bc1"
+    },
+    {
+      "path": "scripts/fetch-runtime.ps1",
+      "bytes": 848,
+      "sha256": "261fa26d5905a156be93751cd35e3403a9febe6a6bffdd1bcc075d6587635f9d"
+    },
+    {
+      "path": "scripts/fetch-webview2.ps1",
+      "bytes": 2488,
+      "sha256": "ef604fb47f10ec8d3836b2ebd172b7e1cd920cd07565f97979f09634d91a0aec"
+    },
+    {
+      "path": "scripts/generate-provider-catalog.mjs",
+      "bytes": 2020,
+      "sha256": "b85a32298ead77b232e6b6b17fc42ad08142d2b64ecdafc47ba5492ee2ffdfff"
+    },
+    {
+      "path": "scripts/license-inventory.mjs",
+      "bytes": 2493,
+      "sha256": "5c321229b7318ddc7f43c7537c1f57d33929c0185e4971c59ef69f7119641e42"
+    },
+    {
+      "path": "scripts/make-icon.mjs",
+      "bytes": 1800,
+      "sha256": "4ac089ce9796f84132cf7ccf1baaa5eecb21a12d898cd20c3b978f620e531c43"
+    },
+    {
+      "path": "scripts/package-portable.ps1",
+      "bytes": 5607,
+      "sha256": "24d1cefcc41f482e67de8012eac61b6906f586b0edc88bfb8f67a9d0afc9ff0e"
+    },
+    {
+      "path": "scripts/prepare-dsh.ps1",
+      "bytes": 1282,
+      "sha256": "148be277bccc19f2e68971ec6d3816df12853cd413668d2bf0646bf7ef626f71"
+    },
+    {
+      "path": "scripts/release-receipt.mjs",
+      "bytes": 4563,
+      "sha256": "462d8ac80a80115886cc1851cd16203a7ee1ab35039f39ab13a3ad1e0ff98f04"
+    },
+    {
+      "path": "scripts/runtime-integrity.mjs",
+      "bytes": 3846,
+      "sha256": "158a9994068704a7b1869492be93c42eef86fb29059ef6d79518f01d3ed89f3a"
+    },
+    {
+      "path": "scripts/runtime-module-sync.mjs",
+      "bytes": 826,
+      "sha256": "98437d024dfa2cf3d9d91f8280832e02310a824f1d75bceaa4c03074e3ce4def"
+    },
+    {
+      "path": "scripts/set-folder-icon.ps1",
+      "bytes": 3790,
+      "sha256": "2415e334f282c0549cf60a92d9d5f80122eaa324eb3421881548caea4ceebd81"
+    },
+    {
+      "path": "scripts/stage-pet-probe.ps1",
+      "bytes": 434,
+      "sha256": "b024a8378a5f14e563e5efbf903848244cc96557d382c643474f66ec73fe2760"
+    },
+    {
+      "path": "scripts/stage-pets.mjs",
+      "bytes": 2288,
+      "sha256": "af57d14168cb01263d250acf8c2e478b4b468a7069261d080988b1de715c3ef8"
+    },
+    {
+      "path": "scripts/sync-desktop-runtime.mjs",
+      "bytes": 2342,
+      "sha256": "e5751eb549ab0cf306b13ae5eea70c44647357540f1b0075b941af1fb79b7ed0"
+    },
+    {
+      "path": "scripts/sync-desktop-theme.mjs",
+      "bytes": 1823,
+      "sha256": "3c161fbbd9127fe412a36d80e73a4d1deedcd4e87e01fb044d6b54b93fbe6f15"
+    },
+    {
+      "path": "scripts/verify-archive.ps1",
+      "bytes": 2786,
+      "sha256": "9eb324f3b8c896b897c13460074d29364ab22ae58d06d84d4e0c339b7ca5461e"
+    },
+    {
+      "path": "scripts/verify-distribution.ps1",
+      "bytes": 2277,
+      "sha256": "842cec149dcfff63cd09611f733925cd5dd95ccadf2f69d62442d70423b935f3"
+    },
+    {
+      "path": "scripts/verify-offline.ps1",
+      "bytes": 2331,
+      "sha256": "8ca7cbd2aa93553d84eb6108d45877b121931e039325562e6f57dc917fc2fe19"
+    },
+    {
+      "path": "scripts/verify-webview2.ps1",
+      "bytes": 1378,
+      "sha256": "cd0585a602ba2d26424786ca2898f326d9a5e121753311b491e6d8a5a1067ba1"
+    },
+    {
+      "path": "shell-ui/app.js",
+      "bytes": 22452,
+      "sha256": "7ae5a06c499e7c740227359d5856fe5044b23ae1eb8604dcfbd08613793fc0c9"
+    },
+    {
+      "path": "shell-ui/credentials.js",
+      "bytes": 3603,
+      "sha256": "ec0b46db85b6af8b15b953976a1b439a6822fdb99053692bd857a701148dc887"
+    },
+    {
+      "path": "shell-ui/desktop-theme.css",
+      "bytes": 5682,
+      "sha256": "24de9d0c4602b5f085c3097f5dbf8e070956d8e2a8fa3b8ffce8e58d8e652e71"
+    },
+    {
+      "path": "shell-ui/desktop-theme.js",
+      "bytes": 2323,
+      "sha256": "e6b194797cd2cda0ef68d743ff891f13d8c667910d808e298a22e45ed105f2ac"
+    },
+    {
+      "path": "shell-ui/dsh-tokens.css",
+      "bytes": 17788,
+      "sha256": "769d1522cd8559531aed5a9f3c75793afd62896d2f0ff49f85b39edb4483dd7a"
+    },
+    {
+      "path": "shell-ui/icon.png",
+      "bytes": 155070,
+      "sha256": "d4cc671cf174b96ca902e5bdb651c8fcd1576662e7d533ae2dddd98062d1f0bb"
+    },
+    {
+      "path": "shell-ui/index.html",
+      "bytes": 20069,
+      "sha256": "d72829d84d9ffda668a0f2e98b0ea58c56d2dc1fd04a49e5cb88905b168e260c"
+    },
+    {
+      "path": "shell-ui/pet/animation.js",
+      "bytes": 551,
+      "sha256": "5c0d9944bcede33184640c3742aea5334bd2b366f2730474f5777599d99a9a4c"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/asset-manifest.json",
+      "bytes": 3047,
+      "sha256": "5619d511ff55b6eb21c6fb249a19ed8cbdb0f54d2591fd3e246d483a79346dec"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/atlas-layout.json",
+      "bytes": 1679,
+      "sha256": "ea22a67962bb6bdfde42455c20893ee8093c3be18e4a716178bf4977638908c8"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/extensions/dragged.webp",
+      "bytes": 113994,
+      "sha256": "d8290a4b4ec6565f623a4f34c9500151d2d821fb870b894d07e167de520fc8e4"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/extensions/happy.webp",
+      "bytes": 153180,
+      "sha256": "cabd1c4e89457ba2d3964580fbe9bebc3a53d4d3a64bfe3988117488a9a8b423"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/extensions/interactions.json",
+      "bytes": 1802,
+      "sha256": "cbfc2c9abe03fe3593406772b547adc43834984b39712f849aaa9ebe64e711e9"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/extensions/manifest.js",
+      "bytes": 840,
+      "sha256": "96888ad95e0d1464c70c430a7c98d62da3c9faa9365decacbe593360fd7539b8"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/extensions/pat.webp",
+      "bytes": 147192,
+      "sha256": "efd9984fc279ac2755443ba93709351d4e174216e53e63b68a11a398e00df6ea"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/manifest.js",
+      "bytes": 1632,
+      "sha256": "b0f37156ad444d12478d4b2ad3515b6bab765aced90353432455c673d3a73c35"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/pet.json",
+      "bytes": 224,
+      "sha256": "c5e599227d0515c8b90fef36a5f7805f30acf89b18f5a62cc6f77e409df351a2"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/spritesheet.webp",
+      "bytes": 2991256,
+      "sha256": "be2917666223cb692fcf62fc9bc1df33aca3cb5a5d53165fb46aa98d364a65bd"
+    },
+    {
+      "path": "shell-ui/pet/assets/xiaojing/staging.json",
+      "bytes": 644,
+      "sha256": "0bc0ef6748e2f2b3f594d392cd6b7e9028ccc77d9440cea15e5ab88544d70664"
+    },
+    {
+      "path": "shell-ui/pet/boot.js",
+      "bytes": 148,
+      "sha256": "7815972f9d169f93fac3c9bd18959ec79d3338f34a41f8c0e4a6486e53d28184"
+    },
+    {
+      "path": "shell-ui/pet/gestures.js",
+      "bytes": 2176,
+      "sha256": "76bb9b2c04deb76225f9a4c5f1cf2fa0c61eba1a571747292f28be56daae9aba"
+    },
+    {
+      "path": "shell-ui/pet/idle.js",
+      "bytes": 893,
+      "sha256": "3f7cb8ac8ae1ba66c60c934105364af9b83dfb8afb5c38be54cac5525d0f92ce"
+    },
+    {
+      "path": "shell-ui/pet/index.html",
+      "bytes": 401,
+      "sha256": "998812134900df58f6bf3071537f37b9c3afc3fd575588921f657473d9126b86"
+    },
+    {
+      "path": "shell-ui/pet/interactions.js",
+      "bytes": 1528,
+      "sha256": "76f5ddbe9553fe245364af232967013fe5ff68e71ccfcd68628040a4ba1491a8"
+    },
+    {
+      "path": "shell-ui/pet/pet.css",
+      "bytes": 928,
+      "sha256": "5206095dfe46966ee6ee86164f5f6f74f0a367776dfaf5bfd7ad1524568f9cc1"
+    },
+    {
+      "path": "shell-ui/pet/pet.js",
+      "bytes": 7977,
+      "sha256": "095cb5ca998b6c0f0a81aff5322e4ce39ef8b630f48019b4bc6c5461332a5465"
+    },
+    {
+      "path": "shell-ui/pet/state.js",
+      "bytes": 3035,
+      "sha256": "9e609547072425cf6039e1867dd12bd40ca240ebb69e2ca45dba9dcc098b995d"
+    },
+    {
+      "path": "shell-ui/pets-settings.css",
+      "bytes": 1602,
+      "sha256": "2e75ad7c83951bee457f72f93b3c42a7f859d354ea9170c8f9488dfba2c7549a"
+    },
+    {
+      "path": "shell-ui/pets-settings.js",
+      "bytes": 6909,
+      "sha256": "a8766f92fab81c75976653a9fe6fb22b58ee750f18143a1d5737ac26666a23d1"
+    },
+    {
+      "path": "shell-ui/profile-recovery.js",
+      "bytes": 4932,
+      "sha256": "7020e60d717834c10a0586d01eef1538a334b9b9732ad3beecab730bcd71070e"
+    },
+    {
+      "path": "shell-ui/provider-catalog.js",
+      "bytes": 11503,
+      "sha256": "c748b0a8451afed9213674aa9562f76b809d0fce4c7681e927640b1ef5524ea6"
+    },
+    {
+      "path": "shell-ui/settings-navigation.js",
+      "bytes": 2649,
+      "sha256": "8c0c1f7afdcec24fc30dfd4dca903ae80b9c54aff0c692955e002394a55c9ac2"
+    },
+    {
+      "path": "shell-ui/snapshots.js",
+      "bytes": 14703,
+      "sha256": "0e006596202393a251e9a37df5a7baaa602b13c39635075c2089ed0a3a1d540b"
+    },
+    {
+      "path": "shell-ui/storage.js",
+      "bytes": 9521,
+      "sha256": "0026bb4953f25a73b0a056dd18c724e0d0d748f99296398c4787cda9e2978e00"
+    },
+    {
+      "path": "shell-ui/style.css",
+      "bytes": 3577,
+      "sha256": "0f91f8beac5eeb59b5d6c7474e749fafa86d8dac17893c19cfc3a9e18d767336"
+    },
+    {
+      "path": "shell-ui/wallpaper.png",
+      "bytes": 1691729,
+      "sha256": "10ad90a7baacf70daefe7e6573cf9e9725bf25122320f8bcde615f1aa4c1802d"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "bytes": 115535,
+      "sha256": "c0c6b2839d74cb3d21e78e8379a691f0102f263503e651509d455817f1911e9f"
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "bytes": 1099,
+      "sha256": "b8b95a267ad782b8001457e77377c6d1572a1624425c16a2f685c0b95c307880"
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "bytes": 1010,
+      "sha256": "fa1f6cc56676d10b7666cced8108f441e1dc5c289ab70ce645891bf90210c4b7"
+    },
+    {
+      "path": "src-tauri/capabilities/pet.json",
+      "bytes": 328,
+      "sha256": "ce00dcbbfb5c2c68cf36469cc6c01304f2795ab71b7b8b66bec0f0c4bc9476a7"
+    },
+    {
+      "path": "src-tauri/capabilities/shell.json",
+      "bytes": 894,
+      "sha256": "85970ed9e1ad371e7e05074dec7c427a9b2753ba99f355d0dfbf49d4e127fce8"
+    },
+    {
+      "path": "src-tauri/generated/desktop-theme.js",
+      "bytes": 2463861,
+      "sha256": "181dbdb3cb9e6676816c9faf9967d85c2cc4a576a02d3f03f59e0f0edbf43e5a"
+    },
+    {
+      "path": "src-tauri/generated/provider-catalog.json",
+      "bytes": 17752,
+      "sha256": "a3afaeed11e4634c89c6f22d4d57f2fa8768f62d47e95852cd601ad95ea9f2ea"
+    },
+    {
+      "path": "src-tauri/icons/icon.ico",
+      "bytes": 223448,
+      "sha256": "5900055d48c6ace1dae3e49ab69052533e7a409a125b65b65fbea2bc25b7f7a3"
+    },
+    {
+      "path": "src-tauri/icons/icon.png",
+      "bytes": 155070,
+      "sha256": "d4cc671cf174b96ca902e5bdb651c8fcd1576662e7d533ae2dddd98062d1f0bb"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/activate_connection_profile.toml",
+      "bytes": 462,
+      "sha256": "f0a4f9492082ca516897e4874a627946f27b7e5e0f29bdf6cbced963e16b742b"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/appearance.toml",
+      "bytes": 360,
+      "sha256": "67cd74a25ddc4efef27fb920b7ac7091f56da9b3480c309f0edf13ac36006f33"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/connection.toml",
+      "bytes": 360,
+      "sha256": "9b287cd44bc0871431d03ef38a72e018240e939c3e0304a5bbb1e0515442d818"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/connection_profiles.toml",
+      "bytes": 414,
+      "sha256": "49c104f571bfdeeb1d63a40386abb95f8427d88841210564fb3632eb21c9cdd1"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/connection_recovery.toml",
+      "bytes": 414,
+      "sha256": "ffb759737fd5345eb8d5ad0cbbcf819ebd95b3390658c0ada88ae2d0c7fe5238"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/credential_cleanup.toml",
+      "bytes": 408,
+      "sha256": "5edc8ba4efafbb51f422a80064917f4f32ef31872ff009bd09308b2d0dabc845"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/delete_connection_profile.toml",
+      "bytes": 450,
+      "sha256": "4fa30f88462415437db5b6cc0d2778d52a6432740ed34de80ba1c7d357c5acd8"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/desktop_storage.toml",
+      "bytes": 390,
+      "sha256": "509353368faeb4f9540aaefb6a3001cce935c5fbb30dc4c9042736b6104d8e2d"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/diagnostics.toml",
+      "bytes": 366,
+      "sha256": "e605c762c0617c7d48faba114c520c17f3d5a1584d11b5db9da42ae966ad7c32"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/global_storage_stats.toml",
+      "bytes": 420,
+      "sha256": "2722275139920eb3a9f8149a514205cc883295b9b1388f2c49cb34d3024089e5"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/open_logs.toml",
+      "bytes": 354,
+      "sha256": "f24e4d3f1067a0a7352a4f769fa292458d93e98fb170c56b9dd62bb79d7da016"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/open_session_diagnostics.toml",
+      "bytes": 444,
+      "sha256": "44c634a71e79245d3c020b4550eead882e23bacf1b7fed15deaa145dd99532f8"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_action.toml",
+      "bytes": 360,
+      "sha256": "4bd143ef24a0baf9b4ec8463bdc9b1a6d3cbfe03d4c271f7eef0419e50a64be2"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_packages.toml",
+      "bytes": 372,
+      "sha256": "b09d3672cc83945de8322260cfc05b2212e35a7ff9c11b3e489247c1e7cbb8cb"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_pick.toml",
+      "bytes": 348,
+      "sha256": "1307f6a9bf837335253c90831595dade2e3c5db66126141cb81d7f0e7e9dca3b"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_ready.toml",
+      "bytes": 354,
+      "sha256": "a960ab1772ea146d232bba969f3113818ad38347fc9f39b99378c135e906e08a"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_resource.toml",
+      "bytes": 372,
+      "sha256": "a8d4fd64bdc624571a8276dd3a2162fe324289372c7a2f584be57186407e96cd"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_settings.toml",
+      "bytes": 372,
+      "sha256": "7a0f2a0f669eff58f7e3266e95cd91acc6ed057067ef12b8dc4e0c707e7e5911"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/pet_snapshot.toml",
+      "bytes": 372,
+      "sha256": "82faa054d4991a67a26d2f14c3e545cddd7686d5d1ccba02cf5ac65d4b7c6fcb"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/quit_app.toml",
+      "bytes": 348,
+      "sha256": "7450dad81766452bc7783b1a53997ed1c24655a7d9f75442e623b1644ffc9d42"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/reset_diagnostic_key.toml",
+      "bytes": 420,
+      "sha256": "46edb07050b7e9a5bec41585c993dd8d08e63f8f10a5a2f60764eb201f93d170"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/restart_engine.toml",
+      "bytes": 384,
+      "sha256": "d6c0ad3e73057beffecebb39788936883a24765aa7d7c5469ff87bf801d2cc6c"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/save_connection.toml",
+      "bytes": 390,
+      "sha256": "95eaba74dabce981ab12df22438661f842a6e9e074cfe474ffa6aef70625f31a"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/save_connection_profile.toml",
+      "bytes": 438,
+      "sha256": "397aabf3873b8968e37310881728c89b3d2d59a9c6aafd413fd0e08a1b160593"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/set_storage_quota.toml",
+      "bytes": 402,
+      "sha256": "bea3b0d4d6d63b72d78bb07cba192294d16a5bac14c647aca61ceaa1854b5a62"
+    },
+    {
+      "path": "src-tauri/permissions/autogenerated/task_snapshots.toml",
+      "bytes": 384,
+      "sha256": "a9504d1f43bf6a5d793f1c8ccf4fbaf0bbc32030284002515a9c2b2c491db1d9"
+    },
+    {
+      "path": "src-tauri/src/artifacts.rs",
+      "bytes": 3523,
+      "sha256": "eb43cab20f53f769f20561327337e26628aefecb7a164944752585ef85718a6e"
+    },
+    {
+      "path": "src-tauri/src/browser_runtime.rs",
+      "bytes": 7103,
+      "sha256": "da1e5583c03b604df8364735f7cadea5c162d4c2c6f49ebaff68d1ef9c64bf40"
+    },
+    {
+      "path": "src-tauri/src/config.rs",
+      "bytes": 38024,
+      "sha256": "02bbd4312ef80cd915018c3e5265ba27b2ce977ee8bea72527d5fb3b091491b1"
+    },
+    {
+      "path": "src-tauri/src/credential_cleanup.rs",
+      "bytes": 11324,
+      "sha256": "c9ef6eed4ce34c2dee4ffa355ee4e0cb7dfef4f25e3a2593d4413cf18168a724"
+    },
+    {
+      "path": "src-tauri/src/desktop_theme.rs",
+      "bytes": 2502,
+      "sha256": "b956bf52433bec22f4cd5542a32f713fce22c4190e41c8214a909058eaf6e366"
+    },
+    {
+      "path": "src-tauri/src/engine.rs",
+      "bytes": 35144,
+      "sha256": "b7148a4ac62dd1daaca896aaca6564d60ea9f90025719789fbbf3443c66ae5f8"
+    },
+    {
+      "path": "src-tauri/src/engine_http.rs",
+      "bytes": 5853,
+      "sha256": "3f48ad1fb83ecc1ab21b7cb93ab738b09f68016fef88df12617ca3e82fadc9cf"
+    },
+    {
+      "path": "src-tauri/src/engine_snapshots.rs",
+      "bytes": 3482,
+      "sha256": "84d61cce0395de3e6515f1c3c2a7f7e171fec79147ae5c0cd2b001f1c7f60f90"
+    },
+    {
+      "path": "src-tauri/src/logging.rs",
+      "bytes": 1316,
+      "sha256": "9b416c6f47c64a6035330dd43e6d36ac3773bf30cdcbdbbf8ba05dbfddb5cc48"
+    },
+    {
+      "path": "src-tauri/src/main.rs",
+      "bytes": 20843,
+      "sha256": "c6673c11ae3bef8ae7b98b47793d87284350daaf327eba5175fa56f2f81abd4c"
+    },
+    {
+      "path": "src-tauri/src/notifications.rs",
+      "bytes": 11428,
+      "sha256": "86651e5b7ce21a12fb0794f752ab065c6aa92a1c7ce03d8e0760168e98714bcb"
+    },
+    {
+      "path": "src-tauri/src/pet_config.rs",
+      "bytes": 13335,
+      "sha256": "e524b131b52c157a1306c215c421b4bb8e38e33ee7fdb12802fb6f9fb119f2d7"
+    },
+    {
+      "path": "src-tauri/src/pet_packages.rs",
+      "bytes": 9215,
+      "sha256": "61ac09fdb5fa5d518efd0c03aa90ba73ae5640d027cd5176a98af3904e145734"
+    },
+    {
+      "path": "src-tauri/src/pets.rs",
+      "bytes": 21769,
+      "sha256": "4916a8c8c2340c80d6e9d7846ead8ff68483329247cfbd60f2f561d3d1257552"
+    },
+    {
+      "path": "src-tauri/src/process.rs",
+      "bytes": 4023,
+      "sha256": "9c5eb491a61e8e8d17ac71d05b8d1f9975598c8f9cbc5ac6e5d2fd88731d3e40"
+    },
+    {
+      "path": "src-tauri/src/profile_recovery.rs",
+      "bytes": 15871,
+      "sha256": "8f0845aa6dda49a8277fa35dfe315319cf9900640f0a05b341f9d3d11a1379f9"
+    },
+    {
+      "path": "src-tauri/src/profiles.rs",
+      "bytes": 22887,
+      "sha256": "7adeec653b1dd0cfcdfd040a1e25f7aeef01f7e48b3041c85be986d9746a8959"
+    },
+    {
+      "path": "src-tauri/src/storage.rs",
+      "bytes": 26142,
+      "sha256": "6e38daded51d703c55a0bcac200710d9f454ac7e0fa1e528ff17809801ca0cfe"
+    },
+    {
+      "path": "src-tauri/src/storage_quota.rs",
+      "bytes": 16920,
+      "sha256": "8b54d4df566a832b29fdf2369f4e5f824dd41c2e82ef9b95a1fb932f379800f7"
+    },
+    {
+      "path": "src-tauri/src/task_snapshots.rs",
+      "bytes": 104466,
+      "sha256": "b4f61f930da45d51d4a8d0d7d12141a025b3064eaf529cda5d3d69d0d12740ff"
+    },
+    {
+      "path": "src-tauri/src/task_snapshots/archive.rs",
+      "bytes": 9543,
+      "sha256": "f21de80ca7d6eb60b0f7afdd3ad6d6a02b7d2b67701522643905a18c381d1cbb"
+    },
+    {
+      "path": "src-tauri/src/task_snapshots/details.rs",
+      "bytes": 3253,
+      "sha256": "81e65940c3fee8fa559210a9c3f2b6382f0783159cf01668b3b09d9ed251b53d"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "bytes": 603,
+      "sha256": "492fbf9f42a48837d39e5f88425a7784118838651a8b15434cd285dabf44f77f"
+    },
+    {
+      "path": "tests/api-negative.mjs",
+      "bytes": 5119,
+      "sha256": "1ab0cc92dd36c31a2900c26da250bc19c86ed7d351b0095d01a856ef6cfa8477"
+    },
+    {
+      "path": "tests/archive-integrity.ps1",
+      "bytes": 2878,
+      "sha256": "9bdbdf38adccec262c656bdbafe9f6e0fe4873c9bf6402aa724398125921fd2f"
+    },
+    {
+      "path": "tests/cache-center.mjs",
+      "bytes": 4167,
+      "sha256": "bc25137313758234c9db7e8104433eb981f539b2078008129beb57a23dda7e69"
+    },
+    {
+      "path": "tests/cache-key-wire.mjs",
+      "bytes": 4288,
+      "sha256": "219a651521b597d29150be7822e8a88c3ee4de8b2a5e4986c2bb461ea6d85f82"
+    },
+    {
+      "path": "tests/cache-probe.mjs",
+      "bytes": 5144,
+      "sha256": "1dab4da47e776d306b74e89093991db2f2fd98f19e6ed0fd5aee33010ea83c59"
+    },
+    {
+      "path": "tests/change-draft.mjs",
+      "bytes": 5185,
+      "sha256": "3cf03c8d89f9d37bf2d231145041d72069493211cff80e7e55766197bfbb33b9"
+    },
+    {
+      "path": "tests/change-review-ui-preview.mjs",
+      "bytes": 3033,
+      "sha256": "239155d454bbcfe72aee071791eab1c3dca4e8251f9367f52322eb5bddb2bbcc"
+    },
+    {
+      "path": "tests/change-review-wire.mjs",
+      "bytes": 9359,
+      "sha256": "2c1c4286f9d45825d6ae9ecaefa510028c91e22434b961389bf9f65cb95e202c"
+    },
+    {
+      "path": "tests/change-review.mjs",
+      "bytes": 10683,
+      "sha256": "d40e7df87db67a8b8fddef1084da74e06b69f67d0c3d57468eb6ec3168dc7c8d"
+    },
+    {
+      "path": "tests/descendant-probe.mjs",
+      "bytes": 307,
+      "sha256": "9b71664374b2af000b0a0beaa1df92d261b584e4e05b296911807cc171be5761"
+    },
+    {
+      "path": "tests/desktop-artifacts.mjs",
+      "bytes": 6723,
+      "sha256": "43424a5e2354d67d43882da08bd6de98b5351fe6fd502a95c438d948788e64bb"
+    },
+    {
+      "path": "tests/desktop-cache-key.mjs",
+      "bytes": 5663,
+      "sha256": "d797d1473051aaac3a0a1efbf840d09ea0f86f816e752a1c8e6a2c6ed92dacf5"
+    },
+    {
+      "path": "tests/desktop-client.mjs",
+      "bytes": 1977,
+      "sha256": "5a9c091b860ce4028ca18926e9e0b401e0b9286c0ee72fafce7be8c901e32320"
+    },
+    {
+      "path": "tests/desktop-health.mjs",
+      "bytes": 973,
+      "sha256": "bbaf051fc6a5c01aa1ae0ce9259a82857c6010b0792cbf57ac099140b1fae41e"
+    },
+    {
+      "path": "tests/desktop-notifications.mjs",
+      "bytes": 4083,
+      "sha256": "faf6fd9063df0ad5d1d7b650c14af429287d0896582c3d0a0724ba22d267f353"
+    },
+    {
+      "path": "tests/desktop-pet-window.ps1",
+      "bytes": 6494,
+      "sha256": "c2ec3ba293984e1dbae97dc37a8915f29a3ae252fef329ae45b2a9f314425d50"
+    },
+    {
+      "path": "tests/desktop-process-smoke.ps1",
+      "bytes": 6803,
+      "sha256": "a86822d07b2cebd2e9fd700963f06f6c131e2199cd684041c2301949a4dadd17"
+    },
+    {
+      "path": "tests/desktop-theme.mjs",
+      "bytes": 3577,
+      "sha256": "85fa2fc78c1110586cef2a67e3362b1afb2c03901121b34114ee14978b477b96"
+    },
+    {
+      "path": "tests/desktop-workspace.mjs",
+      "bytes": 2690,
+      "sha256": "c699f50639863ce143e8f81dbd97ec63e1918d4a1d5c8a02330ddffeda800bd7"
+    },
+    {
+      "path": "tests/distribution-verifier.mjs",
+      "bytes": 2625,
+      "sha256": "bd130b7f0ea032b9ba7bea96eb05251179d544bdb39d7e2263d692076f7d490a"
+    },
+    {
+      "path": "tests/environment-repository.mjs",
+      "bytes": 2872,
+      "sha256": "c5aecd14dda4094a14881169f039e03ded6c9558164f62d8b4f5dad4c6d1e20a"
+    },
+    {
+      "path": "tests/experiments.mjs",
+      "bytes": 6696,
+      "sha256": "63bda338dd9c8dd19a58600cc5c3183f816a6ca44ab550f838150a9e801235fa"
+    },
+    {
+      "path": "tests/fixtures/pets/standard-8x9/pet.json",
+      "bytes": 95,
+      "sha256": "a46aaeb2f3de30091e0f07394fb08547ca9332f498244d9ca6df3f211e05859a"
+    },
+    {
+      "path": "tests/fixtures/pets/standard-8x9/spritesheet.png",
+      "bytes": 3419886,
+      "sha256": "91fda7df3be478843ccda951e952f011988b18db748196fb67bc7b612d3fafcc"
+    },
+    {
+      "path": "tests/known-provider-switch.mjs",
+      "bytes": 5116,
+      "sha256": "8e96f73621a7cc3891df8825df86b2df423d742e139629a3388ad0bd125ebf1f"
+    },
+    {
+      "path": "tests/mock-llm-server/server.mjs",
+      "bytes": 2732,
+      "sha256": "ef6e29dac607c72bc77c78e6405d306743a8c212867928b86545cee580ffa9d1"
+    },
+    {
+      "path": "tests/model-defaults.mjs",
+      "bytes": 1118,
+      "sha256": "aec174bbea76047d692f2902b7c9863236b293378bbeb1e4348be17724e7ab3d"
+    },
+    {
+      "path": "tests/observability-benchmark.mjs",
+      "bytes": 2481,
+      "sha256": "c30dadff783d417a743d05d79c68b6d0f974961e8593eaf9cd1906307aef7ab0"
+    },
+    {
+      "path": "tests/observability-wire.mjs",
+      "bytes": 38753,
+      "sha256": "6aac8452943e8e928d8b9c816d9da8ae13b4276250108ebed618459e5e58c488"
+    },
+    {
+      "path": "tests/observability.mjs",
+      "bytes": 5838,
+      "sha256": "53206b6874d4f4c62737c410d803180d4f2ac403b9aa8eee99e7342e4d0b9fc4"
+    },
+    {
+      "path": "tests/offline-guard.mjs",
+      "bytes": 1237,
+      "sha256": "3fb63cd6c8a699aae04e26aa23691756e58ef11fa230da05f333a100e9bc00c3"
+    },
+    {
+      "path": "tests/pet-animation.test.mjs",
+      "bytes": 700,
+      "sha256": "22cbd71c8eb00eea10ea416f138ce4e418fe9240cba4eaff0ea154142d18f7f1"
+    },
+    {
+      "path": "tests/pet-extension.test.mjs",
+      "bytes": 2298,
+      "sha256": "779b5cfc5e97bf397da5151f02498e5af911fd355eb0d109939e70ebb1bcdbb7"
+    },
+    {
+      "path": "tests/pet-interaction.test.mjs",
+      "bytes": 2790,
+      "sha256": "cadb1799ff488fac481f50e904c6972275a7a3acaa77216706baa7108804737b"
+    },
+    {
+      "path": "tests/pet-package-manager.mjs",
+      "bytes": 2807,
+      "sha256": "7f0ace8c63a81027f3a39702fd83b19cdd00c72f9852d4223c7c3bb4b8ad852b"
+    },
+    {
+      "path": "tests/pet-packages.mjs",
+      "bytes": 3064,
+      "sha256": "9666cfa89c56df20f7bb36ac757038698f2ebf9037a57b7002502831770d0a73"
+    },
+    {
+      "path": "tests/pet-settings-ui.mjs",
+      "bytes": 2719,
+      "sha256": "f6287e0820ee067afbf2a6f8d6bcbab5ee206bccd5374872e5498d187df68fc1"
+    },
+    {
+      "path": "tests/pet-state.test.mjs",
+      "bytes": 4517,
+      "sha256": "02c7eca30c3e2ce341b522fa9cb7823462580c2b4e3fc69f3659d71f5f97780c"
+    },
+    {
+      "path": "tests/prefix-regression-wire.mjs",
+      "bytes": 18867,
+      "sha256": "59607aac76627a925c5a20400121b8031dc3f841517ebf6c440a5ec3ebf46a19"
+    },
+    {
+      "path": "tests/prefix-regression.mjs",
+      "bytes": 4393,
+      "sha256": "16647f0203ec412a2676724a38bf0572b8d7d5996c250e5c61ae8efe8dca93ac"
+    },
+    {
+      "path": "tests/profile-network.mjs",
+      "bytes": 6708,
+      "sha256": "0018ecd0efb6ab601a503d56c4075a299ac51791e43e95b3e94246759ad8aa4b"
+    },
+    {
+      "path": "tests/project-actions.mjs",
+      "bytes": 6620,
+      "sha256": "a2467e1bb9bb876a9712f76ba546c7bff7055e1f5c4c1763e2e18aecdb39f10e"
+    },
+    {
+      "path": "tests/protocol-models.mjs",
+      "bytes": 13761,
+      "sha256": "a508b795c4f1e0469cc70af33490fbb6f5831c1f62bcf616947ef454993d9bcc"
+    },
+    {
+      "path": "tests/provider-presets.mjs",
+      "bytes": 3888,
+      "sha256": "36db31675d5a193e75d3abd0fa2fecd4ee924f2264becd88ab83796ebec30f15"
+    },
+    {
+      "path": "tests/release-receipt.mjs",
+      "bytes": 2392,
+      "sha256": "db567e99cc6670e85fb085e45c2f061d58b0f03cf6ea907ec272e5cae503dee0"
+    },
+    {
+      "path": "tests/runtime-integrity.mjs",
+      "bytes": 2939,
+      "sha256": "6352b9ea4b5512791126d20bb71cb891e67daa25ebab5e11551e7bef8bc62f9d"
+    },
+    {
+      "path": "tests/runtime-module-sync.mjs",
+      "bytes": 1316,
+      "sha256": "36a8e5dcf034cecff3d2fdb992076935f25da7c88fd90e365c8916ddcc2d3cd7"
+    },
+    {
+      "path": "tests/runtime-smoke.mjs",
+      "bytes": 6819,
+      "sha256": "9c5e74bdabe65c3f29aba0a2181957f49bba516b41fd5f0203354bdb1f7a0573"
+    },
+    {
+      "path": "tests/self-test-ui-preview.mjs",
+      "bytes": 3587,
+      "sha256": "8ae391a6442cd2b20e355645ba108907b1653b8dd91b5ec4697ad78269100b58"
+    },
+    {
+      "path": "tests/self-test-wire.mjs",
+      "bytes": 4954,
+      "sha256": "b4c7f4d5074ee62ffdd9b4ef156ecb21c26702753f54fbd8a3596ee00022a947"
+    },
+    {
+      "path": "tests/self-test.mjs",
+      "bytes": 6559,
+      "sha256": "b92c8d3f23091cbbc9f281bd85648d510eb56c40fe0ee369cbc18838c4c4f593"
+    },
+    {
+      "path": "tests/settings-sync.mjs",
+      "bytes": 5388,
+      "sha256": "41e418fc9dfdc83c2d69b216e066076a506353fdecbadc01e46507aaf497ef1f"
+    },
+    {
+      "path": "tests/settings-transaction.mjs",
+      "bytes": 7719,
+      "sha256": "b2e5087762f5cbf2bc914983ef634e7c543694188de3c90f2f76ae397f3663b0"
+    },
+    {
+      "path": "tests/settings-ui-preview.mjs",
+      "bytes": 15459,
+      "sha256": "999434dc6b24580bcfe0d288c933077d507b01afe8c8f19dda65c16a3570c76d"
+    },
+    {
+      "path": "tests/startup-errors.mjs",
+      "bytes": 1695,
+      "sha256": "6a40b62d57d8b4edbea81ea557ec20a99056b528df6b68683f824caf60bd71af"
+    },
+    {
+      "path": "tests/startup-failure.ps1",
+      "bytes": 2273,
+      "sha256": "dd9e973d15f5377a37379932fc26f77f8a0e74c385b3a53a3455b5e00c48d3c1"
+    },
+    {
+      "path": "tests/storage-admission.mjs",
+      "bytes": 5507,
+      "sha256": "0f997e1f8a4964a1fae2e3c00c695da44a756778362260497dcdef33311fb025"
+    },
+    {
+      "path": "tests/task-recovery.mjs",
+      "bytes": 2705,
+      "sha256": "46d3126466ed6b40eb0bc7eca1601eead14018ebef038c85f9bc48aed2c55eda"
+    },
+    {
+      "path": "tests/task-snapshot-bridge.mjs",
+      "bytes": 3576,
+      "sha256": "3571892117b35575da5c3063eb7ef71ebae597aebfde40e3e8c7fa69ca6fa0a9"
+    },
+    {
+      "path": "tests/task-snapshot-wire.mjs",
+      "bytes": 11823,
+      "sha256": "118768749a8c0e0493b78c70173d613731c8c9f46e0cd12a7bc05aec865b671c"
+    },
+    {
+      "path": "tests/vision-provider.mjs",
+      "bytes": 3297,
+      "sha256": "491423be56ae2e737772bb6dc51a308273a75fa77aa5234dfd824cff146e9ba7"
+    },
+    {
+      "path": "tests/workspace-migration.mjs",
+      "bytes": 7719,
+      "sha256": "736b3a121ef3402d895bf92626da623b203559a9185480c838da7f4a5ae4d740"
+    },
+    {
+      "path": "tests/workspace-recovery-wire.mjs",
+      "bytes": 3760,
+      "sha256": "f0f6aaeae2760b11f785a07e4405378a04c4c5183bb322315028898b84dcfa4f"
+    },
+    {
+      "path": "versions.json",
+      "bytes": 523,
+      "sha256": "da7980cb88164529181c75535c23bfdab61ba37ceb7df730aca33d4b65714177"
+    }
+  ],
+  "gate": "scripts/build-windows.ps1",
+  "status": "PASS",
+  "completedAt": "2026-09-23T03:18:24.051Z",
+  "outputs": [
+    {
+      "path": "src-tauri/target/x86_64-pc-windows-msvc/release/DSHDesktop.exe",
+      "bytes": 12485632,
+      "sha256": "06b009af6163e171610ecbfc51d1b1fe3edc083b7fed32f0c153229b6fb44a58"
+    },
+    {
+      "path": "runtime/desktop-runtime-manifest.json",
+      "bytes": 11641,
+      "sha256": "2eb3b9ddf2e61cd70259e5df7ee53208d1e4df4077a01f4148666ed37be05477"
+    },
+    {
+      "path": "runtime/runtime-integrity.json",
+      "bytes": 5289631,
+      "sha256": "68354b8241b0d2d67d0d331938bcbef0eb58deb2f4641235ee9634bdaed5de31"
+    },
+    {
+      "path": "runtime/dsh-integrity.json",
+      "bytes": 5131268,
+      "sha256": "1fa9380c251e07bebfa6d8cfb88b8d341ea6fda1045f51871bc0186519903a09"
+    },
+    {
+      "path": "runtime/webview2-manifest.json",
+      "bytes": 43603,
+      "sha256": "9aaeb53d847198e0659e71c520d9a21b0c639d108e1a233a15008d6c8980797f"
+    }
+  ],
+  "targetAcceptance": "NOT_IMPLIED"
+}

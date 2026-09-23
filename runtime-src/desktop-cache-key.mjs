@@ -7,7 +7,7 @@ export const CACHE_KEY_BRIDGE_VERSION = 1;
 // environment changes, timestamps or conversation content enter this scope.
 export function desktopCacheKeyOptions(profile, model, options, state = diagnosticState) {
   const policy = profile.desktopCacheKey;
-  if (profile.provider !== 'desktop-internal' || profile.api !== 'openai-completions'
+  if (profile.provider !== (state.managedProvider ?? 'desktop-internal') || profile.api !== 'openai-completions'
       || !policy || policy.mode === 'native') return {};
   if (!['off','session'].includes(policy.mode)) throw Error('DESKTOP_CACHE_KEY_POLICY_INVALID');
   const allowed = policy.mode === 'session' && Array.isArray(policy.models) && policy.models.includes(model.id);

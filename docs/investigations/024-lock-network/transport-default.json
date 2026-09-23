@@ -1,0 +1,37 @@
+{
+  "resources": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.4-rc.2-win-x64\\resources",
+  "defaults": true,
+  "actualLockTest": false,
+  "results": [
+    {
+      "protocol": "openai",
+      "scenario": "header-stall",
+      "timeoutMs": 300000,
+      "idleMs": 300000,
+      "elapsedMs": 300419,
+      "requests": 1,
+      "expected": "error",
+      "terminal": {
+        "kind": "error",
+        "error": {
+          "message": "pi-ai stream idle timeout after 300000ms",
+          "code": "TIMEOUT"
+        }
+      },
+      "control": {
+        "id": "0fc592e53af74e42b2933a7a85f3842f",
+        "known": true,
+        "running": 0,
+        "queued": 0,
+        "waiting": 0,
+        "actions": 0,
+        "checks": 0,
+        "admission": "unsupported"
+      },
+      "recoveryStatus": "FAILED",
+      "cancellation": null,
+      "backendAlive": true,
+      "pass": true
+    }
+  ]
+}
