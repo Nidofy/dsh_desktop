@@ -11,11 +11,13 @@
 | adapter | 引擎 | Node | Session writer | 配置 | 桌面运行准入 |
 |---|---|---|---|---|---|
 | registry-015rc2-v1 | 0.1.5-rc.2 | 24.16.0 | 3 | settings.yaml | 保留已有组合 |
-| source-017a2-v1 | 0.1.7-alpha.2 | 24.16.0 | 4 | profiles/dsh-desktop/cordis.patch.yml | 拒绝，完整适配未完成 |
+| source-017a2-v1 | 0.1.7-alpha.2 | 24.16.0 | 4 | profiles/dsh-desktop/cordis.patch.yml | 仅匹配固定来源的隔离候选；正式构建准入关闭 |
 
 `requireDesktopAdapter()` 在 preload 的启动管道放行后、迁移和 Harness 设置写入前检查包身份与固定 Node，未知版本和未接好的源码组合产生固定错误 `BOOT_ADAPTER_UNSUPPORTED`。它不替代整树完整性、Rust 健康检查或构建准入；不通过改动一个布尔值解锁新产品。
 
-`sourceProbeArguments()` 只为隔离开发探针生成 CLI 参数：固定自有 profile `dsh-desktop`，首次使用 `--from-default-profile web`，已有正确 manifest 时不重复初始化。中断留下的不完整目录、未知 bundle 组合、符号链接/目录联接和非隔离路径直接拒绝，保留现场，不自动删除锁或数据。该函数尚未接到 Rust 产品启动分支。
+`sourceProbeArguments()` 为隔离候选验证自有 profile `dsh-desktop`，首次初始化由 `prepareSourceProfile()` 调用公开 `initProfile` 并暂存后 rename。已有正确 manifest 不重复初始化。固定 base/web-app 两个基础 bundle 后可保留原生管理器新增的合法包名；基础顺序变化、重复/路径 specifier、不完整目录、符号链接/目录联接和非隔离路径拒绝，保留现场，不自动删除锁或数据。Rust 候选启动已经接入该分支。
+
+首次工作区使用公开 `workspace-controller.documentsDirectory` 固定在候选目录；已登记项目不会改写。缓存 hook 保持绑定已审阅的源码提交与模块 hash。新增目录继承接口仍处于提案阶段，未改 fork；当前独立路由不能完整保留某些内置模型 compat 字段，见 [具体证据与提案](proposals/M1-CATALOG-ROUTE.md)。
 
 ## 实际依赖与耦合
 
@@ -37,10 +39,10 @@
 | desktop-client / environment client | `window.__ModuleLoader__`、ctx.sessions/uiWorkspace/conversation、slots、上游 DOM | 部分 slot 名仍存在；参数、组件生命周期、DOM 定位和浮窗交互均待新 Tauri 实测 |
 | theme 与构建同步 | 打包 client.js 内 CSS 变量和构建字符串锚点 | `sync-desktop-theme.mjs` 仍依赖旧打包结构，完整源码产品构建尚未验证 |
 
-主连接 Key 保留 Windows 凭据管理器责任；识图 Key 当前由 Harness credentials-local 保存在本地 YAML。元数据诊断的隐私约束不覆盖工程原始日志。代理、企业 CA 和进程网络参数的重载范围尚未完成新版验证。
+主连接 Key 保留 Windows 凭据管理器责任；识图 Key 当前由 Harness credentials-local 保存在本地 YAML。元数据诊断的隐私约束不覆盖工程原始日志。代理、企业 CA 和进程网络参数继续要求重载；源码本地代理、CA、loopback 与不受信证书拒绝测试已通过。
 
 ## 放行要求
 
 每项必须有对应层面的证据：来源固定 → profile/设置/凭据 → 数据副本迁移与降级边界 → 原功能回归 → 双协议请求与缓存前缀 → 完整原生 EXE 构建及启停 → 离线目录核验。Web Host 探针、直接适配器请求和 Loader 组合测试分别只证明各自层面。
 
-源码生产构建目前要求干净的固定提交。经授权的 hook 留在 fork 未提交工作树中，旧 commit 对应的已封存产物不包含该 hook。不能把它重新标成新实现的证据，也不能降低 clean/pin/hash 检查来构建。
+源码生产构建要求干净的固定提交。已授权 payload hook 已提交为 dad014b7，隔离资格目录包含该实现并保留独立 receipt。未来 fork 增量必须重新提交、构建及完成门禁，不能复用旧封存产物或降低 clean/pin/hash 检查。

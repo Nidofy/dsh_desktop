@@ -1,0 +1,32 @@
+[
+  {
+    "protocol": "openai",
+    "status": "PASS",
+    "sameModelTwoProviders": true,
+    "inFlightSnapshot": true,
+    "diagnosticRequestIdentity": true,
+    "nextRequest": true,
+    "pidUnchanged": true,
+    "emptyCredentialRefused": true,
+    "staleRevisionRefused": true,
+    "invalidSelectionRefused": true,
+    "partialWriteRollback": true,
+    "keysNotInYaml": true,
+    "restartPersistence": true
+  },
+  {
+    "protocol": "anthropic",
+    "status": "PASS",
+    "sameModelTwoProviders": true,
+    "inFlightSnapshot": true,
+    "diagnosticRequestIdentity": true,
+    "nextRequest": true,
+    "pidUnchanged": true,
+    "emptyCredentialRefused": true,
+    "staleRevisionRefused": true,
+    "invalidSelectionRefused": true,
+    "partialWriteRollback": true,
+    "keysNotInYaml": true,
+    "restartPersistence": true
+  }
+]

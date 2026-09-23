@@ -58,7 +58,7 @@ OpenAI 使用 Chat Completions，Anthropic 使用 Messages。填写服务基础�
 首次构建去掉 `-ReusePreparedRuntime`。默认打包命令仍可生成 ZIP。源码仓库为 `https://github.com/Nidofy/dsh_desktop`；`runtime/`、`dist/` 和 `.build/` 为本机构建数据。
 
 Harness fork 已建立独立源码构建与候选产物接入流程，仍使用 Tauri。见 [源码工作流](docs/HARNESS_SOURCE.md) 与 [下一阶段适配计划](docs/PLAN-0.2.5-SOURCE-INTEGRATION.md)。源码候选为 DSH 0.1.7-alpha.2；当前交付仍使用 0.1.5-rc.2，尚未切换正式引擎。
-M1 的基线复核、已实施增量、实际测试及未通过的交付 Gate 见 [M1 实施记录](docs/IMPLEMENTATION-M1.md)。
+M1 的初始基线见 [M1 实施记录](docs/IMPLEMENTATION-M1.md)；当前增量、实际测试与剩余交付 Gate 见 [0.2.5 实施记录](docs/IMPLEMENTATION-0.2.5.md)。开发候选已完成源码 profile/迁移、双协议、原生工具与桌宠启停验证，完整交付仍受内置模型目录继承问题阻断，不能作为正式版本验收通过。
 
 - [构建](docs/BUILD.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md) / [离线部署](docs/OFFLINE_DEPLOYMENT.md)
 - [0.2.0 发布记录](docs/RELEASE-0.2.0.md) / [后续现场检查](docs/ACCEPTANCE-0.2.0.md)

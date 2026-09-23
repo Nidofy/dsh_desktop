@@ -1,4 +1,5 @@
 // Shared by the local UI, archive and runner. Imports are projected, never trusted verbatim.
+import {requestConfiguration,reportConfiguration} from './diagnostic-configuration.mjs';
 const text=v=>typeof v==='string'?v.slice(0,256):null;
 const number=v=>Number.isFinite(v)&&v>=0?v:null;
 const hash=v=>typeof v==='string'&&/^[a-f0-9]{24,64}$/.test(v)?v:null;
@@ -9,6 +10,7 @@ export function normalizeReport(input) {
   const records=input.records.map(r=>({
     ...fields(r,['id','session','purpose','startedAt','endedAt','provider','model','effort','status'],text),
     ...fields(r,['durationMs','firstOutputMs','firstTextMs','turn','step','toolCallCount','messageCount','toolCount'],number),
+    ...(r.configuration?{configuration:requestConfiguration(r.configuration)}:{}),
     usage:fields(r.usage,numbers,number),
     fingerprint:{complete:r.fingerprint?.complete===true,...fields(r.fingerprint,['system','tools','toolsSerializationOrder','skillCatalog','projectInstructions','model','config'],hash)},
     continuity:{...fields(r.continuity,['sequence','timeSincePreviousComparableRequest','interveningRequestCount'],number),reasons:(r.continuity?.reasons??[]).slice(0,16).map(text)},
@@ -16,8 +18,8 @@ export function normalizeReport(input) {
   const measurement=input.measurement??{};
   return {schemaVersion:2,sourceSchemaVersion:[1,2].includes(input.sourceSchemaVersion)?input.sourceSchemaVersion:input.schemaVersion,
     ...fields(input,['runId','keyScopeId','exportedAt'],text),fingerprintSchemaVersion:number(input.fingerprintSchemaVersion),dropped:number(input.dropped),
-    configuration:{...fields(input.configuration,['desktopVersion','dshVersion','nodeVersion','api','connectionId','runtimeManifestHash','overlayHash'],text),
-      ...fields(input.configuration,['effectiveSpillBytes','effectiveSkillDescription'],number),repoSummary:input.configuration?.repoSummary===true},
+    configuration:reportConfiguration({...fields(input.configuration,['desktopVersion','dshVersion','nodeVersion','api','connectionId','runtimeManifestHash','overlayHash'],text),
+      ...fields(input.configuration,['effectiveSpillBytes','effectiveSkillDescription'],number),repoSummary:input.configuration?.repoSummary===true},records),
     measurement:{...fields(measurement,['id','label','startedAt','endedAt','session','purpose','acceptanceId'],text),
       quality:['PASS','FAIL','UNKNOWN'].includes(measurement.quality)?measurement.quality:'UNKNOWN',
       acceptanceKind:['external','manual'].includes(measurement.acceptanceKind)?measurement.acceptanceKind:'manual',
@@ -36,6 +38,7 @@ export function selectReport(input,scope={}) {
   const records=report.records.filter(match),tools=report.tools.filter(t=>match({...t,purpose:'conversation'}));
   if(records.length!==report.records.length||tools.length!==report.tools.length)report.measurement={...report.measurement,complete:false,startedAt:null,endedAt:null};
   report.records=records;report.tools=tools;
+  report.configuration=reportConfiguration(report.configuration,records);
   report.measurement={...report.measurement,...fields(scope,['session','purpose'],text),...fields(scope,['turn','from','to'],number)};
   return report;
 }
@@ -69,6 +72,10 @@ export function compareReports(aInput,bInput) {
   for(const k of ['desktopVersion','dshVersion','nodeVersion','runtimeManifestHash','overlayHash','connectionId','effectiveSpillBytes','effectiveSkillDescription','repoSummary'])add(k,a.configuration[k],b.configuration[k],['effectiveSpillBytes','effectiveSkillDescription','repoSummary'].includes(k));
   for(const k of ['provider','model','effort'])add(k,unique(a.records,k),unique(b.records,k));
   for(const k of ['system','tools','skillCatalog','projectInstructions'])add(k,comparable?fingerprints(a,k):null,comparable?fingerprints(b,k):null);
+  // Compare each request's connection, including credential-only hot changes.
+  // Whole config fingerprints also include intentional experiment budgets.
+  if([...a.records,...b.records].some(row=>row.configuration))for(const k of ['api','connectionId','credentialId'])add('request '+k,
+    comparable?unique(a.records.map(row=>row.configuration??{}),k):null,comparable?unique(b.records.map(row=>row.configuration??{}),k):null);
   for(const k of ['revision','state'])add('workspace '+k,comparable&&a.workspace.complete?a.workspace[k]:null,comparable&&b.workspace.complete?b.workspace[k]:null);
   const validity=checks.some(c=>c.result==='DIFFERENT')?'NOT_MATCHED':checks.some(c=>c.result==='UNKNOWN')?'PARTIALLY_MATCHED':'MATCHED';
   const quality=a.measurement.quality==='PASS'&&b.measurement.quality==='PASS'&&a.measurement.acceptanceKind==='external'&&b.measurement.acceptanceKind==='external'&&a.measurement.acceptanceId&&a.measurement.acceptanceId===b.measurement.acceptanceId;

@@ -31,6 +31,21 @@ const old=normalizeReport({schemaVersion:1,records:[{usage:{cacheReadTokens:0}}]
 assert.throws(()=>normalizeReport({schemaVersion:3,records:[]}));
 assert.equal(summarize(old).toolCalls,null,'v1 missing tool telemetry is unknown, not zero');
 assert.equal(selectReport(scoped,{turn:99}).measurement.startedAt,null,'narrowed scope cannot inherit whole-task wall time');
+// A delayed old request finishing after a hot edit must retain its identity.
+const hot=new Capture({key:Buffer.alloc(32,4),configuration:{api:'openai-completions',connectionId:'a'.repeat(24)}});
+const oldRequest=hot.begin(options,{api:'openai-completions',connectionId:'a'.repeat(24),credentialId:'1'.repeat(24)});oldRequest.turn=1;
+const newRequest=hot.begin(options,{api:'anthropic-messages',connectionId:'b'.repeat(24),credentialId:'2'.repeat(24),apiKey:'PRIVATE_KEY',baseURL:'https://PRIVATE_URL'});newRequest.turn=2;
+hot.finish(newRequest);hot.finish(oldRequest);
+assert.equal(hot.snapshot().configuration.connectionId,null,'mixed requests have no single connection');
+assert.equal(hot.snapshot().configuration.api,null);
+const oldScope=selectReport(hot.snapshot(),{turn:1}),newScope=selectReport(hot.snapshot(),{turn:2});
+assert.equal(oldScope.configuration.connectionId,'a'.repeat(24));assert.equal(oldScope.configuration.api,'openai-completions');
+assert.equal(newScope.configuration.connectionId,'b'.repeat(24));assert.equal(newScope.configuration.api,'anthropic-messages');
+assert.equal(compareReports(oldScope,newScope).checks.find(row=>row.name==='request credentialId').result,'DIFFERENT');
+const budget=structuredClone(oldScope);budget.configuration.effectiveSpillBytes=24000;oldScope.configuration.effectiveSpillBytes=50000;
+assert.equal(compareReports(oldScope,budget).checks.find(row=>row.name==='effectiveSpillBytes').result,'EXPERIMENT');
+assert(!compareReports(oldScope,budget).checks.some(row=>row.result==='DIFFERENT'),'an explicit budget experiment is not a provider change');
+const hotExport=JSON.stringify(normalizeReport(hot.snapshot()));assert(!hotExport.includes('PRIVATE_KEY'));assert(!hotExport.includes('PRIVATE_URL'));
 const unsafeTool=normalizeReport({schemaVersion:2,records:[],tools:[{name:'__proto__',status:'completed'}]});assert.equal(summarize(unsafeTool).toolGroups.__proto__.completed,1);assert.equal(Object.prototype.calls,undefined);
 await mkdir('.build',{recursive:true});const home=await mkdtemp(resolve('.build/experiments-unit-'));
 const store=new MeasurementStore(home,{maxFiles:2});const ids=[];for(let i=0;i<3;i++)ids.push((await store.save(scoped)).id);assert.equal((await store.list()).length,2);assert.equal((await store.read(ids[2])).records.length,2);await assert.rejects(()=>store.read('../escape'));
@@ -39,7 +54,7 @@ const passed=await runCommand({command:process.execPath,args:['-e','console.log(
 const fail=await runCommand({command:process.execPath,args:['-e','process.exit(2)'],cwd:home});assert.equal(fail.status,'FAIL');
 const timeout=await runCommand({command:process.execPath,args:['-e','setInterval(()=>{},1000)'],cwd:home,timeoutMs:200});assert.equal(timeout.status,'TIMEOUT');
 const patchFile=join(home,'patch.json');await writeFile(patchFile,'[]');await writeFile(join(home,'settings.yaml'),'spill-policy:\n  maxInlineBytes: 12345\ntool-skill:\n  catalogDescriptionMaxLength: 321\n');
-const sync=()=>synchronizeDesktopSettings({home,patchFile,runtimeRoot:resolve('runtime')});
+const sync=()=>synchronizeDesktopSettings({home,patchFile,runtimeRoot:resolve(process.env.LEGACY_TEST_RUNTIME??'runtime')});
 diagnosticState.preferences={enabled:true,spillMode:'compact',skillMode:'compact'};await sync();assert.equal(diagnosticState.effectiveSpillBytes,24000);assert.equal(diagnosticState.effectiveSkillDescription,250);
 diagnosticState.preferences={enabled:true,spillMode:'native',skillMode:'native'};await sync();assert.equal(diagnosticState.effectiveSpillBytes,50000);assert.equal(diagnosticState.effectiveSkillDescription,500);
 diagnosticState.preferences={enabled:true,spillMode:'restore',skillMode:'restore'};await sync();assert.equal(diagnosticState.effectiveSpillBytes,12345);assert.equal(diagnosticState.effectiveSkillDescription,321);

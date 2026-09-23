@@ -6,6 +6,8 @@
 
 不能靠桌面复制所有配置解决：catalog.ts 明确将 zaiToolStream、deferredToolsMode、supportsMidConvoEffort、allowedFallbackModels 等标记为 withhold，公开 profile schema 不允许写入这些字段。绕过 schema 或替换私有内部实现都不合适。现有 payload hook 只授权传输缓存元数据，也不能代替模型目录继承。
 
+已用实际 source Host 的 `session/modelCatalog` RPC 复现：相同 Rust preset 配置换成独立路由后，ZAI、Anthropic、DeepSeek 合计 27 个模型的 reasoning 选项消失，零模型请求。见 `../evidence/0.2.5/source-catalog-alias-blocker.json`。可用 `node tests/source-catalog-alias-probe.mjs <qualification-resources>` 重现，检测到差异时明确返回 BLOCKED/退出码 2，不计为通过。未修改 fork。
+
 ## 最小可审阅实现范围
 
 仅在 llm-pi-ai 增加可选的 `catalogProvider?: string` 配置字段，表示固定安装目录的继承来源，非 URL/路径/动态模块：

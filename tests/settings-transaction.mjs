@@ -9,7 +9,7 @@ import {settingsTransaction} from '../runtime-src/settings-transaction.mjs';
 import {settingsProtection} from '../runtime-src/settings-protection.mjs';
 import {diagnosticState} from '../runtime-src/diagnostic-state.mjs';
 
-const runtimeRoot=resolve('runtime'),require=createRequire(join(runtimeRoot,'dsh/package.json'));
+const runtimeRoot=resolve(process.env.LEGACY_TEST_RUNTIME??'runtime'),require=createRequire(join(runtimeRoot,'dsh/package.json'));
 const {parse,stringify}=require('yaml');
 const {writeFileAtomic}=await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-atomic-write')).href);
 // Deterministic process-independent key only for synthetic test payloads.

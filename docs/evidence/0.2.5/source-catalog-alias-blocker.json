@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "dad014b7efd3e1d76a36e6bd9646487d28d9037e",
+  "status": "BLOCKED",
+  "method": "actual source Host session/modelCatalog RPC",
+  "modelRequests": 0,
+  "changedUpstreamFiles": false,
+  "losses": [
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-4.6v",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-4.7",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5-turbo",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.1",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.2",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.2-highspeed",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.3",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.3-flash",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.3-highspeed",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5v-turbo",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-fable-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-fable-5-1",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-5-20251101",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-6",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-7",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-8",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5-20250929",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "minimal",
+            "name": "Minimal"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "medium",
+            "name": "Medium"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "xhigh",
+            "name": "Xhigh"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash-vision-exp",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "low",
+            "name": "Low"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "field": "reasoning",
+      "builtin": {
+        "efforts": [
+          {
+            "id": "off",
+            "name": "Off"
+          },
+          {
+            "id": "high",
+            "name": "High"
+          },
+          {
+            "id": "max",
+            "name": "Max"
+          }
+        ]
+      },
+      "alias": null
+    }
+  ]
+}

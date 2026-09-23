@@ -1,5 +1,6 @@
 import {createHmac, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
+import {requestConfiguration,reportConfiguration} from './diagnostic-configuration.mjs';
 
 export const fingerprintSchemaVersion = 1;
 const MAX_BYTES = 4 * 1024 * 1024, MAX_MESSAGES = 2048;
@@ -92,7 +93,7 @@ export class Capture {
       provider:String(options.provider ?? '').slice(0,256),model:String(options.model ?? '').slice(0,256),
       effort:['off','minimal','low','medium','high','xhigh','max'].includes(options.reasoningEffort) ? options.reasoningEffort : 'unspecified-or-custom',
       messageCount:options.messages?.length ?? 0,toolCount:options.tools?.length ?? 0,
-      fingerprint:fingerprintRequest(options,this.key,configuration),status:'running',usage:usageMetadata(null),
+      fingerprint:fingerprintRequest(options,this.key,configuration),configuration:requestConfiguration(configuration),status:'running',usage:usageMetadata(null),
       firstOutputMs:null,firstTextMs:null,toolCallCount:0};
     const previous=session ? this.records.findLast(r=>r.session===session&&r.purpose===purpose) : undefined;
     record.comparison=classify(previous,record);
@@ -122,7 +123,7 @@ export class Capture {
   }
   clear() {this.records=[];this.bytes=0;this.active.clear();this.continuity.clear();this.dropped=0;}
   snapshot() {return {schemaVersion:2,fingerprintSchemaVersion,runId:this.runId,keyScopeId:this.keyScopeId,
-    configuration:this.configuration,limits:{maxRecords:this.maxRecords,maxBytes:this.maxBytes,maxActive:64},
+    configuration:reportConfiguration(this.configuration,[...this.records,...this.active.values()]),limits:{maxRecords:this.maxRecords,maxBytes:this.maxBytes,maxActive:64},
     retainedBytes:this.bytes,dropped:this.dropped,observerFailures:this.failures,
     records:[...this.records,...this.active.values()]};}
 }

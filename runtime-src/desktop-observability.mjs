@@ -1,4 +1,5 @@
 import {Capture, observeStream} from './diagnostic-capture.mjs';
+import {reportConfiguration} from './diagnostic-configuration.mjs';
 import {readHarnessSetting} from './harness-settings.mjs';
 import {sourceCredential} from './source-provider-control.mjs';
 import {diagnosticState, saveDiagnosticPreferences} from './diagnostic-state.mjs';
@@ -125,6 +126,7 @@ export function apply(ctx, config = {}) {
   const snapshot = session => {
     const result = capture.snapshot();
     if(session)result.records=result.records.filter(r=>r.session===session);
+    result.configuration=reportConfiguration(capture.configuration,result.records);
     return {...result,exportedAt:new Date().toISOString(),enabled:diagnosticState.preferences.enabled,
       tools:telemetry.rows.filter(t=>!session||t.session===session),toolsDropped:telemetry.dropped,
       workspace:session?workspaces.get(session):undefined,archiveFailures,activeMeasurements:[...measurements.values()],

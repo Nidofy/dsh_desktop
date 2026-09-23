@@ -44,12 +44,13 @@ await loadDiagnosticPreferences(home);await saveDiagnosticPreferences({enabled:f
 await loadDiagnosticPreferences(home);assert.equal(diagnosticState.preferences.enabled,false);
 const patchFile=join(home,'patch.json');writeFileSync(patchFile,'[]');
 writeFileSync(join(home,'settings.yaml'),'unrelated:\n  enabled: true\nspill-policy:\n  maxInlineBytes: 50000\n');
-const sync=()=>synchronizeDesktopSettings({home,patchFile,runtimeRoot:resolve('runtime')});
+const legacyRuntime=resolve(process.env.LEGACY_TEST_RUNTIME??'runtime');
+const sync=()=>synchronizeDesktopSettings({home,patchFile,runtimeRoot:legacyRuntime});
 await sync();assert.equal(diagnosticState.effectiveSpillBytes,24000);
 await saveDiagnosticPreferences({spillMode:'native'});await sync();assert.equal(diagnosticState.effectiveSpillBytes,50000);
 assert(readFileSync(join(home,'settings.yaml'),'utf8').includes('enabled: true'));
 // Real upstream policy: different preview size, identical full saved artifact.
-const require=createRequire(resolve('runtime/dsh/package.json'));
+const require=createRequire(join(legacyRuntime,'dsh/package.json'));
 const {apply:spill}=await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-spill-policy')).href);
 const text='PREVIEW_'.repeat(9000),decision={kind:'accept'};
 for(const cap of [24000,50000]) {

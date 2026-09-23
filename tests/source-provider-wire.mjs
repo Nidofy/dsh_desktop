@@ -35,6 +35,12 @@ export async function runSourceProviderWire({protocol,patch,overlay,requests,rpc
   const rows=requests.slice(boundary).filter(row=>!row.isTitle);assert(rows[0].path.startsWith('/v1')||!rows[0].path.includes('/r1/'));
   assert(rows.some(row=>row.path.includes('/r1/')),'subsequent request uses the new endpoint within the same agent turn');
   await prompt(session.sessionId,2);assert(requests.at(-1).path.includes('/r1/'));
+  const mixed=await api('snapshot'),completedOld=mixed.records.find(row=>row.id===oldRecord.id);
+  const completedNew=mixed.records.findLast(row=>row.purpose==='conversation'&&row.id!==oldRecord.id);
+  assert.deepEqual(completedOld.configuration,oldRecord.configuration,'late old completion keeps old identity metadata');
+  assert.notEqual(completedNew.configuration.connectionId,oldRecord.configuration.connectionId);
+  assert.notEqual(completedNew.configuration.credentialId,oldRecord.configuration.credentialId);
+  assert.equal(mixed.configuration.connectionId,null,'multi-revision report must not claim startup connection');
   await rpc('session/selectModel',{sessionId:session.sessionId,provider:routeB,model});await prompt(session.sessionId,3);
   assert.equal((await control(second)).ok,false,'stale revision refused');
   const invalid=config(2);invalid.selection.model='absent';assert.equal((await control(invalid)).ok,false);
@@ -46,5 +52,5 @@ export async function runSourceProviderWire({protocol,patch,overlay,requests,rpc
   const beforeRestart=requests.length;await stop();await start();assert.equal(requests.length,beforeRestart,'restart does not replay a request');
   await prompt(session.sessionId,6);assert(requests.at(-1).path.includes('/r4/'));
   for(const file of ['profiles/dsh-desktop/cordis.patch.yml','.credentials.yaml'])if(existsSync(join(dataHome,file)))assert(!readFileSync(join(dataHome,file),'utf8').includes('hot-key-'),'Windows key never enters YAML');
-  return {protocol,status:'PASS',sameModelTwoProviders:true,inFlightSnapshot:true,nextRequest:true,pidUnchanged:true,emptyCredentialRefused:true,staleRevisionRefused:true,invalidSelectionRefused:true,partialWriteRollback:true,keysNotInYaml:true,restartPersistence:true};
+  return {protocol,status:'PASS',sameModelTwoProviders:true,inFlightSnapshot:true,diagnosticRequestIdentity:true,nextRequest:true,pidUnchanged:true,emptyCredentialRefused:true,staleRevisionRefused:true,invalidSelectionRefused:true,partialWriteRollback:true,keysNotInYaml:true,restartPersistence:true};
 }
