@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "sessionReadOnlyNoWrite": true,
+  "immutableV3": true,
+  "v4Continuation": true,
+  "downgradeFromBackup": true,
+  "sharedWorkspaceDeduplicated": true,
+  "sourceAndProjectUnchanged": true
+}

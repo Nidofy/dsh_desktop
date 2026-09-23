@@ -32,7 +32,7 @@ test('profile has editable provider reference, native fields survive restart and
 });
 test('unknown or legacy settings are refused before import and original bytes survive',async()=>{
   const f=await fixture();await mkdir(f.home);await writeFile(join(f.home,'settings.yaml'),'unknown: synthetic\n');
-  await assert.rejects(prepareSourceProfile(f),{code:'SOURCE_LEGACY_SETTINGS_PENDING'});
+  await assert.rejects(prepareSourceProfile(f),{code:'SOURCE_LEGACY_SECTION_UNSUPPORTED'});
   assert.equal(await readFile(join(f.home,'settings.yaml'),'utf8'),'unknown: synthetic\n');
 });
 test('profile transaction recovers after each durable interruption point',async()=>{
@@ -62,4 +62,39 @@ test('experiment restore retains a native profile override across restart',async
     diagnosticState.preferences.spillMode='restore';await prepareSourceProfile(f);assert.equal(diagnosticState.effectiveSpillBytes,32000);
     await prepareSourceProfile(f);assert.equal(diagnosticState.effectiveSpillBytes,32000);
   }finally{delete diagnosticState.preferences.spillMode;}
+});
+
+test('legacy settings migrate atomically and preserve exact original bytes',async()=>{
+  const f=await fixture();await mkdir(f.home);
+  const original=stringify({'ui-theme':{preference:'dark',fontSize:16},'agent-default-model':{provider:'desktop-internal',model:'fixture'},'llm-pi-ai':{providers:{'desktop-internal':{api:'openai-completions',apiKeyEnv:'DSH_DESKTOP_LLM_KEY',baseURL:'http://127.0.0.1:9/v1',models:[{id:'fixture'}]}}}});
+  await writeFile(join(f.home,'settings.yaml'),original);
+  await prepareSourceProfile(f);
+  assert.equal(await readFile(join(f.home,'desktop-legacy-settings/settings.yaml'),'utf8'),original);
+  const rows=parse(await readFile(join(f.dir,'cordis.patch.yml'),'utf8'));
+  assert.equal(rows.find(row=>row.id==='ui-theme').config.preference,'dark');
+  await assert.rejects(readFile(join(f.home,'settings.yaml')),{code:'ENOENT'});
+  await prepareSourceProfile(f);
+});
+
+test('legacy settings recover every transaction interruption without repeating sections',async()=>{
+  for(const point of ['prepared','after:cordis.patch.yml','after:desktop-legacy-migration.json','committed']){
+    const f=await fixture();await mkdir(f.home);const original='ui-theme:\n  preference: dark\n';await writeFile(join(f.home,'settings.yaml'),original);
+    let fired=false;
+    await assert.rejects(prepareSourceProfile({...f,transactionOptions:{protection,fault:async phase=>{if(!fired&&phase===point){fired=true;throw Error('INTERRUPTED');}}}}),/INTERRUPTED/);
+    assert.equal(await readFile(join(f.home,'settings.yaml'),'utf8'),original);
+    await prepareSourceProfile(f);
+    const rows=parse(await readFile(join(f.dir,'cordis.patch.yml'),'utf8'));assert.equal(rows.filter(row=>row.id==='ui-theme').length,1);
+    assert.equal(await readFile(join(f.home,'desktop-legacy-settings/settings.yaml'),'utf8'),original);
+  }
+});
+
+test('unknown fields, inline secrets and unknown legacy locks are preserved and refused',async()=>{
+  for(const [text,lock,code] of [
+    ['ui-theme:\n  futureField: true\n',false,'SOURCE_LEGACY_SECTION_UNSUPPORTED'],
+    ['llm-pi-ai:\n  providers:\n    fixture:\n      apiKey: synthetic-secret\n',false,'SOURCE_LEGACY_SECRET_INLINE'],
+    ['ui-theme:\n  preference: dark\n',true,'SOURCE_LEGACY_WRITER_LOCKED']]){
+    const f=await fixture();await mkdir(f.home);await writeFile(join(f.home,'settings.yaml'),text);if(lock)await writeFile(join(f.home,'settings.yaml.lock'),'foreign-owner');
+    await assert.rejects(prepareSourceProfile(f),{code});assert.equal(await readFile(join(f.home,'settings.yaml'),'utf8'),text);
+    if(lock)assert.equal(await readFile(join(f.home,'settings.yaml.lock'),'utf8'),'foreign-owner');
+  }
 });

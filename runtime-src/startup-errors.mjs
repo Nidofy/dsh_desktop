@@ -3,6 +3,7 @@
 export function startupErrorCode(error,stage='BOOT') {
   const message=typeof error?.message==='string'?error.message:'';
   if(stage==='ADAPTER')return 'BOOT_ADAPTER_UNSUPPORTED';
+  if(error?.code?.startsWith('SOURCE_LEGACY_'))return 'BOOT_LEGACY_MIGRATION';
   if(message.startsWith('workspace domain is inconsistent:'))return 'BOOT_WORKSPACE_INCONSISTENT';
   if(/not a symlink or dsh-managed module proxy/.test(message))return 'BOOT_MODULE_LINK';
   if(['EACCES','EPERM'].includes(error?.code))return 'BOOT_ACCESS_DENIED';

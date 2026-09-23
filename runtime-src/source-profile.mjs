@@ -1,4 +1,4 @@
-import {readFile,mkdir,lstat,rename,open} from 'node:fs/promises';
+import {readFile,mkdir,rename,open} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
@@ -6,6 +6,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {sourceProbeArguments,sourceProfile} from './harness-adapter.mjs';
 import {settingsTransaction,readSettingsFile} from './settings-transaction.mjs';
 import {diagnosticState} from './diagnostic-state.mjs';
+import {migrateSourceSettings} from './source-settings-migration.mjs';
 
 const fail=code=>Object.assign(Error(code),{code});
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -14,12 +15,8 @@ const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex
 // while desktop connection fields are persisted only when their revision changes.
 export async function prepareSourceProfile({root,home,runtimeRoot,patch,transactionOptions}) {
   const args=await sourceProbeArguments({root,home});
-  for(const name of ['settings.yaml','settings.yaml.imported']) {
-    try {await lstat(join(home,name));throw fail('SOURCE_LEGACY_SETTINGS_PENDING');}
-    catch(error){if(error.code!=='ENOENT')throw error;}
-  }
   const require=createRequire(join(runtimeRoot,'dsh/package.json'));
-  const load=id=>import(pathToFileURL(require.resolve(id)).href);
+  const load=id=>import(id.startsWith('file:')?id:pathToFileURL(require.resolve(id)).href);
   const {initProfile}=await load('@deepseek-ai/dsh-app-boot');
   const {withFileLock,writeFileAtomic}=await load('@deepseek-ai/dsh-atomic-write');
   const {parseDocument,isSeq,isMap}=require('yaml');
@@ -50,6 +47,7 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
       const lock=await open(filename+'.lock','r+');try{await lock.writeFile('DSHDesktop-startup:'+owner);await lock.sync();}finally{await lock.close();}
     }
     const transaction=settingsTransaction(dir,writeFileAtomic,transactionOptions);await transaction.recover();
+    await migrateSourceSettings({home,dir,load,require,writeFileAtomic,transactionOptions,patch,installAnchor:join(runtimeRoot,'dsh/package.json')});
     const original=await readSettingsFile(dir,'cordis.patch.yml');
     const marker=await readSettingsFile(dir,'desktop-settings-revision.json');
     const baselineText=await readSettingsFile(dir,'desktop-experiment-baseline.json');
@@ -71,7 +69,8 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
         doc.contents.items.splice(index,1);
       }
     }
-    const owned=structuredClone(patch).map(row=>row.id==='llm-pi-ai'?{...row,config:{...row.config,providers:{[route]:cleanProvider}}}:row);
+    const inheritedProviders=doc.contents.items.map(node=>node.toJSON()).filter(row=>row.id==='llm-pi-ai').at(-1)?.config?.providers??{};
+    const owned=structuredClone(patch).map(row=>row.id==='llm-pi-ai'?{...row,config:{...row.config,providers:{...inheritedProviders,[route]:cleanProvider}}}:row);
     for(const [modeKey,id,field,native,compact,stateKey] of [
       ['spillMode','spill-policy','maxInlineBytes',50000,24000,'effectiveSpillBytes'],
       ['skillMode','tool-skill','catalogDescriptionMaxLength',500,250,'effectiveSkillDescription']]){
@@ -82,7 +81,10 @@ export async function prepareSourceProfile({root,home,runtimeRoot,patch,transact
       if(value!==undefined)owned.push({id,config:{[field]:value}});
       diagnosticState[stateKey]=value??inherited??native;
     }
-    owned.push({insert:[{id:'desktop-source-cache',name:new URL('./source-cache.mjs',import.meta.url).href,config:{providers:providers??{}}}]});
+    const legacyText=await readSettingsFile(dir,'desktop-legacy-migration.json');
+    const legacyPolicies=legacyText?JSON.parse(legacyText).cachePolicies??{}:{};
+    const cacheProviders=Object.fromEntries(Object.entries(inheritedProviders).map(([id,config])=>[id,{...config,...(legacyPolicies[id]?{desktopCacheKey:legacyPolicies[id]}:{})}]));
+    owned.push({insert:[{id:'desktop-source-cache',name:new URL('./source-cache.mjs',import.meta.url).href,config:{providers:{...cacheProviders,...providers}}}]});
     for(const entry of owned)doc.contents.add(doc.createNode(entry));
     const effective={effectiveSpillBytes:diagnosticState.effectiveSpillBytes,effectiveSkillDescription:diagnosticState.effectiveSkillDescription};
     await transaction.commit({'cordis.patch.yml':String(doc),'desktop-settings-revision.json':JSON.stringify({schemaVersion:1,fingerprint,route,owned,effective}),

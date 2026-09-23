@@ -7,6 +7,7 @@ assert.equal(startupErrorCode({code:'EPERM',message:'secret'}),'BOOT_ACCESS_DENI
 assert.equal(startupErrorCode(new Error('not a symlink or dsh-managed module proxy')),'BOOT_MODULE_LINK');
 assert.equal(startupErrorCode(new Error('workspace domain is inconsistent: private path')),'BOOT_WORKSPACE_INCONSISTENT');
 assert.equal(startupErrorCode(new Error('private-setting'),'SETTINGS'),'BOOT_SETTINGS_INVALID');
+assert.equal(startupErrorCode({code:'SOURCE_LEGACY_SECTION_UNSUPPORTED',message:'private-setting'},'SETTINGS'),'BOOT_LEGACY_MIGRATION');
 assert.equal(startupErrorCode({code:'SETTINGS_TRANSACTION_CONFLICT',message:'private-setting'},'SETTINGS'),'BOOT_SETTINGS_CONFLICT');
 assert.equal(startupErrorCode({code:'SETTINGS_PROTECTION_UNAVAILABLE',message:'private-setting'},'SETTINGS'),'BOOT_SETTINGS_RECOVERY');
 assert.equal(startupErrorCode(new Error('atomic-write: timed out waiting for the writer lock at private-path'),'SETTINGS'),'BOOT_SETTINGS_LOCKED');
