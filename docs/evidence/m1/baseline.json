@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-23T23:22:56.7011624+08:00",
+  "head": "36d84ebe49243ba03a658fb4e844cec4fb5d9399",
+  "branch": "main",
+  "snapshot": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\m1-baseline-20260923-232256",
+  "files": [
+    {
+      "path": "README.md",
+      "status": " M",
+      "sha256": "a7efa1acf970ac113e5ee7ed5ee681487d193cfca67a0fcbd3ee0e2e05ceb915"
+    },
+    {
+      "path": "docs/BUILD.md",
+      "status": " M",
+      "sha256": "6ce8bf0f77b9f5b72229f8141d63788a7302274b9607bb0efa9f118bcbdc91c6"
+    },
+    {
+      "path": "scripts/build-windows.ps1",
+      "status": " M",
+      "sha256": "59de382a5ba341a7423898bc468625df83420b2b673944c810ce51501ae5262f"
+    },
+    {
+      "path": "scripts/prepare-dsh.ps1",
+      "status": " M",
+      "sha256": "4a0e86158c4744238f059a88d56d94c298ea7e7df4bec07a4130cc3b62e68d36"
+    },
+    {
+      "path": "scripts/release-receipt.mjs",
+      "status": " M",
+      "sha256": "6320605a5cf0d973a6416b0447ee0566d06da9166f1ba7345e58c40877c8829e"
+    },
+    {
+      "path": "scripts/runtime-integrity.mjs",
+      "status": " M",
+      "sha256": "74998ee49ed68d8e3055179243600f3ab36f7453aae58bbbc25c72e3d1bc95bd"
+    },
+    {
+      "path": "build-deps/harness-source.json",
+      "status": "??",
+      "sha256": "780a8fedaf0983be7236ff8735a88458ef8f901367a1c07b17976d2ee44fedeb"
+    },
+    {
+      "path": "docs/HARNESS_SOURCE.md",
+      "status": "??",
+      "sha256": "ae00293c9ee142ebdbbb23717e01833cc3e1f644d1737bc7db874f0ab128e615"
+    },
+    {
+      "path": "docs/PLAN-0.2.5-SOURCE-INTEGRATION.md",
+      "status": "??",
+      "sha256": "380e1e74f23701bea91ff164a0e032fdc3c2ea191117cf468e48a9f14891dce7"
+    },
+    {
+      "path": "docs/evidence/harness-source-20260923.json",
+      "status": "??",
+      "sha256": "72fdf5eaebb3981ce68d566fb88146bcfdf935443a3108d6e14753f57e12be34"
+    },
+    {
+      "path": "scripts/build-harness-source.ps1",
+      "status": "??",
+      "sha256": "b2c0e8b052f7b8d70db1015558e28e2bc8ef34de1252d94fd5f2d41ded66104a"
+    },
+    {
+      "path": "scripts/check-harness-upstream.ps1",
+      "status": "??",
+      "sha256": "3257e5e05774a8d06aec0672064fed3f5f39a3c642a2712fbf2aa67581ea1db1"
+    },
+    {
+      "path": "scripts/harness-source.mjs",
+      "status": "??",
+      "sha256": "d36bbc1e3b6515374d9684eb65d4a2cb00690c7af4148f2f25350943823ce59a"
+    },
+    {
+      "path": "scripts/prepare-harness-candidate.ps1",
+      "status": "??",
+      "sha256": "df6277374d06756f5725a3d0eef46ff8d671f3baac19ba9700b972a3d119aa21"
+    },
+    {
+      "path": "tests/harness-source-smoke.mjs",
+      "status": "??",
+      "sha256": "6c64742027d03875a27459bedd58bf588f8b02d7bf9b8f5e19bf6f4daec34355"
+    },
+    {
+      "path": "tests/harness-source.mjs",
+      "status": "??",
+      "sha256": "51c88f20dc3b3eb56b13f81b8db7d5bd3e35e80773c9854bb342906a156b4ea4"
+    }
+  ]
+}

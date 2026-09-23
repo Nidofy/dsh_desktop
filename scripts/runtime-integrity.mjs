@@ -4,6 +4,7 @@ import {resolve,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {createInventory,verifyInventory,readManifest,verifyRuntime,hashFile} from '../runtime-src/runtime-integrity.mjs';
+import {verifyImportedSource} from './harness-source.mjs';
 const project=fileURLToPath(new URL('../',import.meta.url));
 const [mode,input]=process.argv.slice(2),root=resolve(input??join(project,'runtime'));
 const versions=JSON.parse(await readFile(join(project,'versions.json'),'utf8'));
@@ -12,6 +13,10 @@ const lock=await readFile(join(project,'build-deps/package-lock.json'));
 const save=(name,value)=>writeFile(join(root,name),JSON.stringify(value,null,2)+'\n');
 async function verifyDsh(){
  const m=await readManifest(join(root,'dsh-integrity.json'));
+ if(m.schemaVersion===1&&m.kind==='dsh-dependencies'&&m.source){
+  const pin=await readManifest(join(project,'build-deps/harness-source.json'));
+  return verifyImportedSource(root,m,pin,versions);
+ }
  if(m.schemaVersion!==1||m.kind!=='dsh-dependencies'||m.version!==versions.dsh||m.lockSha256!==digest(lock))throw Error('DSH baseline does not match pinned build dependencies; prepare again');
  return verifyInventory(join(root,'dsh'),m.files);
 }

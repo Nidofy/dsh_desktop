@@ -118,6 +118,7 @@ pub fn ready_url(line: &str) -> Option<Url> {
 }
 fn startup_failure(line: &str) -> Option<&'static str> {
     Some(match line.strip_prefix("dsh desktop error: ")? {
+        "BOOT_ADAPTER_UNSUPPORTED" => "此引擎尚未通过桌面适配或固定版本校验，已在修改会话和设置前停止。请使用通过完整构建验收的运行目录。",
         "BOOT_MODULE_LINK" => "旧版模块目录阻止引擎启动。请打开日志目录检查 dsh/profiles/node_modules；保留原目录后修复运行时链接。",
         "BOOT_ACCESS_DENIED" => "引擎无法读写本机目录。请检查 DSHDesktop 数据目录及运行目录的权限，关闭仍占用文件的旧版程序后重试。",
         "BOOT_MODULE_MISSING" => "引擎依赖缺失或旧模块链接失效。请使用包含 resources 的完整验证目录启动。",
@@ -772,6 +773,7 @@ mod tests {
     use super::*;
     #[test]
     fn startup_failures_accept_only_fixed_codes() {
+        assert!(startup_failure("dsh desktop error: BOOT_ADAPTER_UNSUPPORTED").is_some());
         assert!(startup_failure("dsh desktop error: BOOT_MODULE_LINK").is_some());
         assert!(startup_failure("dsh desktop error: BOOT_SETTINGS_INVALID").is_some());
         assert!(startup_failure("dsh desktop error: secret-provider-response").is_none());

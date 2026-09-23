@@ -1,0 +1,47 @@
+{
+  "sourceCommit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+  "version": "0.1.7-alpha.2",
+  "home": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\harness-web-smoke-FIBBbP",
+  "status": "PASS",
+  "tauriAcceptance": "NOT_RUN",
+  "modelCalls": 0,
+  "launches": [
+    {
+      "attempt": 1,
+      "profile": "dsh-desktop",
+      "sourceCommit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+      "version": "0.1.7-alpha.2",
+      "home": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\harness-web-smoke-FIBBbP",
+      "status": "PASS",
+      "modelCalls": 0,
+      "tauriAcceptance": "NOT_RUN",
+      "checks": [
+        "fresh custom profile boot",
+        "loopback authenticated HTTP",
+        "packaged JS/CSS assets: 4",
+        "no system Node or package manager on PATH",
+        "no observed denied egress"
+      ],
+      "cleanup": "OWNED_PROCESS_STOPPED"
+    },
+    {
+      "attempt": 2,
+      "profile": "dsh-desktop",
+      "sourceCommit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+      "version": "0.1.7-alpha.2",
+      "home": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\harness-web-smoke-FIBBbP",
+      "status": "PASS",
+      "modelCalls": 0,
+      "tauriAcceptance": "NOT_RUN",
+      "checks": [
+        "fresh custom profile boot",
+        "loopback authenticated HTTP",
+        "packaged JS/CSS assets: 4",
+        "no system Node or package manager on PATH",
+        "no observed denied egress"
+      ],
+      "cleanup": "OWNED_PROCESS_STOPPED"
+    }
+  ],
+  "artifactUnchanged": true
+}

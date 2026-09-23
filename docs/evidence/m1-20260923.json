@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-23T16:02:03.139Z",
+  "kind": "m1-incremental-implementation",
+  "status": "INCOMPLETE",
+  "baseline": "m1/baseline.json",
+  "originalInputsPreserved": 16,
+  "versions": {
+    "desktop": "0.2.4-rc.2",
+    "dsh": "0.1.5-rc.2",
+    "node": "24.16.0",
+    "nodeSha256": "b3094d0b49f9ad602262a9921551737bb97637c05dd357a06ae98188d7290aa3",
+    "webview2": "153.0.4234.48",
+    "webview2Url": "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/08cd33ee-d109-49b8-9301-9f0bea43c575/Microsoft.WebView2.FixedVersionRuntime.153.0.4234.48.x64.cab",
+    "webview2CabSha256": "11e8240cb0bc56dcd3e4498907203c251346f65107fe35a3a13e152c7d51c79e",
+    "tauri": "2.11.5",
+    "rust": "1.97.1"
+  },
+  "source": {
+    "baseCommit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+    "branch": "codex/tauri-integration",
+    "workingTreeClean": false,
+    "userAuthorizedHook": true,
+    "committed": false,
+    "pushed": false,
+    "pinUpdated": false,
+    "files": [
+      {
+        "path": "packages/llm/llm-pi-ai/README.md",
+        "bytes": 26774,
+        "sha256": "0a19590208e3daa1e18a75e02df4d59c6bf5e832318fe530c4c33f7b91da26ee"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/README.zh.md",
+        "bytes": 24279,
+        "sha256": "f9c2b383247beb79ec4115719b7e436718eb3992eae264eedb6228a3de5aba99"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/README.i18n.yaml",
+        "bytes": 432,
+        "sha256": "8b02347a9f4810da9ad213d79a0ff9eee8ea37b303c690ae2ce558ceee0c1d08"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/src/adapter.ts",
+        "bytes": 20329,
+        "sha256": "3d2f84e8cef4c0695c05ebb4d3b0d09b165aa0100fad5ea584cec3045b9dafe3"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/src/index.ts",
+        "bytes": 14974,
+        "sha256": "396cf9f1453cec4d676045f75c565c2a0e61d326fd17dc2954e059e8d9ec8f73"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/tests/loader-composition.spec.ts",
+        "bytes": 12097,
+        "sha256": "a093203123286ad350d0634485ce6f41aaaa20c17faa0e1d937570dd911bac33"
+      },
+      {
+        "path": "packages/llm/llm-pi-ai/tests/payload-hook.spec.ts",
+        "bytes": 7157,
+        "sha256": "cea88da2f1a783f7f9a4827a525daa23b77c04d90b2848e92482d172419dd972"
+      },
+      {
+        "path": "scripts/gen-cordis-catalog.ts",
+        "bytes": 67816,
+        "sha256": "b1ca562bb9e9c62124250bafaec69cde1a7c598148946443505089205aee906d"
+      },
+      {
+        "path": "docs/subsystems/llm-streaming.md",
+        "bytes": 66433,
+        "sha256": "cf6d2a201283baa2d5f72380d4440e59d3efee4277ffd148ee5baeef98113cef"
+      },
+      {
+        "path": "docs/subsystems/llm-streaming.zh.md",
+        "bytes": 65510,
+        "sha256": "0e666371d6dbcf7e0233e244cf99de226d728170a725aebc2e8e210bcc6c4bbc"
+      },
+      {
+        "path": "docs/subsystems/llm-streaming.i18n.yaml",
+        "bytes": 446,
+        "sha256": "ceb86e62049a5604ba22ce5c3f793c644b687dcd4850968a6a5d437f8731a7ac"
+      },
+      {
+        "path": "packages/extensions/tool-cordis/src/api-catalog.ts",
+        "bytes": 549625,
+        "sha256": "17200c71cd5c5677c84f99a85a7f93d3d9691d4bfb1357f41ee6a824c7be6cfe"
+      }
+    ],
+    "reviewPatch": "m1/harness-hook-review.patch",
+    "reviewPatchSha256": "5a8570fcf2b5652080741c18ff4b0cef20ad6124ceaea381793059ccb4bc43de"
+  },
+  "checks": {
+    "desktopAdapter": {
+      "passed": 5,
+      "failed": 0
+    },
+    "sourceContracts": {
+      "passed": 8,
+      "failed": 0
+    },
+    "sourceProfileSmoke": "m1/source-profile-smoke.json",
+    "sourceStaging": {
+      "scenarios": 7,
+      "status": "PASS",
+      "path": ".build/staging-test-726f84b4b62f4d989d0b839d70081eb3"
+    },
+    "rust": {
+      "passed": 1,
+      "filter": "startup",
+      "profile": "release",
+      "fullSuite": false
+    },
+    "harnessRegression": {
+      "files": 4,
+      "passed": 71,
+      "failed": 0
+    },
+    "harnessHookAfterAnthropicAddition": {
+      "passed": 6,
+      "failed": 0
+    },
+    "harnessTypeBuild": "PASS",
+    "harnessExportJsdoc": "PASS",
+    "harnessTranslationPair": "PASS",
+    "harnessFocusedLint": "PASS",
+    "harnessModuleGraph": "PASS",
+    "runtimeIntegrity": {
+      "status": "PASS",
+      "files": 25786,
+      "bytes": 1025709046
+    },
+    "oldReleaseReceipt": "REJECTED_AS_EXPECTED",
+    "startupErrors": "PASS",
+    "runtimeModuleSync": "PASS",
+    "releaseReceiptContracts": "PASS",
+    "harnessCatalogConsumers": {
+      "passed": 23,
+      "failed": 0,
+      "files": 3
+    },
+    "harnessApiCatalog": "REGENERATED: 115 computed, 3 changed; type links and event ownership explicitly mapped, no exemption"
+  },
+  "gates": {
+    "fixedHookArtifact": "BLOCKED_UNCOMMITTED_SOURCE",
+    "tauriProfileSettingsCredentials": "NOT_COMPLETE",
+    "copiedDataMigration": "NOT_RUN",
+    "featureRegression": "NOT_RUN",
+    "fullDualProtocolPrefixAndCache": "NOT_RUN",
+    "nativeWindows": "NOT_RUN",
+    "realInternalNetwork": "NOT_RUN",
+    "offlineCandidate": "NOT_BUILT"
+  },
+  "limitations": [
+    "Direct adapter/Loader tests are not native Tauri acceptance",
+    "CLI/Web smoke artifact still represents the original clean commit without the hook",
+    "Ordinary staging failures roll back; hard termination recovery is not automated or tested",
+    "No formal user data or real provider requests used",
+    "No new runnable product directory"
+  ]
+}

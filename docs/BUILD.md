@@ -1,5 +1,8 @@
 # Developer build
 
+Harness fork 的源码构建、固定提交、独立候选导入与 `-HarnessSourceArtifact` 入口见 [源码工作流](HARNESS_SOURCE.md)。当前源码候选 0.1.7-alpha.2 尚未完成桌面适配；默认 registry 构建与 0.2.4-rc.2 的引擎组合保持不变。
+M1 增量门禁与未测范围见 [实施记录](IMPLEMENTATION-M1.md)；fork 中未经提交固定的 hook 不得冒用旧 commit 的源码回执。
+
 0.1.7 adds `tests/experiments.mjs`. Use `scripts/build-windows.ps1 -ReusePreparedRuntime -SkipPackage` to run checks and compile without creating an offline ZIP. Runner fixtures and live opt-in instructions: [0.1.7 experiments](EXPERIMENTS-0.1.7.md).
 
 Version 0.1.6 additionally runs `tests/observability.mjs` and `tests/observability-wire.mjs`. Use `runtime/runtime/node.exe tests/observability-benchmark.mjs` for the separate synthetic ON/OFF CPU/memory probe. Portable archives are versioned (`DSHDesktop-0.1.6-win-x64-portable.zip`) so the prior unversioned package is preserved.

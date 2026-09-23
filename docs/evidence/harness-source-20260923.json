@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-23T16:10:34.7994807+08:00",
+  "kind": "harness-source-workflow",
+  "source": {
+    "schemaVersion": 1,
+    "repository": "https://github.com/Nidofy/deepseek-harness.git",
+    "commit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+    "version": "0.1.7-alpha.2",
+    "packageManager": "pnpm@11.7.0",
+    "node": "24.16.0",
+    "platform": "win32",
+    "arch": "x64",
+    "lockSha256": "b86256be5afec5814a404747893cab392a73b40901d14fa8135f663fb42c8d40",
+    "workspaceSha256": "c5efad389f40127764a5072d98fdc5926ab5d6aa0417d6a83939baf988f78f1f"
+  },
+  "checkout": "D:/Documents/FeiyangChen/devApps/deepseek-harness",
+  "branch": "codex/tauri-integration",
+  "sourceTreeCleanAfterBuild": true,
+  "artifact": ".build/harness-source/00102833dfae-20260923-155745-34606996/artifact",
+  "artifactManifestSha256": "876c4dab61a6f287ecfae6006561d3aa445c8cc347ca2d89a3faf561deeeae66",
+  "files": 27876,
+  "bytes": 621210235.0,
+  "buildStartedAt": "2026-09-23T07:57:45.716Z",
+  "buildCompletedAt": "2026-09-23T08:00:42.25Z",
+  "build": "PASS: frozen dependency install, build:official, locked production deploy, workspace peer closure, materialization",
+  "cliSmoke": {
+    "version": "0.1.7-alpha.2",
+    "help": true,
+    "modelCalls": 0
+  },
+  "webHostSmoke": {
+    "sourceCommit": "00102833dfaee1da9f48a3a8eae9d34005a75218",
+    "version": "0.1.7-alpha.2",
+    "home": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\harness-web-smoke-MLwlS8",
+    "status": "PASS",
+    "modelCalls": 0,
+    "tauriAcceptance": "NOT_RUN",
+    "checks": [
+      "fresh custom profile boot",
+      "loopback authenticated HTTP",
+      "packaged JS/CSS assets: 4",
+      "no system Node or package manager on PATH",
+      "no observed denied egress"
+    ],
+    "cleanup": "OWNED_PROCESS_STOPPED",
+    "artifactUnchanged": true
+  },
+  "import": {
+    "status": "PASS",
+    "path": ".build/harness-candidates/20260923-160123-0ffa3b84"
+  },
+  "desktopAdmission": {
+    "allowed": false,
+    "reasons": [
+      "DESKTOP_ENGINE_VERSION_MISMATCH",
+      "DESKTOP_ADAPTER_NOT_APPROVED"
+    ]
+  },
+  "buildEntryRejection": "PASS: build-windows refused the unapproved combination before runtime preparation",
+  "checks": {
+    "sourceContracts": "8 passed, 0 failed",
+    "runtimeIntegrityContracts": "PASS",
+    "releaseReceiptContracts": "PASS",
+    "powershellParse": "PASS: 5 scripts",
+    "nodeSyntax": "PASS",
+    "diffWhitespace": "PASS",
+    "existingRuntime": "PASS: 25786 files, 1025709046 bytes; existing manifest unchanged"
+  },
+  "production": {
+    "desktop": "0.2.4-rc.2",
+    "dsh": "0.1.5-rc.2",
+    "sourceAdapterApproved": false,
+    "runtimeReplaced": false,
+    "distModified": false,
+    "newOfflinePackage": false
+  },
+  "notRun": [
+    "New-engine Tauri native window and shutdown acceptance",
+    "Old user data/profile/session migration",
+    "New-engine dual-protocol and cache-prefix regressions",
+    "Real internal gateway testing",
+    "Cross-machine bit-for-bit reproducibility"
+  ],
+  "logs": [
+    ".build/harness-source-final-pipeline-2.log",
+    ".build/harness-candidate-import.log",
+    ".build/harness-web-probe.log",
+    ".build/harness-desktop-admission.log",
+    ".build/harness-source-contracts.log",
+    ".build/harness-source-integrity-contracts.log",
+    ".build/harness-source-receipt-contracts.log",
+    ".build/harness-source-existing-runtime.log"
+  ]
+}

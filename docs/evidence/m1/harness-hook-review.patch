@@ -1,0 +1,590 @@
+diff --git a/packages/llm/llm-pi-ai/README.md b/packages/llm/llm-pi-ai/README.md
+index 7b1708b..48c0251 100644
+--- a/packages/llm/llm-pi-ai/README.md
++++ b/packages/llm/llm-pi-ai/README.md
+@@ -104,6 +104,14 @@ A profile's `models` list replaces the route's installed catalog rather than ext
+ 
+ For self-hosted Chat Completions endpoints, `thinkingTokenBudgetField` selects the reasoning-budget parameter, and `vllmPriority` sets an integer scheduler priority when the server enables priority scheduling. Template arguments accept `$var: thinking.budget`. `openai-responses` gateways can set `supportsMaxOutputTokens: false` to omit `max_output_tokens`; Azure and Codex transports ignore this shared compatibility field. These controls are opt-in; catalog-owned Anthropic effort and fallback capabilities are not configurable switches.
+ 
++<a id="control-transport-routing-metadata"></a>
++
++### Control transport routing metadata
++
++A deployment plugin can listen for `llm-pi-ai/prepare-payload` and return a pi-ai `onPayload` callback. The first listener returning a callback owns the transform. The adapter provides frozen provider, model, protocol, endpoint and optional session facts before awaiting the credential; listeners must capture policy in the returned callback so changes affect the next request. Without a callback, native payload behavior is unchanged. Preparation or callback failure prevents sending that request. Disposing the listener removes the transform for subsequent requests.
++
++Callbacks may adjust transport routing metadata such as `prompt_cache_key`; they must preserve logged messages, system content, tools and generation parameters. This trusted deployment extension receives final payload content and must not log it or credentials. It does not add prompts, tools or a second request loop, and it does not imply that a gateway supports or benefits from the routing hint.
++
+ ### Change configuration at runtime
+ 
+ Each operation captures the current `providers` Config reference. New or changed provider profiles are validated before form persistence; unchanged catalog failures remain editable. Route-set or retry-policy changes update registration atomically, preserving previous routes if another adapter owns a requested route.
+diff --git a/packages/llm/llm-pi-ai/README.zh.md b/packages/llm/llm-pi-ai/README.zh.md
+index ed780ad..e9fc76b 100644
+--- a/packages/llm/llm-pi-ai/README.zh.md
++++ b/packages/llm/llm-pi-ai/README.zh.md
+@@ -104,6 +104,14 @@ profile 的 `models` 列表会替换而非扩展路由的已安装目录；每
+ 
+ 对于自托管 Chat Completions 端点，`thinkingTokenBudgetField` 选择推理预算参数，`vllmPriority` 在服务端启用优先级调度时设置整数调度优先级。模板参数接受 `$var: thinking.budget`。`openai-responses` 网关可设置 `supportsMaxOutputTokens: false` 来省略 `max_output_tokens`；Azure 与 Codex 传输会忽略这个共享兼容字段。这些控制均需显式启用；目录拥有的 Anthropic effort 和回退能力不是可配置开关。
+ 
++<a id="control-transport-routing-metadata"></a>
++
++### 控制传输路由元数据
++
++部署插件可以监听 `llm-pi-ai/prepare-payload` 并返回 pi-ai 的 `onPayload` 回调。第一个返回回调的监听器负责变换。适配器在等待凭据之前提供冻结的提供方、模型、协议、端点及可选会话信息；监听器必须在返回的回调中捕获策略，使更改从下一次请求生效。没有回调时原生 payload 行为保持不变。准备或回调失败会阻止发送该请求。释放监听器会移除后续请求的变换。
++
++回调可以调整 `prompt_cache_key` 等传输路由元数据，必须保留已记录的消息、系统内容、工具和生成参数。这是受信部署扩展，会收到最终 payload 内容，不得记录正文或凭据。它不增加提示、工具或第二个请求循环，也不表示网关支持该路由提示或会因此获益。
++
+ ### 运行时更改配置
+ 
+ 每次操作捕获当前 `providers` Config 引用。新增或修改的 provider 配置在表单持久化前验证；未更改的目录故障仍可编辑。路由集合或重试策略变化时原子更新注册；如果其他适配器已拥有所请求的路由，则保留先前路由。
+diff --git a/packages/llm/llm-pi-ai/README.i18n.yaml b/packages/llm/llm-pi-ai/README.i18n.yaml
+index c5fbc21..da34292 100644
+--- a/packages/llm/llm-pi-ai/README.i18n.yaml
++++ b/packages/llm/llm-pi-ai/README.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write packages/llm/llm-pi-ai/README.md
+-README.md: 7b1708b957202369382d8a93b2bbcefd31565f67
+-README.zh.md: ed780ad235b1d8df2b821be6a0595ecd8b8e951b
++README.md: 0bb278454759299979fde7054cc5197422e479c1
++README.zh.md: d864bd15be5e9c5727e2621c1416f877f1f99a49
+diff --git a/packages/llm/llm-pi-ai/src/adapter.ts b/packages/llm/llm-pi-ai/src/adapter.ts
+index de9f3e0..a7dcc7f 100644
+--- a/packages/llm/llm-pi-ai/src/adapter.ts
++++ b/packages/llm/llm-pi-ai/src/adapter.ts
+@@ -70,8 +70,29 @@ interface PiAiSnapshot {
+   models: Models
+ }
+ 
+-/** Constructor options for {@link PiAiAdapter}: the two resolution hooks the plugin owns. */
++/** Request routing facts captured before credential resolution; contains no model content or key. */
++export interface PiAiPayloadScope {
++  /** Harness provider route selected for this call. */
++  readonly provider: string
++  /** Model identifier within the selected route. */
++  readonly model: string
++  /** Resolved pi-ai protocol. */
++  readonly api: string
++  /** Resolved model endpoint, without the request credential. */
++  readonly baseURL: string
++  /** Session routing scope when the caller supplies one. */
++  readonly sessionId: string | undefined
++}
++
++/** Constructor options for {@link PiAiAdapter}: request resolution and payload hooks. */
+ export interface PiAiAdapterOptions {
++  /**
++   * Capture an optional transport-payload transform once before the credential await.
++   * The returned callback must preserve logged content, tools and generation parameters.
++   * @param scope - frozen routing facts without prompt content or the request credential.
++   * @returns a request-local callback, or undefined to preserve native payload behavior.
++   */
++  preparePayload?: (scope: PiAiPayloadScope) => SimpleStreamOptions['onPayload']
+   /** Current validated profiles by provider route; called once per operation. */
+   profiles: () => ReadonlyMap<string, ResolvedPiAiProviderProfile>
+   /**
+@@ -345,6 +366,13 @@ export class PiAiAdapter extends LlmAdapter {
+       model,
+       options.reasoningEffort ?? profile.reasoning,
+     )
++    const onPayload = this.config.preparePayload?.(Object.freeze({
++      provider: options.provider,
++      model: options.model,
++      api: model.api,
++      baseURL: model.baseUrl,
++      sessionId: options.sessionId === undefined ? undefined : String(options.sessionId),
++    }))
+     const apiKey = await this.config.resolveApiKey(options.provider, profile)
+ 
+     const consumer = new AbortController()
+@@ -379,6 +407,7 @@ export class PiAiAdapter extends LlmAdapter {
+         }, onReplayDegrade)
+       const events = snapshot.models.streamSimple(model, context, {
+         ...profileOptions(profile, reasoning, apiKey),
++        ...onPayload === undefined ? {} : { onPayload },
+         ...options.temperature === undefined ? {} : { temperature: options.temperature },
+         ...options.maxTokens === undefined ? {} : { maxTokens: options.maxTokens },
+         ...options.sessionId === undefined ? {} : { sessionId: String(options.sessionId) },
+diff --git a/packages/llm/llm-pi-ai/src/index.ts b/packages/llm/llm-pi-ai/src/index.ts
+index 389acba..d2a4145 100644
+--- a/packages/llm/llm-pi-ai/src/index.ts
++++ b/packages/llm/llm-pi-ai/src/index.ts
+@@ -65,6 +65,7 @@ import type { AdapterRegistrationHandle, DirectoryRegistrationHandle, LlmConfigu
+ import type {} from '@deepseek-ai/dsh-fs'
+ import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
+ import { PiAiAdapter } from './adapter.ts'
++import type { PiAiAdapterOptions, PiAiPayloadScope } from './adapter.ts'
+ import { authContextFrom, credentialStoreFrom } from './auth.ts'
+ import { catalogProviderIds } from './catalog.ts'
+ import { assertServiceable, Config, resolveProfiles } from './config.ts'
+@@ -74,7 +75,21 @@ import type { StoredModelDiscoveryProfile } from './discovery.ts'
+ import { registerPiAiFlows } from './login.ts'
+ 
+ export { PiAiAdapter } from './adapter.ts'
+-export type { PiAiAdapterOptions } from './adapter.ts'
++export type { PiAiAdapterOptions, PiAiPayloadScope } from './adapter.ts'
++
++declare module '@deepseek-ai/cordis' {
++  interface Events {
++    /**
++     * Capture the deployment's optional final transport-payload transform.
++     * The listener returns a callback with request-local policy already frozen.
++     * The callback must preserve logged model content, tools and generation parameters.
++     * @param scope - routing facts without prompt content or credentials.
++     * @mode bail
++     * @dshScopeScan unsupported The event runs at the provider transport boundary.
++     */
++    'llm-pi-ai/prepare-payload'(scope: PiAiPayloadScope): ReturnType<NonNullable<PiAiAdapterOptions['preparePayload']>>
++  }
++}
+ export { Config } from './config.ts'
+ export type {
+   Options,
+@@ -210,6 +225,7 @@ export function apply(ctx: Context, config: Config): void {
+   // a configuration change causes, and a sign-in survives one.
+   const auth = { credentials: credentialStoreFrom(ctx), authContext: authContextFrom(ctx) }
+   const adapter = new PiAiAdapter({
++    preparePayload: scope => ctx.bail('llm-pi-ai/prepare-payload', scope),
+     profiles,
+     resolveApiKey,
+     auth,
+diff --git a/packages/llm/llm-pi-ai/tests/loader-composition.spec.ts b/packages/llm/llm-pi-ai/tests/loader-composition.spec.ts
+index e9d1699..845ad3f 100644
+--- a/packages/llm/llm-pi-ai/tests/loader-composition.spec.ts
++++ b/packages/llm/llm-pi-ai/tests/loader-composition.spec.ts
+@@ -268,3 +268,35 @@ describe('llm-pi-ai real dormant composition', () => {
+     })
+   })
+ })
++
++describe('deployment payload policy through the Loader composition', () => {
++  it('changes only a routing field and disposes its effect without changing native requests', async () => {
++    vi.stubEnv('PI_COMPOSITION_KEY', '')
++    const server = await mockServer([{ events: textEvents }, { events: textEvents }, { events: textEvents }])
++    const { ctx, settingsPath } = await loadComposition()
++    await writeFile(settingsPath, [
++      '- id: llm-pi-ai', '  config:', '    providers:', '      deepseek:',
++      '        apiKeyEnv: PI_COMPOSITION_KEY', `        baseURL: ${server.url}`, '',
++    ].join('\n'))
++    await vi.waitFor(() => { expect(ctx.llm.listProviders().map(provider => provider.id)).toEqual(['deepseek']) }, { timeout: 5000 })
++    const request = { provider: 'deepseek', model: 'deepseek-v4-flash', messages: [] }
++    const native = await assemble(ctx, request)
++    const policy = ctx.plugin({
++      name: 'test-payload-policy',
++      apply(scope: Context) {
++        scope.on('llm-pi-ai/prepare-payload', () => (payload) => {
++          if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) throw Error('Expected payload object')
++          return { ...payload, prompt_cache_key: 'synthetic-route' }
++        })
++      },
++    })
++    await policy
++    const changed = await assemble(ctx, request)
++    expect(server.requests[1]).toEqual({ ...server.requests[0] as object, prompt_cache_key: 'synthetic-route' })
++    expect(changed.message.content).toEqual(native.message.content)
++    expect(changed.usage).toEqual(native.usage)
++    await policy.dispose()
++    await assemble(ctx, request)
++    expect(server.requests[2]).toEqual(server.requests[0])
++  })
++})
+diff --git a/packages/llm/llm-pi-ai/tests/payload-hook.spec.ts b/packages/llm/llm-pi-ai/tests/payload-hook.spec.ts
+index e69de29..8c14ba2 100644
+--- a/packages/llm/llm-pi-ai/tests/payload-hook.spec.ts
++++ b/packages/llm/llm-pi-ai/tests/payload-hook.spec.ts
+@@ -0,0 +1,123 @@
++import { createServer } from 'node:http'
++import { afterEach, expect, it, vi } from 'vitest'
++import { PiAiAdapter } from '@deepseek-ai/dsh-llm-pi-ai'
++import type { PiAiAdapterOptions, PiAiPayloadScope } from '@deepseek-ai/dsh-llm-pi-ai'
++import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
++import { resolveProfiles } from '../src/config.ts'
++import { memoryAuth } from './auth-double.ts'
++import { closeMockServers, mockServer, textEvents } from './mock-server.ts'
++
++afterEach(closeMockServers)
++const request: GenerateOptions = { provider: 'payload-test', model: 'model-a', messages: [] }
++const replaceKey = (key: string) => (payload: unknown): unknown => {
++  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) throw Error('Expected payload object')
++  return { ...payload, prompt_cache_key: key }
++}
++function adapter(baseURL: string, hooks: Partial<PiAiAdapterOptions> = {}): PiAiAdapter {
++  const profiles = resolveProfiles({ 'payload-test': { api: 'openai-completions', baseURL, models: [{ id: 'model-a' }] } })
++  return new PiAiAdapter({ profiles: () => profiles, auth: memoryAuth(), resolveApiKey: () => Promise.resolve('synthetic'), ...hooks })
++}
++async function drain(value: PiAiAdapter, options: GenerateOptions = request): Promise<StreamChunk[]> {
++  const chunks: StreamChunk[] = []
++  for await (const chunk of value.stream(options)) chunks.push(chunk)
++  return chunks
++}
++
++it('without a callback sends the same body and usage as an untouched payload callback', async () => {
++  const server = await mockServer([{ events: textEvents }, { events: textEvents }])
++  const plain = await drain(adapter(server.url))
++  const tapped = await drain(adapter(server.url, { preparePayload: () => () => undefined }))
++  expect(server.requests[1]).toEqual(server.requests[0])
++  expect(tapped.filter(c => c.type === 'usage')).toEqual(plain.filter(c => c.type === 'usage'))
++})
++
++it('captures policy once before credentials and uses changed policy on the next request', async () => {
++  const server = await mockServer([{ events: textEvents }, { events: textEvents }])
++  const entered = Promise.withResolvers<undefined>()
++  const credential = Promise.withResolvers<string>()
++  let key = 'first'
++  const scopes: PiAiPayloadScope[] = []
++  const preparePayload = vi.fn((scope: PiAiPayloadScope) => { scopes.push(scope); return replaceKey(key) })
++  const value = adapter(server.url, { preparePayload, resolveApiKey: () => { entered.resolve(undefined); return credential.promise } })
++  const pending = drain(value)
++  await entered.promise
++  key = 'second'
++  expect(server.requests).toHaveLength(0)
++  credential.resolve('synthetic')
++  await pending
++  await drain(value)
++  expect(preparePayload).toHaveBeenCalledTimes(2)
++  expect(scopes[0]).toEqual({ provider: 'payload-test', model: 'model-a', api: 'openai-completions', baseURL: server.url, sessionId: undefined })
++  expect(Object.isFrozen(scopes[0])).toBe(true)
++  expect(server.requests[0]).toMatchObject({ prompt_cache_key: 'first' })
++  expect(server.requests[1]).toMatchObject({ prompt_cache_key: 'second' })
++})
++
++it('does not resolve credentials or send a request when policy preparation fails', async () => {
++  const server = await mockServer([])
++  const resolveApiKey = vi.fn(() => Promise.resolve('synthetic'))
++  await expect(drain(adapter(server.url, { resolveApiKey, preparePayload: () => { throw Error('policy failed') } }))).rejects.toThrow('policy failed')
++  expect(resolveApiKey).not.toHaveBeenCalled()
++  expect(server.requests).toHaveLength(0)
++})
++
++it('does not send a request when the payload transform fails', async () => {
++  const server = await mockServer([])
++  const chunks = await drain(adapter(server.url, { preparePayload: () => () => { throw Error('payload failed') } }))
++  expect(chunks.find(chunk => chunk.type === 'finish')).toMatchObject({ reason: { kind: 'error' } })
++  expect(server.requests).toHaveLength(0)
++})
++
++it('preserves cancellation while the credential is pending', async () => {
++  const server = await mockServer([])
++  const entered = Promise.withResolvers<undefined>(), credential = Promise.withResolvers<string>()
++  const controller = new AbortController()
++  const value = adapter(server.url, { preparePayload: () => replaceKey('cancelled'), resolveApiKey: () => { entered.resolve(undefined); return credential.promise } })
++  const pending = drain(value, { ...request, signal: controller.signal })
++  await entered.promise
++  controller.abort()
++  credential.resolve('synthetic')
++  // Direct adapters may throw or emit aborted; either must leave the wire untouched.
++  try { await pending } catch (error) { expect(error).toBeInstanceOf(Error) }
++  expect(server.requests).toHaveLength(0)
++})
++
++it('keeps Anthropic final requests and usage unchanged when policy declines that protocol', async () => {
++  const requests: unknown[] = []
++  const events = [
++    { type: 'message_start', message: { id: 'synthetic', type: 'message', role: 'assistant', model: 'model-a', content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 3, output_tokens: 0 } } },
++    { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
++    { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'hello' } },
++    { type: 'content_block_stop', index: 0 },
++    { type: 'message_delta', delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 1 } },
++    { type: 'message_stop' },
++  ]
++  const server = createServer((req, res) => {
++    let body = ''
++    req.on('data', (chunk: Buffer) => { body += chunk.toString() })
++    req.on('end', () => {
++      requests.push(JSON.parse(body))
++      res.writeHead(200, { 'content-type': 'text/event-stream' })
++      res.end(events.map(event => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(''))
++    })
++  })
++  await new Promise<void>(done => server.listen(0, '127.0.0.1', done))
++  try {
++    const address = server.address()
++    if (address === null || typeof address === 'string') throw Error('No server address')
++    const profiles = resolveProfiles({ 'payload-test': { api: 'anthropic-messages', baseURL: `http://127.0.0.1:${address.port}`, models: [{ id: 'model-a' }] } })
++    const preparePayload = vi.fn((scope: PiAiPayloadScope) => scope.api === 'openai-completions' ? replaceKey('openai-only') : undefined)
++    const config = { profiles: () => profiles, auth: memoryAuth(), resolveApiKey: () => Promise.resolve('synthetic') }
++    const native = await drain(new PiAiAdapter(config))
++    const scoped = await drain(new PiAiAdapter({ ...config, preparePayload }))
++    expect(requests).toHaveLength(2)
++    expect(requests[1]).toEqual(requests[0])
++    expect(requests[1]).not.toHaveProperty('prompt_cache_key')
++    expect(preparePayload).toHaveBeenCalledTimes(1)
++    expect(scoped.filter(c => c.type === 'usage')).toEqual(native.filter(c => c.type === 'usage'))
++    expect(scoped).toContainEqual(expect.objectContaining({ type: 'finish', reason: { kind: 'stop' } }))
++  } finally {
++    server.closeAllConnections()
++    await new Promise<void>((done, reject) => server.close((error) => { if (error) reject(error); else done() }))
++  }
++})
+diff --git a/scripts/gen-cordis-catalog.ts b/scripts/gen-cordis-catalog.ts
+index 042e19d..73314ed 100644
+--- a/scripts/gen-cordis-catalog.ts
++++ b/scripts/gen-cordis-catalog.ts
+@@ -228,6 +228,7 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
+   'fs': 'filesystem.md',
+   'goal': 'goal.md',
+   'llm': 'llm-streaming.md',
++  'llm-pi-ai': 'llm-streaming.md',
+   'permission-presets': 'permission-presets.md',
+   'session': 'session.md',
+   'settings': 'settings.md',
+@@ -311,6 +312,8 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
+   ContentBlock: 'llm-streaming.md',
+   CreateAgentOptions: 'core.md',
+   GenerateOptions: 'llm-streaming.md',
++  PiAiAdapterOptions: 'llm-streaming.md',
++  PiAiPayloadScope: 'llm-streaming.md',
+   Inbox: 'core.md',
+   InboxItem: 'core.md',
+   InboxPlacement: 'core.md',
+diff --git a/docs/subsystems/llm-streaming.md b/docs/subsystems/llm-streaming.md
+index 07fc659..8fac27e 100644
+--- a/docs/subsystems/llm-streaming.md
++++ b/docs/subsystems/llm-streaming.md
+@@ -878,6 +878,12 @@ declare abstract class LlmAdapter {
+ 
+ `ContentBlockType` (the key set the `index`-correlated blocks carry) derives from [`ContentBlockMap`](#content-blocks-and-messages) above.
+ 
++<a id="pi-ai-transport-routing"></a>
++
++## Pi-ai transport routing
++
++The pi-ai adapter's optional `PiAiAdapterOptions.preparePayload` accepts a frozen `PiAiPayloadScope`: string fields `provider`, `model`, `api` and `baseURL`, plus `sessionId` as a string or undefined. It returns a pi-ai payload callback or undefined before the request awaits its credential. The callback receives the final provider payload and resolved model, and may synchronously or asynchronously return a replacement payload; undefined retains the native payload. The plugin supplies this factory through the bail event documented below. The [package contract](../../packages/llm/llm-pi-ai/README.md#control-transport-routing-metadata) defines routing-only use, captured policy, failure and disposal behavior; [the declarations](../../packages/llm/llm-pi-ai/src/adapter.ts) own the exact signatures.
++
+ <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
+ 
+ <a id="cordis-surface"></a>
+@@ -1119,4 +1125,28 @@ Waterfall around every streaming model call (retry, replay, routing). Bound to t
+ ```
+ 
+ Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
++
++<a id="llm-pi-ai-events"></a>
++
++### `llm-pi-ai/*` events
++
++<a id="llm-pi-aiprepare-payload--bail"></a>
++
++#### `llm-pi-ai/prepare-payload` — bail
++
++Capture the deployment's optional final transport-payload transform. The listener returns a callback with request-local policy already frozen. The callback must preserve logged model content, tools and generation parameters.
++
++```ts cordis-catalog
++/**
++ * Capture the deployment's optional final transport-payload transform.
++ * The listener returns a callback with request-local policy already frozen.
++ * The callback must preserve logged model content, tools and generation parameters.
++ * @param scope - routing facts without prompt content or credentials.
++ * @mode bail
++ * @dshScopeScan unsupported The event runs at the provider transport boundary.
++ */
++'llm-pi-ai/prepare-payload'(scope: PiAiPayloadScope): ReturnType<NonNullable<PiAiAdapterOptions['preparePayload']>>
++```
++
++Source: [`packages/llm/llm-pi-ai/src/index.ts`](../../packages/llm/llm-pi-ai/src/index.ts)
+ <!-- END GENERATED cordis-surface -->
+diff --git a/docs/subsystems/llm-streaming.zh.md b/docs/subsystems/llm-streaming.zh.md
+index 079a335..0da0e56 100644
+--- a/docs/subsystems/llm-streaming.zh.md
++++ b/docs/subsystems/llm-streaming.zh.md
+@@ -884,6 +884,12 @@ declare abstract class LlmAdapter {
+ 
+ `ContentBlockType`（带 `index` 关联的块所携带的键集合）从上文的 [`ContentBlockMap`](#content-blocks-and-messages) 派生。
+ 
++<a id="pi-ai-transport-routing"></a>
++
++## Pi-ai 传输路由
++
++pi-ai 适配器的可选 `PiAiAdapterOptions.preparePayload` 接收冻结的 `PiAiPayloadScope`：字符串字段 `provider`、`model`、`api`、`baseURL`，以及字符串或 undefined 的 `sessionId`。它在请求等待凭据之前返回 pi-ai payload 回调或 undefined。回调接收最终提供方 payload 和已解析模型，可以同步或异步返回替换 payload；undefined 保留原生 payload。插件通过下方记录的 bail 事件提供此工厂。[包契约](../../packages/llm/llm-pi-ai/README.zh.md#control-transport-routing-metadata) 规定仅限路由用途、策略捕获、失败和释放行为；[声明](../../packages/llm/llm-pi-ai/src/adapter.ts) 定义确切签名。
++
+ <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
+ 
+ <a id="cordis-surface"></a>
+@@ -1125,4 +1131,28 @@ Waterfall around every streaming model call (retry, replay, routing). Bound to t
+ ```
+ 
+ Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
++
++<a id="llm-pi-ai-events"></a>
++
++### `llm-pi-ai/*` events
++
++<a id="llm-pi-aiprepare-payload--bail"></a>
++
++#### `llm-pi-ai/prepare-payload` — bail
++
++Capture the deployment's optional final transport-payload transform. The listener returns a callback with request-local policy already frozen. The callback must preserve logged model content, tools and generation parameters.
++
++```ts cordis-catalog
++/**
++ * Capture the deployment's optional final transport-payload transform.
++ * The listener returns a callback with request-local policy already frozen.
++ * The callback must preserve logged model content, tools and generation parameters.
++ * @param scope - routing facts without prompt content or credentials.
++ * @mode bail
++ * @dshScopeScan unsupported The event runs at the provider transport boundary.
++ */
++'llm-pi-ai/prepare-payload'(scope: PiAiPayloadScope): ReturnType<NonNullable<PiAiAdapterOptions['preparePayload']>>
++```
++
++Source: [`packages/llm/llm-pi-ai/src/index.ts`](../../packages/llm/llm-pi-ai/src/index.ts)
+ <!-- END GENERATED cordis-surface -->
+diff --git a/docs/subsystems/llm-streaming.i18n.yaml b/docs/subsystems/llm-streaming.i18n.yaml
+index 757474d..c80bcfe 100644
+--- a/docs/subsystems/llm-streaming.i18n.yaml
++++ b/docs/subsystems/llm-streaming.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write docs/subsystems/llm-streaming.md
+-llm-streaming.md: 07fc6599bc5d4eb5a4af9b566032004932052585
+-llm-streaming.zh.md: 079a33599d1e5169af6402db2b2abdd7dc978369
++llm-streaming.md: 8fac27e7d93538ab5fc64228592da18096340e16
++llm-streaming.zh.md: 0da0e5670270c241506126b5985de4ced13254f4
+diff --git a/packages/extensions/tool-cordis/src/api-catalog.ts b/packages/extensions/tool-cordis/src/api-catalog.ts
+index 4bf22ee..88c5086 100644
+--- a/packages/extensions/tool-cordis/src/api-catalog.ts
++++ b/packages/extensions/tool-cordis/src/api-catalog.ts
+@@ -3937,6 +3937,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
+     description: 'Module replacements have finished loading.',
+     parameters: [{ name: 'reloads', description: 'Replaced plugins and their module locations.' }],
+   },
++  {
++    name: 'llm-pi-ai/prepare-payload',
++    mode: 'bail',
++    signature: '\'llm-pi-ai/prepare-payload\'(scope: PiAiPayloadScope): ReturnType<NonNullable<PiAiAdapterOptions[\'preparePayload\']>>',
++    summary: 'Capture the deployment\'s optional final transport-payload transform.',
++    description: 'Capture the deployment\'s optional final transport-payload transform. The listener returns a callback with request-local policy already frozen. The callback must preserve logged model content, tools and generation parameters.',
++    parameters: [{ name: 'scope', description: 'routing facts without prompt content or credentials.' }],
++  },
+   {
+     name: 'llm/adapters-updated',
+     mode: 'emit',
+@@ -4305,6 +4313,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'AgentStatus',
+     declaration: 'export type AgentStatus = \'idle\' | \'running\';',
+   },
++  {
++    name: 'AlwaysRetryPolicyConfig',
++    declaration: 'export interface AlwaysRetryPolicyConfig {\n    mode: \'always\';\n    backoff?: BackoffConfig;\n}',
++  },
+   {
+     name: 'ApiKeyRecord',
+     declaration: 'export interface ApiKeyRecord {\n    readonly kind: \'api-key\';\n    readonly key?: string;\n    readonly env?: Readonly<Record<string, string>>;\n}',
+@@ -4409,6 +4421,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'AttachmentId',
+     declaration: 'export type AttachmentId = Branded<\'AttachmentId\'>;',
+   },
++  {
++    name: 'AttachmentStore',
++    declaration: 'export abstract class AttachmentStore extends Service {\n    constructor(ctx: Context);\n    abstract readonly imageLimits: ImageAttachmentLimits;\n    abstract validateImage(input: SaveImageAttachment): Promise<void>;\n    async saveImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]>;\n    async admitPromptContent(content: readonly AttachmentAdmissionPart[]): Promise<AdmittedPromptContentPart[]>;\n    admitEncodedFile(input: EncodedFileAttachment): Promise<FileAttachmentRef>;\n    isAttachmentError(error: unknown): error is AttachmentError;\n    abstract saveImage(input: SaveImageAttachment): Promise<ImageAttachmentRef>;\n    abstract readImage(ref: ImageAttachmentRef, signal?: AbortSignal): Promise<StoredImageAttachment>;\n    imageHostPath(ref: ImageAttachmentRef): string | undefined;\n    saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef>;\n    saveFileStream(input: SaveFileStreamAttachment): Promise<FileAttachmentRef>;\n    async *readFileStream(ref: FileAttachmentRef, signal?: AbortSignal): AsyncIterable<Uint8Array>;\n    fileHostPath(ref: FileAttachmentRef): string | undefined;\n    readImageRequest(ref: ImageAttachmentRef, target: ImageRequestTarget, signal?: AbortSignal): Promise<RequestImageAttachment>;\n}',
++  },
+   {
+     name: 'AuthorizationEntry',
+     declaration: 'export interface AuthorizationEntry {\n    key: CredentialKey;\n    label: string;\n    methods: readonly AuthorizationMethod[];\n    inFlight: boolean;\n}',
+@@ -4461,6 +4477,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'BackendRegistry',
+     declaration: 'export class BackendRegistry {\n    register(name: string, backend: StorageBackend): () => void;\n    get(name: string): StorageBackend;\n    names(): string[];\n}',
+   },
++  {
++    name: 'BackoffConfig',
++    declaration: 'export interface BackoffConfig {\n    initialDelayMs?: number;\n    maxDelayMs?: number;\n    jitterRatio?: number;\n}',
++  },
+   {
+     name: 'BashEnvContributor',
+     declaration: 'export interface BashEnvContributor {\n    name: string;\n    variables: Readonly<Record<DshEnvironmentKey, BashEnvVariable>>;\n    resolve(execution: ToolExecution): Readonly<Partial<Record<DshEnvironmentKey, string>>>;\n}',
+@@ -5069,6 +5089,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'HostConnectionRpc',
+     declaration: 'export interface HostConnectionRpc {\n    handle(channel: string, handler: ConnectionRpcHandler): () => Promise<void>;\n    intercept(channel: \'/api\', matches: ConnectionRpcEndpointMatcher, handler: ConnectionRpcHandler): () => Promise<void>;\n}',
+   },
++  {
++    name: 'ImageAttachmentAccess',
++    declaration: 'export interface ImageAttachmentAccess {\n    readonlyPath: string;\n}',
++  },
+   {
+     name: 'ImageAttachmentLimits',
+     declaration: 'export interface ImageAttachmentLimits {\n    maxImageBytes: number;\n    maxImagesPerMessage: number;\n    maxMessageImageBytes: number;\n    maxImagePixels: number;\n    maxImageDimension: number;\n    mediaTypes: readonly ImageMediaType[];\n}',
+@@ -5553,6 +5577,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'NativeFileApplication',
+     declaration: 'export interface NativeFileApplication {\n    readonly id: string;\n    readonly name: string;\n    readonly default: boolean;\n    readonly icon: string | null;\n}',
+   },
++  {
++    name: 'NormalRetryPolicyConfig',
++    declaration: 'export interface NormalRetryPolicyConfig {\n    mode: \'normal\';\n    maxRetries?: number;\n    retryableCodes?: string[];\n    backoff?: BackoffConfig;\n}',
++  },
+   {
+     name: 'ObjectJsonSchema',
+     declaration: 'export type ObjectJsonSchema = JsonSchemaNode & {\n    type: \'object\';\n};',
+@@ -5613,6 +5641,50 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'PermissionCatalog',
+     declaration: 'export interface PermissionCatalog {\n    options: PresetOption[];\n    defaultOptions: PresetOption[];\n    defaultPreset: string;\n}',
+   },
++  {
++    name: 'PiAiAdapterOptions',
++    declaration: 'export interface PiAiAdapterOptions {\n    preparePayload?: (scope: PiAiPayloadScope) => SimpleStreamOptions[\'onPayload\'];\n    profiles: () => ReadonlyMap<string, ResolvedPiAiProviderProfile>;\n    resolveApiKey: (provider: string, profile: ResolvedPiAiProviderProfile) => Promise<string | undefined>;\n    auth: PiAiAuthInjection;\n    resolveAttachments?: () => AttachmentStore | undefined;\n    resolveImageAccess?: (attachments: AttachmentStore, ref: ImageAttachmentRef) => ImageAttachmentAccess | undefined;\n    onReplayDegrade?: (detail: {\n        provider: string;\n        model: string;\n        reason: string;\n    }) => void;\n}',
++  },
++  {
++    name: 'PiAiAuthInjection',
++    declaration: 'export interface PiAiAuthInjection {\n    credentials: CredentialStore;\n    authContext: AuthContext;\n}',
++  },
++  {
++    name: 'PiAiCompatProfile',
++    declaration: 'export interface PiAiCompatProfile {\n    supportsStore?: boolean;\n    supportsDeveloperRole?: boolean;\n    supportsReasoningEffort?: boolean;\n    supportsUsageInStreaming?: boolean;\n    supportsFinishReason?: boolean;\n    maxTokensField?: NonNullable<OpenAICompletionsCompat[\'maxTokensField\']>;\n    requiresToolResultName?: boolean;\n    requiresAssistantAfterToolResult?: boolean;\n    requiresThinkingAsText?: boolean;\n    requiresReasoningContentOnAssistantMessages?: boolean;\n    thinkingFormat?: PiAiThinkingFormat;\n    chatTemplateKwargs?: NonNullable<OpenAICompletionsCompat[\'chatTemplateKwargs\']>;\n    chatTemplateArgs?: NonNullable<OpenAICompletionsCompat[\'chatTemplateArgs\']>;\n    supportsThinkingTokenBudget?: boolean;\n    thinkingTokenBudgetField?: PiAiThinkingTokenBudgetField;\n    vllmPriority?: number;\n    supportsMaxOutputTokens?: boolean;\n    supportsStrictMode?: boolean;\n    cacheControlFormat?: NonNullable<OpenAICompletionsCompat[\'cacheControlFormat\']>;\n    supportsLongCacheRetention?: boolean;\n    supportsEagerToolInputStreaming?: boolean;\n    supportsCacheControlOnTools?: boolean;\n    supportsTemperature?: boolean;\n    forceAdaptiveThinking?: boolean;\n    allowEmptySignature?: boolean;\n    supportsStrictTools?: boolean;\n}',
++  },
++  {
++    name: 'PiAiModality',
++    declaration: 'export type PiAiModality = Model<Api>[\'input\'][number];',
++  },
++  {
++    name: 'PiAiModelOverride',
++    declaration: 'export type PiAiModelOverride = Omit<PiAiModelProfile, \'id\'>;',
++  },
++  {
++    name: 'PiAiModelProfile',
++    declaration: 'export interface PiAiModelProfile {\n    id: string;\n    name?: string;\n    contextWindow?: number;\n    maxTokens?: number;\n    input?: PiAiModality[];\n    reasoningEfforts?: false | PiAiReasoningEfforts;\n    compat?: PiAiCompatProfile;\n}',
++  },
++  {
++    name: 'PiAiPayloadScope',
++    declaration: 'export interface PiAiPayloadScope {\n    readonly provider: string;\n    readonly model: string;\n    readonly api: string;\n    readonly baseURL: string;\n    readonly sessionId: string | undefined;\n}',
++  },
++  {
++    name: 'PiAiProviderProfile',
++    declaration: 'export interface PiAiProviderProfile {\n    apiKeyEnv?: string;\n    displayName?: string;\n    api?: string;\n    baseURL?: string;\n    models?: PiAiModelProfile[];\n    modelOverrides?: Record<string, PiAiModelOverride>;\n    compat?: PiAiCompatProfile;\n    defaultContextWindow?: number;\n    defaultMaxTokens?: number;\n    defaultInput?: PiAiModality[];\n    headers?: Record<string, string>;\n    reasoning?: ModelThinkingLevel;\n    thinkingBudgets?: ThinkingBudgets;\n    cacheRetention?: CacheRetention;\n    transport?: Transport;\n    timeoutMs?: number;\n    websocketConnectTimeoutMs?: number;\n    streamIdleTimeoutMs?: number;\n    maxRequestImageBytes?: number;\n    requestImagePixelBudget?: number;\n    requestImageMaxBytes?: number;\n    retryPolicy?: RetryPolicyConfig;\n}',
++  },
++  {
++    name: 'PiAiReasoningEfforts',
++    declaration: 'export type PiAiReasoningEfforts = Partial<Record<ModelThinkingLevel, string | null>>;',
++  },
++  {
++    name: 'PiAiThinkingFormat',
++    declaration: 'export type PiAiThinkingFormat = NonNullable<OpenAICompletionsCompat[\'thinkingFormat\']>;',
++  },
++  {
++    name: 'PiAiThinkingTokenBudgetField',
++    declaration: 'export type PiAiThinkingTokenBudgetField = NonNullable<OpenAICompletionsCompat[\'thinkingTokenBudgetField\']>;',
++  },
+   {
+     name: 'PlatformSession',
+     declaration: 'export interface PlatformSession {\n    readonly origin: string;\n    readonly token: string;\n    readonly embeddedPageDist?: string;\n    readonly requestHeaders?: Readonly<Record<string, string>>;\n}',
+@@ -5929,6 +6001,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'ResolvedNormalRetryPolicy',
+     declaration: 'export interface ResolvedNormalRetryPolicy extends ResolvedRetryBackoff {\n    readonly mode: \'normal\';\n    readonly maxRetries: number;\n    readonly retryableCodes: readonly string[];\n}',
+   },
++  {
++    name: 'ResolvedPiAiProviderProfile',
++    declaration: 'export interface ResolvedPiAiProviderProfile extends Omit<PiAiProviderProfile, \'apiKeyEnv\' | \'retryPolicy\' | \'models\' | \'displayName\'> {\n    provider: string;\n    displayName: string;\n    apiKeyEnv?: CredentialRef;\n    streamIdleTimeoutMs: number;\n    maxRequestImageBytes: number;\n    requestImagePixelBudget: number;\n    requestImageMaxBytes: number;\n    retryPolicy: ResolvedRetryPolicy;\n    piProvider?: Provider;\n    catalogError?: string;\n    modelErrors: ReadonlyMap<string, string>;\n    configuredMaxTokens: ReadonlyMap<string, number>;\n}',
++  },
+   {
+     name: 'ResolvedRetryBackoff',
+     declaration: 'export interface ResolvedRetryBackoff {\n    readonly initialDelayMs: number;\n    readonly maxDelayMs: number;\n    readonly jitterRatio: number;\n}',
+@@ -5949,6 +6025,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
+     name: 'ResumeAgentOptions',
+     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly parentAgent?: Agent;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+   },
++  {
++    name: 'RetryPolicyConfig',
++    declaration: 'export type RetryPolicyConfig = NormalRetryPolicyConfig | AlwaysRetryPolicyConfig;',
++  },
+   {
+     name: 'RpcId',
+     declaration: 'export type RpcId = Branded<\'rpc-id\'>;',

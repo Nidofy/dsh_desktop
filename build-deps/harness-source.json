@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/Nidofy/deepseek-harness.git",
+  "upstream": "https://github.com/deepseek-ai/deepseek-harness.git",
+  "commit": "dad014b7efd3e1d76a36e6bd9646487d28d9037e",
+  "version": "0.1.7-alpha.2",
+  "packageManager": "pnpm@11.7.0",
+  "node": "24.16.0",
+  "lockSha256": "b86256be5afec5814a404747893cab392a73b40901d14fa8135f663fb42c8d40",
+  "workspaceSha256": "c5efad389f40127764a5072d98fdc5926ab5d6aa0417d6a83939baf988f78f1f",
+  "desktopAdapterApproved": false,
+  "baseline": {
+    "version": "0.1.5-rc.2",
+    "tag": "dsh-v0.1.5-rc.2",
+    "commit": "fb2c4b9e698e30edb738bca4cf0618587db7d203"
+  }
+}

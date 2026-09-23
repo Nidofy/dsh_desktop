@@ -1,10 +1,15 @@
-param([switch]$ReusePreparedRuntime, [switch]$SkipPackage)
+param([switch]$ReusePreparedRuntime, [switch]$SkipPackage, [string]$HarnessSourceArtifact)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
 if (![Environment]::Is64BitOperatingSystem) { throw 'Windows x64 build host required' }
+if ($HarnessSourceArtifact) {
+    if ($ReusePreparedRuntime) { throw 'Source artifact and reused runtime cannot be selected together' }
+    & (Join-Path $root 'runtime/runtime/node.exe') scripts/harness-source.mjs admission $HarnessSourceArtifact
+    if ($LASTEXITCODE -ne 0) { throw 'Source candidate requires desktop adapter qualification before integration' }
+}
 foreach ($tool in @('cargo','rustc','node','npm.cmd')) { if (!(Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Build tool missing: $tool (developer machine only)" } }
-if (!$ReusePreparedRuntime) { & "$PSScriptRoot/fetch-runtime.ps1"; & "$PSScriptRoot/prepare-dsh.ps1" }
+if (!$ReusePreparedRuntime) { & "$PSScriptRoot/fetch-runtime.ps1"; & "$PSScriptRoot/prepare-dsh.ps1" -HarnessSourceArtifact $HarnessSourceArtifact }
 & "$PSScriptRoot/fetch-webview2.ps1" -Offline:$ReusePreparedRuntime
 & (Join-Path $root 'runtime/runtime/node.exe') scripts/generate-provider-catalog.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Provider catalog generation failed' }
@@ -24,6 +29,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Release build provenance contracts failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Runtime integrity contracts failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/runtime-module-sync.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Runtime module staging contracts failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') --test tests/harness-source.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Harness source artifact contracts failed' }
+& (Join-Path $root 'runtime/runtime/node.exe') --test tests/harness-adapter.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Harness versioned adapter contracts failed' }
+& "$PSScriptRoot/../tests/source-runtime-staging.ps1"
 $verificationShell = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh.exe' } else { 'powershell.exe' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/distribution-verifier.mjs (Join-Path $PSHOME $verificationShell)
 if ($LASTEXITCODE -ne 0) { throw 'Standalone distribution verifier contracts failed' }

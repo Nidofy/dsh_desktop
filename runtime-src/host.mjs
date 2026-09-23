@@ -13,6 +13,7 @@ import {storageAdmission} from './storage-admission.mjs';
 import {migrateWorkspaceHistory} from './workspace-migration.mjs';
 import {failStartup,installStartupErrors} from './startup-errors.mjs';
 import {desktopControl} from './desktop-control.mjs';
+import {requireDesktopAdapter} from './harness-adapter.mjs';
 installStartupErrors();
 const input = createInterface({ input: process.stdin });
 // --import preload gates the real CLI entry; import.meta.main remains true in DSH.
@@ -32,6 +33,8 @@ await new Promise(resolve => input.on('line', line => {
   if (line.startsWith('snapshot ')) snapshotPipe.receive(line);
   if (line.startsWith('desktop-control ') && line.length<256) void desktopControl(line.slice(16));
 }));
+try { await requireDesktopAdapter(dirname(fileURLToPath(import.meta.url))); }
+catch(error) { failStartup(error,'ADAPTER'); await new Promise(()=>{}); }
 // The supervisor has stopped the old engine before this start gate opens.
 // No settings watcher or old process can restore stale overrides afterward.
 try { await validateExtraCa(); }
