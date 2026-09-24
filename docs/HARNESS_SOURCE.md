@@ -19,15 +19,18 @@
 
 精确输入位于 [`build-deps/harness-source.json`](../build-deps/harness-source.json)，构建组合由 [`versions.json`](../versions.json) 指定。源码产物构建成功不等于桌面准入；实际适配、构建与原生交付结果见 [0.2.5 实施记录](IMPLEMENTATION-0.2.5.md)。fork 包含明确授权的 payload hook 与 catalogProvider 接口，其他桌面集成仍保存在本仓库。
 
+2026-09-24 用户明确选择仅推送桌面仓库 main。Harness 的两项适配提交仍只保存在本地，GitHub fork 尚无 `codex/tauri-integration` 分支；因此当前不能仅靠远端 clone 复现这套固定构建。需要另行获得对应源码提交，或之后单独授权推送 fork。已交付离线运行时包含该提交的构建产物，运行不依赖源码仓库。
+
 ## 首次准备与日常构建
 
 本机 clone 和 remotes 已完成；以下 clone 命令仅用于其他开发机。不要在已有 checkout 上重复执行。
 
 ```powershell
-git clone --branch codex/tauri-integration https://github.com/Nidofy/deepseek-harness.git ../deepseek-harness
+git clone https://github.com/Nidofy/deepseek-harness.git ../deepseek-harness
 git -C ../deepseek-harness remote add upstream https://github.com/deepseek-ai/deepseek-harness.git
 git -C ../deepseek-harness fetch upstream --tags
-# 构建必须与桌面 pin 一致；分支以后可能继续前进
+# 先另行取得尚未推送的固定提交；仅执行上述 clone/fetch 不足以获取它
+# 获得后再切换；分支以后可能继续前进，构建必须与桌面 pin 一致
 git -C ../deepseek-harness switch --detach 5e2879f0478ba9336128312e715dee7a9f56c3db
 ```
 
@@ -93,7 +96,7 @@ pnpm 会把上游已批准的 `dsh-subprocess-local` postinstall 的相对 file 
 
 正式接入时 `prepare-dsh.ps1` 先在 `.build/source-prepared-*` 导入源依赖、复制固定 Node/WebView2、同步桌面扩展并验证完整 runtime；全部通过后才替换 runtime，将完整旧树保留在 `.build/source-previous-*`。普通替换失败会回滚；硬终止后的恢复已验证精确 journal、进程退出和新旧完整树指纹后进行。未知锁、资料变化或恢复冲突保留现场。具体测试与限制见 [0.2.5 记录](IMPLEMENTATION-0.2.5.md)。运行时校验会绑定源码 receipt、commit、版本、锁及每个文件，release receipt 也纳入源码 pin。
 
-本机构建 `runtime/` 已通过原子暂存切换到固定源码，完整旧运行时保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`。这不修改用户数据或既有 dist。交付包必须匹配本轮完整 release receipt，不能沿用改动前的构建回执。其他构建机必须取得 fork 集成分支中的固定提交；仅 clone 默认 master 不会包含两项适配接口。Git 仓库不包含被忽略的完整旧 runtime、源码产物或 dist。
+本机构建 `runtime/` 已通过原子暂存切换到固定源码，完整旧运行时保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`。这不修改用户数据或既有 dist。交付包必须匹配本轮完整 release receipt，不能沿用改动前的构建回执。其他构建机必须另行取得本地 fork 集成分支中的固定提交；仅 clone 默认 master 不会包含两项适配接口。Git 仓库不包含被忽略的完整旧 runtime、源码产物或 dist。
 
 ## 上游同步规则
 
