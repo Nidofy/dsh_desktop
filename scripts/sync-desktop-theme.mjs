@@ -11,7 +11,15 @@ const css = sheets.map(name => {
 }).join('\n');
 if (!css.includes('body[data-ds-dark-theme]') || !css.includes('--dsw-alias-bg-base')) throw Error('Incomplete DSH palette');
 const themePackage = JSON.parse(await readFile(join(root,'runtime/dsh/node_modules/@deepseek-ai/dsh-client-ui-theme/package.json'),'utf8'));
-const license = await readFile(join(root,'runtime/dsh/node_modules/@deepseek-ai/dsh-client-ui-theme/LICENSE'),'utf8');
+// The pinned source deployment shares the repository MIT text carried by its CLI;
+// the older registry theme package carries its own copy.
+const sourceTheme=themePackage.version==='0.1.7-alpha.2';
+const licenseOwner=sourceTheme?'@deepseek-ai/dsh':'@deepseek-ai/dsh-client-ui-theme';
+if(sourceTheme){
+  const cli=JSON.parse(await readFile(join(root,'runtime/dsh/node_modules/@deepseek-ai/dsh/package.json'),'utf8'));
+  if(cli.version!==themePackage.version||cli.license!=='MIT'||themePackage.license!=='MIT')throw Error('Source theme license owner mismatch');
+}
+const license = await readFile(join(root,'runtime/dsh/node_modules',licenseOwner,'LICENSE'),'utf8');
 const notice = '/* Generated from @deepseek-ai/dsh-client-ui-theme ' + themePackage.version + '. Do not edit.\n' + license.replaceAll('*/','* /') + '\n*/\n';
 await writeFile(join(root,'shell-ui/dsh-tokens.css'), notice + css);
 const common = await readFile(join(root,'shell-ui/desktop-theme.css'),'utf8');

@@ -1,12 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,readFile,symlink} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,readFile,symlink,cp,access} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
 import {join} from 'node:path';
 import {createInventory} from '../runtime-src/runtime-integrity.mjs';
 import {project,validatePin,assertIdentity,verifyArtifact,importArtifact,admission,validateDeployment,workspaceClosure,verifyImportedSource} from '../scripts/harness-source.mjs';
 
 const pin=JSON.parse(await readFile(join(project,'build-deps/harness-source.json'),'utf8'));
 const source={...pin,platform:process.platform,arch:process.arch};
+test('source build entry points refuse registry preparation before touching runtime',async()=>{
+  const root=await mkdtemp(join(project,'.build/source-entry-'));
+  await mkdir(join(root,'scripts'));
+  await writeFile(join(root,'versions.json'),JSON.stringify({dsh:'0.1.7-alpha.2'}));
+  for(const file of ['build-windows.ps1','prepare-dsh.ps1']){
+    const script=join(root,'scripts',file);await cp(join(project,'scripts',file),script);
+    const result=spawnSync('pwsh.exe',['-NoProfile','-File',script],{encoding:'utf8',windowsHide:true,timeout:15000});
+    assert.ifError(result.error);assert.notEqual(result.status,0);
+    assert.match(result.stdout+result.stderr,/Source build requires/);
+    await assert.rejects(access(join(root,'runtime')),error=>error.code==='ENOENT');
+  }
+});
 async function fixture(){
   await mkdir(join(project,'.build'),{recursive:true});
   const root=await mkdtemp(join(project,'.build/source-contract-'));

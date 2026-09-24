@@ -2,6 +2,8 @@ param([switch]$ReusePreparedRuntime, [switch]$SkipPackage, [string]$HarnessSourc
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
+$buildVersions=Get-Content -LiteralPath (Join-Path $root 'versions.json') -Raw | ConvertFrom-Json
+if ($buildVersions.dsh -eq '0.1.7-alpha.2' -and !$HarnessSourceArtifact -and !$ReusePreparedRuntime) { throw 'Source build requires -HarnessSourceArtifact or -ReusePreparedRuntime; registry preparation is not allowed' }
 if (![Environment]::Is64BitOperatingSystem) { throw 'Windows x64 build host required' }
 if ($HarnessSourceArtifact) {
     . (Join-Path $PSScriptRoot 'source-runtime-staging.ps1')

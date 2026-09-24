@@ -1,5 +1,7 @@
 param([string]$Root = (Split-Path $PSScriptRoot -Parent), [string]$HarnessSourceArtifact)
 $ErrorActionPreference = 'Stop'
+$buildVersions=Get-Content -LiteralPath (Join-Path $Root 'versions.json') -Raw | ConvertFrom-Json
+if ($buildVersions.dsh -eq '0.1.7-alpha.2' -and !$HarnessSourceArtifact) { throw 'Source build requires -HarnessSourceArtifact; registry preparation is not allowed' }
 $out = Join-Path $Root 'runtime/dsh'
 if ($HarnessSourceArtifact) {
     . (Join-Path $PSScriptRoot 'source-runtime-staging.ps1')
