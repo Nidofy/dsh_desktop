@@ -24,10 +24,11 @@
 本机 clone 和 remotes 已完成；以下 clone 命令仅用于其他开发机。不要在已有 checkout 上重复执行。
 
 ```powershell
-git clone https://github.com/Nidofy/deepseek-harness.git ../deepseek-harness
+git clone --branch codex/tauri-integration https://github.com/Nidofy/deepseek-harness.git ../deepseek-harness
 git -C ../deepseek-harness remote add upstream https://github.com/deepseek-ai/deepseek-harness.git
 git -C ../deepseek-harness fetch upstream --tags
-git -C ../deepseek-harness switch -c codex/tauri-integration 00102833dfaee1da9f48a3a8eae9d34005a75218
+# 构建必须与桌面 pin 一致；分支以后可能继续前进
+git -C ../deepseek-harness switch --detach 5e2879f0478ba9336128312e715dee7a9f56c3db
 ```
 
 在桌面仓库根目录执行，建议使用 PowerShell 7。构建机需 Git、Corepack、已准备的固定 Node，以及源依赖所需网络/缓存；最终用户无需安装这些工具。
@@ -92,9 +93,11 @@ pnpm 会把上游已批准的 `dsh-subprocess-local` postinstall 的相对 file 
 
 正式接入时 `prepare-dsh.ps1` 先在 `.build/source-prepared-*` 导入源依赖、复制固定 Node/WebView2、同步桌面扩展并验证完整 runtime；全部通过后才替换 runtime，将完整旧树保留在 `.build/source-previous-*`。普通替换失败会回滚；硬终止后的恢复已验证精确 journal、进程退出和新旧完整树指纹后进行。未知锁、资料变化或恢复冲突保留现场。具体测试与限制见 [0.2.5 记录](IMPLEMENTATION-0.2.5.md)。运行时校验会绑定源码 receipt、commit、版本、锁及每个文件，release receipt 也纳入源码 pin。
 
-本机构建 `runtime/` 已通过原子暂存切换到固定源码，完整旧运行时保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`。这不修改用户数据或既有 dist。交付包必须匹配本轮完整 release receipt，不能沿用改动前的构建回执。fork 新接口目前只有本地提交，未推送；其他构建机需先获得对应提交的 checkout，不能假定远端已经包含它。
+本机构建 `runtime/` 已通过原子暂存切换到固定源码，完整旧运行时保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`。这不修改用户数据或既有 dist。交付包必须匹配本轮完整 release receipt，不能沿用改动前的构建回执。其他构建机必须取得 fork 集成分支中的固定提交；仅 clone 默认 master 不会包含两项适配接口。Git 仓库不包含被忽略的完整旧 runtime、源码产物或 dist。
 
 ## 上游同步规则
+
+逐步操作、需要审查的文件和升级后的 Gate 见 [引擎升级流程](HARNESS_UPGRADE.md)。这是一套人工审查的固定版本流程，当前没有自动跟随上游的更新器。
 
 - `origin/master` 跟随 fork 的上游同步；桌面所需的小范围引擎修改放在 `codex/tauri-integration` 或专门的 `codex/*` 分支，以可审查提交保存。不要把桌面 UI 和 Rust 宿主移入 Harness fork。
 - 每周或准备一个桌面里程碑时执行 `check-harness-upstream.ps1 -Fetch`；这是检查频率建议，本轮未创建定时任务。紧急安全/崩溃修复单独评估。

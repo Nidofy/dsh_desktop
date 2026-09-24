@@ -51,16 +51,17 @@ OpenAI 使用 Chat Completions，Anthropic 使用 Messages。填写服务基础�
 构建机需要 Node/npm、Rust 和 MSVC；最终用户不需要这些开发工具。版本和依赖锁定在 `versions.json`、`build-deps/package-lock.json` 与 `src-tauri/Cargo.lock`。
 
 ```powershell
-# 已准备运行时：完成全部检查和 EXE 构建，不生成 ZIP
-.\scripts\build-windows.ps1 -ReusePreparedRuntime -SkipPackage
+# 已准备源码运行时：完整构建；旧运行时用于迁移及旧桥回归
+.\scripts\build-windows.ps1 -ReusePreparedRuntime -SkipPackage -LegacyRuntime .build/source-previous-79580316a07746aea34a0e386513afd5
 # 完整目录：包含许可证清单和离线启动验证，不生成 ZIP
+$env:DSH_TEST_FIXTURE_ROOT=Join-Path $env:TEMP 'dsh-desktop-build-tests'
 .\scripts\package-portable.ps1 -SkipArchive
 ```
 
-首次构建去掉 `-ReusePreparedRuntime`。默认打包命令仍可生成 ZIP。源码仓库为 `https://github.com/Nidofy/dsh_desktop`；`runtime/`、`dist/` 和 `.build/` 为本机构建数据。
+上述旧运行时路径为本机保留的产物，其他机器需自行准备完整的 0.1.5-rc.2 运行时。首次源码构建使用 `-HarnessSourceArtifact <已构建的实际 artifact 路径>`，并提供 `-LegacyRuntime`；不能仅去掉复用参数走 registry 安装。默认打包命令可生成 ZIP。源码仓库为 `https://github.com/Nidofy/dsh_desktop`；`runtime/`、`dist/` 和 `.build/` 为本机构建数据，不随 Git clone 获取。
 
-Harness fork 已建立独立源码构建与候选产物接入流程，仍使用 Tauri。见 [源码工作流](docs/HARNESS_SOURCE.md) 与 [下一阶段适配计划](docs/PLAN-0.2.5-SOURCE-INTEGRATION.md)。源码候选为 DSH 0.1.7-alpha.2；当前交付仍使用 0.1.5-rc.2，尚未切换正式引擎。
-M1 的初始基线见 [M1 实施记录](docs/IMPLEMENTATION-M1.md)；当前增量、实际测试与剩余交付 Gate 见 [0.2.5 实施记录](docs/IMPLEMENTATION-0.2.5.md)。开发候选已完成源码 profile/迁移、双协议、原生工具与桌宠启停验证，完整交付仍受内置模型目录继承问题阻断，不能作为正式版本验收通过。
+当前 0.2.5-rc.1 隔离候选使用 DSH **0.1.7-alpha.2**，固定 fork 提交 `5e2879f0478ba9336128312e715dee7a9f56c3db`；包含已授权的 payload hook 和 catalogProvider 接口。旧 0.2.0/0.2.4 交付目录仍保留各自的旧引擎，正式用户数据未自动迁移。
+M1 T1–T6 的完整构建、最终原生 EXE 和独立离线目录 Gate 已通过；真实内网、目录 ACL 限制及额外 SDK feedback 回放失败分开记录。见 [交付说明](docs/RELEASE-0.2.5-rc.1.md)、[实施记录](docs/IMPLEMENTATION-0.2.5.md)、[源码工作流](docs/HARNESS_SOURCE.md) 和 [后续引擎升级流程](docs/HARNESS_UPGRADE.md)。
 
 - [构建](docs/BUILD.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md) / [离线部署](docs/OFFLINE_DEPLOYMENT.md)
 - [0.2.0 发布记录](docs/RELEASE-0.2.0.md) / [后续现场检查](docs/ACCEPTANCE-0.2.0.md)
