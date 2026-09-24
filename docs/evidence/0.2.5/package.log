@@ -1,0 +1,43 @@
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+{"kind":"RUNTIME_VERIFIED","files":28218,"bytes":1428762773}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+Unified Explorer icon: D:\Documents\FeiyangChen\devApps\dshWinUi\dist\DSHDesktop-0.2.5-rc.1-win-x64-20260924-105055-4abdcccc
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+{"kind":"PACKAGE_BASELINE_CREATED","files":29247}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+{"kind":"PACKAGE_VERIFIED","files":29247,"bytes":1456694971}
+Runtime probe child PID 31540
+PASS bundled Node / no Node,npm,pnpm in PATH / HTTP UI
+PASS upstream UI assets served locally 4 assets
+PASS first-use default workspace stays in candidate and is idempotent
+workspace result {"type":"server-response","rpcId":"f10fef1d-6872-4748-bc73-b81985c4ee22","result":{"ok":true,"value":{"workspace":{"workspaceId":"f517f57d-53bd-49ac-bb80-2b47a6e779f3","path":"C:\\Users\\enxi1\\AppData\\Local\\Temp\\dsh-desktop-build-tests\\smoke-中文 (space)-2VvueN\\c-36d487430a1a4b03a952d17765d689f3\\测试项目\\Solver Test (a-b_c)","title":"Solver Test (a-b_c)","sessionIds":[],"createdAt":"2026-09-24T02:52:47.801Z","updatedAt":"2026-09-24T02:52:47.801Z"},"created":true}}}
+PASS workspace creation, Chinese/space/parenthesis paths
+session result {"type":"server-response","rpcId":"9b2031c9-4e72-4e0c-9467-f8a143e45c2e","result":{"ok":true,"value":{"sessionId":"session-70860932-577e-4792-b2cf-145fd19c9ad8","agentPreset":"standard"}}}
+PASS native session creation
+PASS custom Base URL + API Key + Model reaches mock
+Native tool names: ask_user_question, create_goal, edit, exit_plan_mode, get_goal, glob, grep, interrupt_agent, job_kill, job_list, job_output, list_agents, present, pwsh, read, read_image, send_message, skill, subagent, subagent_fork, todo_write, update_goal, web_fetch, web_search, workflow, write
+PASS native file read tool
+PASS native file edit tool
+PASS native PowerShell tool
+PASS no denied public internet/package-manager calls
+PASS graceful backend stop
+Runtime probe child PID 33360
+PASS session persists across restart
+PASS registered explicit project paths survive restart unchanged
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\smoke-中文 (space)-2VvueN\c-36d487430a1a4b03a952d17765d689f3
+PASS T42 invalid API key
+PASS T43 unreachable Base URL
+PASS T44 model error
+PASS T45 stream idle timeout
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\api-negative-bisxkj
+PASS: bundled runtime + restricted PATH + loopback-only test transport. Clean VM and WebView egress require separate acceptance evidence.
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+{"kind":"PACKAGE_VERIFIED","files":29247,"bytes":1456694971}
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "desktopVersion": "0.2.5-rc.1",
+  "buildId": "faaf05d4-9328-43ff-88ef-e0c20e3ea121",
+  "directory": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\dist\\DSHDesktop-0.2.5-rc.1-win-x64-20260924-105055-4abdcccc",
+  "archiveCreated": false
+}

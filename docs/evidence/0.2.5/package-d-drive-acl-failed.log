@@ -1,0 +1,39 @@
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+{"kind":"RUNTIME_VERIFIED","files":28218,"bytes":1428762773}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+Unified Explorer icon: D:\Documents\FeiyangChen\devApps\dshWinUi\dist\DSHDesktop-0.2.5-rc.1-win-x64
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+{"kind":"PACKAGE_BASELINE_CREATED","files":29246}
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+{"kind":"PACKAGE_VERIFIED","files":29246,"bytes":1456689876}
+Runtime probe child PID 32152
+PASS bundled Node / no Node,npm,pnpm in PATH / HTTP UI
+PASS upstream UI assets served locally 4 assets
+PASS first-use default workspace stays in candidate and is idempotent
+workspace result {"type":"server-response","rpcId":"750c7bd9-d480-43b3-824a-8499c36e6c2d","result":{"ok":true,"value":{"workspace":{"workspaceId":"0df628ec-1a90-48cc-b91d-f93cc050726e","path":"D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)","title":"Solver Test (a-b_c)","sessionIds":[],"createdAt":"2026-09-24T02:49:07.725Z","updatedAt":"2026-09-24T02:49:07.725Z"},"created":true}}}
+PASS workspace creation, Chinese/space/parenthesis paths
+session result {"type":"server-response","rpcId":"78d75456-b8d4-4f4c-96cd-979d322213c5","result":{"ok":true,"value":{"sessionId":"session-2e3153a2-c337-45f3-a646-e0a4c662ed63","agentPreset":"standard"}}}
+PASS native session creation
+PASS custom Base URL + API Key + Model reaches mock
+Native tool names: ask_user_question, create_goal, edit, exit_plan_mode, get_goal, glob, grep, interrupt_agent, job_kill, job_list, job_output, list_agents, present, pwsh, read, read_image, send_message, skill, subagent, subagent_fork, todo_write, update_goal, web_fetch, web_search, workflow, write
+PASS native file read tool
+PASS native file edit tool
+Tool evidence: [[],[],["<path>D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)\\fixture.txt</path>\n<type>file</type>\n<content>\n1: ORIGINAL_CONTENT\n\n(End of file - total 1 lines)\n</content>"],["<path>D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)\\fixture.txt</path>\n<type>file</type>\n<content>\n1: ORIGINAL_CONTENT\n\n(End of file - total 1 lines)\n</content>","The file D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)\\fixture.txt has been updated successfully."],["<path>D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)\\fixture.txt</path>\n<type>file</type>\n<content>\n1: ORIGINAL_CONTENT\n\n(End of file - total 1 lines)\n</content>","The file D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c)\\fixture.txt has been updated successfully.","Error: SetNamedSecurityInfoW failed (Win32 5): grantWrite(D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\smoke-中文 (space)-WZ8aVr\\c-8391794aa3c04d77921fffc13f161293\\测试项目\\Solver Test (a-b_c))"]]
+FAIL native PowerShell tool
+Evidence directory: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\smoke-中文 (space)-WZ8aVr\c-8391794aa3c04d77921fffc13f161293
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: native PowerShell tool
+    at check (file:///D:/Documents/FeiyangChen/devApps/dshWinUi/tests/runtime-smoke.mjs:25:153)
+    at file:///D:/Documents/FeiyangChen/devApps/dshWinUi/tests/runtime-smoke.mjs:76:2 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.16.0

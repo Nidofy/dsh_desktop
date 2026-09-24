@@ -1,5 +1,5 @@
 {
-  "status": "DSH_DESKTOP_ISOLATED_SOURCE_CANDIDATE",
+  "status": "DSH_DESKTOP_M1_ISOLATED_CANDIDATE_GATE_PASSED",
   "desktopVersion": "0.2.5-rc.1",
   "harnessVersion": "0.1.7-alpha.2",
   "sourceCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
@@ -8,7 +8,7 @@
   "nativeFinalExeGate": "PASS",
   "acceptanceEvidence": "docs/evidence/0.2.5/native-final-verification.json",
   "releaseNotes": "docs/RELEASE-0.2.5-rc.1.md",
-  "deliveryVerification": "Package script requires complete receipt, offline smoke and full inventory before publishing local directory",
+  "deliveryVerification": "PASS: docs/evidence/0.2.5/distribution-verification.json",
   "isolatedDefault": true,
   "formalUserDataMigrated": false,
   "realProviderRequests": 0,
@@ -108,5 +108,7 @@
     "deliveryGate": "PASS",
     "portableDirectorySmokePassed": true,
     "zipProduced": false
-  }
+  },
+  "deliveryDirectory": "dist/DSHDesktop-0.2.5-rc.1-win-x64-20260924-105055-4abdcccc",
+  "knownWorkspaceAclLimit": "D-drive development workspace grantWrite returned Win32 5; same sandbox checks passed in user temporary directory"
 }

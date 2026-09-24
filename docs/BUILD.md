@@ -50,6 +50,8 @@ Some restricted agent execution environments cannot create a second Windows rest
 
 `tests/runtime-smoke.mjs` uses the packaged node.exe, removes developer tools from child PATH, uses fresh Chinese/space/parenthesis paths, an HTTP mock, and a test-only network interception preload. It must never be represented as a firewall/VM or WebView-wide egress proof.
 
+源码候选在本机 D 盘开发目录的 Windows ACL `grantWrite` 会返回 Win32 5；完整 Gate 使用用户临时目录的相同中文/空格测试数据通过。单独执行 `package-portable.ps1` 或 `verify-offline.ps1` 时也应设置 `$env:DSH_TEST_FIXTURE_ROOT=Join-Path $env:TEMP 'dsh-desktop-build-tests'`，与完整构建一致。该变量只改变合成测试位置，不改变产品沙箱、权限策略或断言；D 盘失败日志保留为现场限制证据。
+
 独立缓存键使用固定 hash 的 DSH 适配器内存扩展（schema + pi-ai 公开 onPayload 钩子），磁盘中的上游包保持原样。`tests/desktop-cache-key.mjs` 校验来源 hash、旧配置默认、键隔离与不改其他字段；`tests/observability-wire.mjs runtime --cache-key-only` 验证最终双协议 HTTP。构建脚本已纳入两项门禁；上游适配器升级未重新审查时会阻止启动，不静默忽略独立键配置。
 
 Changing DSH requires repeating the investigation, provider contract tests, complete production install, native tools test, network audit and clean-image acceptance. The new CLI guards `runCli()` with `import.meta.main`; an imported-only CLI is inert. The wrapper uses `node --import host.mjs <official-bin> web ...` so the official entry remains main.

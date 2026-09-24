@@ -2,6 +2,8 @@
 
 此候选继续使用 Tauri 2、固定 Node 和固定 WebView2。Harness 是唯一 Agent Loop。功能和资格结果见 [实施记录](IMPLEMENTATION-0.2.5.md)。这是独立本地候选，未推送或在线发布。
 
+**M1 T1–T6 交付 Gate：PASS。** 可运行目录为 `dist/DSHDesktop-0.2.5-rc.1-win-x64-20260924-105055-4abdcccc`，启动其中的 `DSHDesktop.exe`。不要使用无后缀、带 `NOT_ACCEPTED.txt` 的首次失败目录。此次交付独立目录，不生成 ZIP；旧发布目录及正式数据保留。
+
 ## 固定组合
 
 Desktop 0.2.5-rc.1 / Harness 0.1.7-alpha.2；fork `5e2879f0478ba9336128312e715dee7a9f56c3db`；Node 24.16.0 / WebView2 153.0.4234.48 / Tauri 2.11.5。fork 接口和桌面里程碑均为本地提交，未推送。
@@ -19,10 +21,12 @@ Desktop 0.2.5-rc.1 / Harness 0.1.7-alpha.2；fork `5e2879f0478ba9336128312e715de
 - 完整构建：PASS，回执 `faaf05d4-9328-43ff-88ef-e0c20e3ea121`；[日志与回执](evidence/0.2.5/build-receipt.json)。Rust 93 项、单独的双协议原生快照集成、38 项前缀及完整协议/迁移/恢复检查均通过。
 - 原生 Windows：PASS，实际回执 EXE 完成合成工具任务、浮窗、快照入口、桌宠拖动/关闭、受控重启、历史打开及正常退出；[证据与具体边界](evidence/0.2.5/native-final-verification.json)。连接首次保存/热应用在同源码与资源的预验收 EXE 验证，完整 Gate 另覆盖最终双协议热更新。
 - EXE SHA256：`cbaec9533f4f9700ceaeca56fe4a288be93480b5cd5cbd35413f0e3e9f377d95`。
-- 交付形式：独立 `DSHDesktop-0.2.5-rc.1-win-x64` 目录。只有目录完整性、许可证和受限 PATH 离线 smoke 成功后，打包脚本才登记 `.build/latest-staged-package.json`。交付目录包含 `BUILD_RECEIPT.json` 与 `Verify-DSHDesktop.ps1`，可自行复查。
+- 离线目录：PASS，29,247 文件，1,456,694,971 字节（不计自校验清单），受限 PATH、loopback mock 工具执行/重启、错误 Key/URL/模型检查、许可证与整树校验通过。实际目录 EXE 已另行原生启动和退出；[交付证据](evidence/0.2.5/distribution-verification.json)。交付目录包含 `BUILD_RECEIPT.json` 与 `Verify-DSHDesktop.ps1`，可自行复查。包内文档是封存前记录，仓库本文件记录随后完成的目录验收。
 - 真实内网及企业现场：未完成验收，具体范围见下文；不以本机 PASS 代替现场结论。
 
 ## 明确限制
+
+本机 D 盘开发目录的原生 shell ACL 授权返回 Win32 5（`SetNamedSecurityInfoW grantWrite`）；相同产品与测试在用户临时目录通过。首次独立打包因此被 Gate 拒绝，失败目录与日志保留；后续打包使用完整构建相同的临时测试根。需要在实际项目目录验证其 ACL 支持，不能将临时目录成功解释为所有磁盘和企业目录均可执行 shell。
 
 真实内网网关、缓存命中收益、睡眠、混合 DPI、触控/笔、长期负载和干净企业镜像未在本候选完成现场验收。本机 loopback mock 与受限 PATH 检查不等于全系统防火墙或 WebView egress 验证。主连接凭据在 Windows Credential Manager；识图凭据仍由 Harness 本地 YAML 服务管理，工程原始日志的隐私范围不同于元数据诊断。
 

@@ -2,7 +2,9 @@
 
 当前交付对象为固定源码 Harness 的独立 Tauri 候选，正式用户资料不自动挂载，旧发布目录保留。用户已授权本地里程碑提交；没有授权远端推送或在线发布。
 
-本机完整构建和最终回执 EXE 的原生任务、重启、历史恢复及退出均通过。交付目录只有通过完整文件清单、许可证、受限 PATH 离线 smoke 和构建回执复核后才生成成功记录。当前结果见 [交付记录](docs/RELEASE-0.2.5-rc.1.md) 和 `MVP_STATUS.json`。没有未解决的数据迁移阻断。
+M1 T1–T6 的本机完整构建、最终回执 EXE 的原生任务/重启/历史恢复/退出、交付目录完整清单、许可证、受限 PATH 离线 smoke 和构建回执复核均通过。当前结果及实际目录见 [交付记录](docs/RELEASE-0.2.5-rc.1.md) 和 `MVP_STATUS.json`。没有未解决的数据迁移阻断。
+
+本机 D 盘开发目录的原生 shell `grantWrite` 返回 Win32 5，首次打包因此未通过；该目录已标记 `NOT_ACCEPTED.txt`。用户临时目录下相同产品和断言通过，最终交付使用与完整 Gate 一致的临时测试根。实际项目目录仍须具备 Harness Windows ACL 沙箱要求的权限；未修改系统 ACL 或降低产品沙箱。
 
 额外 Harness SDK `text-turn` 回放仍有 feedback 事件断言失败，原因未定位；[失败记录](docs/evidence/0.2.5/catalog-provider-fork.json) 和原始日志保留，不能宣称 SDK 全部通过。它不替代或取消实际桌面 Gate。
 

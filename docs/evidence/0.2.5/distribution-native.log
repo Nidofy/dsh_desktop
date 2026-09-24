@@ -1,0 +1,5 @@
+1790218426099 UTC-epoch-ms webview2=fixed version=153.0.4234.48 path=D:\Documents\FeiyangChen\devApps\dshWinUi\dist\DSHDesktop-0.2.5-rc.1-win-x64-20260924-105055-4abdcccc\resources/webview2 os=Windows 10.0 build 26200
+1790218427041 UTC-epoch-ms system tray initialized; window close hides to tray
+1790218427042 UTC-epoch-ms desktop=0.2.5-rc.1 node=24.16.0 supervisor started; engine identity pending verification
+1790218430775 UTC-epoch-ms backend ready pid=32532 port=56148 startup_ms=3732
+1790218492000 UTC-epoch-ms backend job closed; supervisor stopped
