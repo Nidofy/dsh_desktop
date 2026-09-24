@@ -11,13 +11,13 @@
 | origin | `https://github.com/Nidofy/deepseek-harness.git` |
 | upstream | `https://github.com/deepseek-ai/deepseek-harness.git` |
 | 本地集成分支 | `codex/tauri-integration` |
-| 本次候选 commit | `00102833dfaee1da9f48a3a8eae9d34005a75218` |
+| 本次候选 commit | `5e2879f0478ba9336128312e715dee7a9f56c3db` |
 | 本次候选引擎 | `0.1.7-alpha.2` |
 | 源码包管理器 / Node | pnpm `11.7.0` / Node `24.16.0` |
-| 当前桌面交付 | `0.2.4-rc.2`，仍携带 DSH `0.1.5-rc.2` |
+| 当前开发候选 | `0.2.5-rc.1`，携带 DSH `0.1.7-alpha.2`；旧交付保留 |
 | 旧引擎源码参照 | `dsh-v0.1.5-rc.2` / `fb2c4b9e698e30edb738bca4cf0618587db7d203` |
 
-精确输入位于 [`build-deps/harness-source.json`](../build-deps/harness-source.json)，正式组合仍由 [`versions.json`](../versions.json) 指定。候选构建成功不修改正式版本。当前 `desktopAdapterApproved=false`：新源码的配置、会话、请求和客户端接口尚未完成桌面适配。
+精确输入位于 [`build-deps/harness-source.json`](../build-deps/harness-source.json)，构建组合由 [`versions.json`](../versions.json) 指定。源码产物构建成功不等于桌面准入；实际适配、构建与原生交付结果见 [0.2.5 实施记录](IMPLEMENTATION-0.2.5.md)。fork 包含明确授权的 payload hook 与 catalogProvider 接口，其他桌面集成仍保存在本仓库。
 
 ## 首次准备与日常构建
 

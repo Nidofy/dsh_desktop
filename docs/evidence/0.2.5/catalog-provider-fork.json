@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "authorization": "User explicitly authorized catalogProvider on 2026-09-24",
+  "sourceCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "sourceVersion": "0.1.7-alpha.2",
+  "runtimeChanges": ["llm-pi-ai/src/config.ts", "llm-pi-ai/src/catalog.ts", "llm-pi-ai/src/provider.ts"],
+  "payloadDocumentationRepair": "Remove non-scoped event annotation and teach the existing event scanner to recognize Context.bail; runtime payload behavior unchanged",
+  "checks": {
+    "initialFocusedTests": "100 passed across catalog, config, payload hook, alias and Loader tests",
+    "loaderAfterNewAliasCase": "6 passed",
+    "finalAliasPayloadScannerTests": "16 passed",
+    "packageTypecheck": "PASS: tsc -b packages/llm/llm-pi-ai",
+    "docQuick": "20 passed",
+    "docSync": "42 passed",
+    "lint": "PASS after correcting new test style; build prerequisites completed",
+    "preCommit": "PASS without bypass",
+    "desktopRustRouteIsolation": "2 passed",
+    "desktopAdapterProfileControl": "18 passed"
+  },
+  "additionalSdkSnapshot": {
+    "scenario": "sdk/text-turn",
+    "status": "FAIL",
+    "observed": "Expected five feedback events; result.events contained none, both initial and freshly built lib-mode replay",
+    "scope": "Additional Harness SDK snapshot, not a desktop qualification PASS; root cause not established",
+    "logs": [".build/catalog-snapshot.log", ".build/catalog-snapshot-built.log"]
+  },
+  "sourceArtifact": {
+    "path": ".build/harness-source/5e2879f0478b-20260924-093944-c3da316d/artifact",
+    "files": 27876,
+    "workspaceProductionPackages": 275,
+    "llmPiAiIndexSha256": "c62064e899f5defcbd04164267ff048ac1d42bb8d7ffcb74811475682ab8c846"
+  },
+  "desktopReleaseGate": "PENDING"
+}

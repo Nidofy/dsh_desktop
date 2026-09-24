@@ -123,6 +123,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Artifact file contracts failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/provider-presets.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Native known-provider catalog failed' }
+if ($sourceEngine) {
+    & (Join-Path $root 'runtime/runtime/node.exe') tests/source-catalog-alias-probe.mjs runtime
+    if ($LASTEXITCODE -ne 0) { throw 'Independent source routes lost inherited model capabilities' }
+}
 & (Join-Path $root 'runtime/runtime/node.exe') tests/known-provider-switch.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Known-provider session continuity failed' }
 & (Join-Path $root 'runtime/runtime/node.exe') tests/known-provider-switch.mjs --managed-cache-key

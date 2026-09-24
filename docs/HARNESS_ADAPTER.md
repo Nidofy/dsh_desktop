@@ -11,13 +11,13 @@
 | adapter | 引擎 | Node | Session writer | 配置 | 桌面运行准入 |
 |---|---|---|---|---|---|
 | registry-015rc2-v1 | 0.1.5-rc.2 | 24.16.0 | 3 | settings.yaml | 保留已有组合 |
-| source-017a2-v1 | 0.1.7-alpha.2 | 24.16.0 | 4 | profiles/dsh-desktop/cordis.patch.yml | 仅匹配固定来源的隔离候选；正式构建准入关闭 |
+| source-017a2-v1 | 0.1.7-alpha.2 | 24.16.0 | 4 | profiles/dsh-desktop/cordis.patch.yml | 仅匹配固定来源的隔离候选；允许完整构建 Gate |
 
 `requireDesktopAdapter()` 在 preload 的启动管道放行后、迁移和 Harness 设置写入前检查包身份与固定 Node，未知版本和未接好的源码组合产生固定错误 `BOOT_ADAPTER_UNSUPPORTED`。它不替代整树完整性、Rust 健康检查或构建准入；不通过改动一个布尔值解锁新产品。
 
 `sourceProbeArguments()` 为隔离候选验证自有 profile `dsh-desktop`，首次初始化由 `prepareSourceProfile()` 调用公开 `initProfile` 并暂存后 rename。已有正确 manifest 不重复初始化。固定 base/web-app 两个基础 bundle 后可保留原生管理器新增的合法包名；基础顺序变化、重复/路径 specifier、不完整目录、符号链接/目录联接和非隔离路径拒绝，保留现场，不自动删除锁或数据。Rust 候选启动已经接入该分支。
 
-首次工作区使用公开 `workspace-controller.documentsDirectory` 固定在候选目录；已登记项目不会改写。缓存 hook 保持绑定已审阅的源码提交与模块 hash。新增目录继承接口仍处于提案阶段，未改 fork；当前独立路由不能完整保留某些内置模型 compat 字段，见 [具体证据与提案](proposals/M1-CATALOG-ROUTE.md)。
+首次工作区使用公开 `workspace-controller.documentsDirectory` 固定在候选目录；已登记项目不会改写。缓存 hook 保持绑定已审阅的源码提交与模块 hash。授权后的 `catalogProvider` 接口让独立连接继承固定内置模型的完整元数据，保留各自 endpoint、凭据和请求 scope；见 [具体证据与方案](proposals/M1-CATALOG-ROUTE.md)及 [实施结果](IMPLEMENTATION-0.2.5.md)。
 
 ## 实际依赖与耦合
 

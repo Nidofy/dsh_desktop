@@ -1,4 +1,4 @@
-// Explicit blocker probe; never counts a detected mismatch as qualification PASS.
+// Actual Host catalog inheritance regression; any model difference fails qualification.
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir,mkdtemp} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
@@ -13,7 +13,7 @@ const providers={},pairs=[];
 for(const [i,known] of ['zai-coding-cn','anthropic','deepseek'].entries()){
  const rows=JSON.parse(await readFile(`.build/provider-presets/${known}/desktop.patch.json`,'utf8'));
  const config=rows[1].config.providers[known],alias='desktop-p-'+String(i+1).repeat(32);
- config.baseURL='http://127.0.0.1:9/v1';providers[known]=config;providers[alias]=structuredClone(config);pairs.push({known,alias});
+ config.baseURL='http://127.0.0.1:9/v1';providers[known]=config;providers[alias]={...structuredClone(config),catalogProvider:known};pairs.push({known,alias});
 }
 const overlay=join(root,'desktop.patch.json');await writeFile(overlay,JSON.stringify([{id:'session-telemetry-otel',disabled:true},{id:'llm-pi-ai',config:{providers}}]));
 const env={...process.env,...sourceEnvironment(runtime,root,home),DSH_HOME:home,DSH_DESKTOP_PATCH:overlay,DSH_TELEMETRY_DISABLED:'1',NODE_OPTIONS:'',NODE_PATH:''};
@@ -27,9 +27,10 @@ try{
  const auth=await fetch(launch,{redirect:'manual'}),cookie=auth.headers.get('set-cookie').split(';')[0],origin=new URL(launch).origin;
  const method='session/modelCatalog',response=await(await fetch(origin+'/api/'+method,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({type:'client-request',method,rpcId:crypto.randomUUID(),payload:{args:{}}})})).json();
  assert(response.result.ok);const groups=response.result.value.groups,losses=[];
- for(const {known,alias} of pairs){const native=groups.find(g=>g.id===known),route=groups.find(g=>g.id===alias);assert(native&&route);for(const model of native.models){const aliased=route.models.find(m=>m.id===model.id);assert(aliased);for(const field of ['reasoning','input','modalities'])if(JSON.stringify(model[field])!==JSON.stringify(aliased[field]))losses.push({provider:known,model:model.id,field,builtin:model[field]??null,alias:aliased[field]??null});}}
+ const compared=[];
+ for(const {known,alias} of pairs){const native=groups.find(g=>g.id===known),route=groups.find(g=>g.id===alias);assert(native&&route);assert(native.models.length>0);assert.deepEqual(route.models.map(m=>m.id).sort(),native.models.map(m=>m.id).sort());compared.push({provider:known,models:native.models.length});for(const model of native.models){const aliased=route.models.find(m=>m.id===model.id);assert(aliased);for(const field of ['reasoning','input','modalities'])if(JSON.stringify(model[field])!==JSON.stringify(aliased[field]))losses.push({provider:known,model:model.id,field,builtin:model[field]??null,alias:aliased[field]??null});}}
  assert(!output.includes('OFFLINE_TEST_DENIED'));
- const evidence={schemaVersion:1,sourceCommit:receipt.source.commit,status:losses.length?'BLOCKED':'PASS',method:'actual source Host session/modelCatalog RPC',modelRequests:0,changedUpstreamFiles:false,losses};
+ const evidence={schemaVersion:1,sourceCommit:receipt.source.commit,status:losses.length?'BLOCKED':'PASS',method:'actual source Host session/modelCatalog RPC',modelRequests:0,catalogProvider:true,compared,losses};
  const report=join(fixture,'report.json');await writeFile(report,JSON.stringify(evidence,null,2)+'\n');console.log(JSON.stringify({status:evidence.status,differences:losses.length,report}));
  if(losses.length)process.exitCode=2;
 }finally{if(!exited){child.stdin.write('stop\n');const deadline=Date.now()+10000;while(!exited&&Date.now()<deadline)await pause();if(!exited)child.kill();}}

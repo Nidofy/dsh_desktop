@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "status": "PASS",
+  "method": "actual source Host session/modelCatalog RPC",
+  "modelRequests": 0,
+  "catalogProvider": true,
+  "compared": [
+    {
+      "provider": "zai-coding-cn",
+      "models": 10
+    },
+    {
+      "provider": "anthropic",
+      "models": 14
+    },
+    {
+      "provider": "deepseek",
+      "models": 3
+    }
+  ],
+  "losses": []
+}

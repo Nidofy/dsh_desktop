@@ -3,7 +3,7 @@ import {readFile,lstat} from 'node:fs/promises';
 import {join,resolve,isAbsolute,basename} from 'node:path';
 
 export const harnessAdapterVersion = 1;
-export const sourceCommit = 'dad014b7efd3e1d76a36e6bd9646487d28d9037e';
+export const sourceCommit = '5e2879f0478ba9336128312e715dee7a9f56c3db';
 export const sourceProfile = 'dsh-desktop';
 const contracts = Object.freeze({
   '0.1.5-rc.2': Object.freeze({id:'registry-015rc2-v1',version:'0.1.5-rc.2',node:'24.16.0',sessionWriter:3,settings:'settings.yaml',desktopReady:true}),

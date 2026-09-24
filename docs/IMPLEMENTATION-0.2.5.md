@@ -12,6 +12,14 @@ Harness fork 已提交 `dad014b7efd3e1d76a36e6bd9646487d28d9037e`。运行时只
 
 ## 后续里程碑及 Gate
 
+### S5e：独立连接继承内置模型目录（2026-09-24）
+
+用户授权最小 `catalogProvider` 接口后，fork 已本地提交 `5e2879f0478ba9336128312e715dee7a9f56c3db`。目录默认值与连接身份分离，桌面仅为已识别 preset 写入继承来源；自定义连接保持手工模型配置。完整 compat、reasoning、input 等字段通过整个模型对象比较验证，暂停旧请求期间更换配置仍保持旧 endpoint/key/scope。真实 Loader 配置加载、类型、lint、42 项文档 Gate 和提交检查通过。详见 `evidence/0.2.5/catalog-provider-fork.json`。
+
+完整文档检查同时发现并修复此前 payload hook 的 scoped 注释及 `ctx.bail` 扫描遗漏，没有更改 payload 行为。额外 SDK `text-turn` 回放在 Windows 的 feedback 断言失败，重新构建后相同；原因尚未确定，单独保留失败记录，不冒充桌面或 SDK 回放通过。新源码产物已封存 27,876 文件、275 个工作区生产包；桌面 0.2.5-rc.1 的全量 Gate 与最终原生验收继续执行。
+
+S5e 后续验证：新提交资格目录封存 28,219 个文件，实际 Host RPC 对照 ZAI 10、Anthropic 14、DeepSeek 3 个模型，27 个模型全部一致（`source-catalog-alias.json`）。双协议热应用在新产物上复测通过（`source-catalog-hot-wire.json`）。据此前原生宿主验证及本轮源码接口验证，构建组合准入已开启；这只允许完整桌面 Gate，最终交付状态仍以该 Gate 和最终 EXE 原生验收为准。
+
 ### S5d：热切换诊断标记与比较（2026-09-24）
 
 单次请求此前已冻结配置指纹，但汇总报告仍可能引用启动时连接，影响热切换后的归档/比较。现在每个请求仅记录协议及 HMAC 连接/凭据标记；不同修订混合时汇总身份为空，按会话或轮次筛选后重新计算。迟到旧请求不覆盖新请求标记，凭据原文、引用和 endpoint 不进入新增导出字段。A/B 比较检查请求级连接与凭据变化，同时保持明确预算实验的既有分类。

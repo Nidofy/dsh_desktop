@@ -72,7 +72,7 @@ test('production source validation binds imported receipt, files, approval and v
   const baseline=JSON.parse(await readFile(join(out,'dsh-integrity.json'),'utf8'));
   const approved={...pin,desktopAdapterApproved:true},versions={dsh:pin.version,node:pin.node};
   await verifyImportedSource(out,baseline,approved,versions);
-  await assert.rejects(verifyImportedSource(out,baseline,pin,versions),/not approved/);
+  await assert.rejects(verifyImportedSource(out,baseline,{...pin,desktopAdapterApproved:false},versions),/not approved/);
   await assert.rejects(verifyImportedSource(out,baseline,approved,{...versions,dsh:'0.1.5-rc.2'}),/not approved/);
   await assert.rejects(verifyImportedSource(out,{...baseline,files:[]},approved,versions),/baseline differs/);
   await writeFile(join(out,'harness-source-artifact.json'),'{}');
