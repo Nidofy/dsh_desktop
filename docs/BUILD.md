@@ -10,10 +10,13 @@ Version 0.1.6 additionally runs `tests/observability.mjs` and `tests/observabili
 Build on Windows x64. Tested compiler: Rust 1.97.1 with Visual Studio 2026 MSVC. Put `cargo`/`rustc` on the developer PATH. Node/npm are build-time tools only. All direct versions are in `versions.json` and `src-tauri/Cargo.toml`; the complete npm/Cargo resolutions are committed in `build-deps/package-lock.json` and `src-tauri/Cargo.lock`.
 
 ```powershell
-.\scripts\build-windows.ps1
-# Reuse a previously verified staging tree:
-.\scripts\build-windows.ps1 -ReusePreparedRuntime
+# Use the actual sealed artifact path reported by build-harness-source.ps1:
+.\scripts\build-windows.ps1 -HarnessSourceArtifact .build/harness-source/<run>/artifact -SkipPackage
+# Reuse a verified source runtime and the complete retained legacy runtime:
+.\scripts\build-windows.ps1 -ReusePreparedRuntime -SkipPackage -LegacyRuntime .build/source-previous-<id>
 ```
+
+源码版本遗漏上述运行时选择参数时，build-windows 和 prepare-dsh 在创建或改写 runtime 前拒绝运行，防止误走旧 npm registry 安装路径。
 
 Stages: verify build tools → pinned official Node → `npm ci --omit=dev` → pinned Microsoft WebView2 Fixed Version CAB (hash/signature/file inventory) → local icon/wallpaper conversion → release Rust tests → locked release build → copy full production and browser trees → collect original licenses → offline smoke → ZIP with folder icon metadata → SHA256.
 

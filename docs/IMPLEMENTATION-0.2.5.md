@@ -1,6 +1,6 @@
 # 0.2.5 实施记录
 
-本记录接续 [M1 基线与首轮验证](IMPLEMENTATION-M1.md)。目标为隔离的源码 Harness / Tauri 候选，当前未达到交付 Gate。用户于 2026-09-24 授权本地提交及后续里程碑自动提交；不推送、不发布。
+本记录接续 [M1 基线与首轮验证](IMPLEMENTATION-M1.md)。目标为隔离的源码 Harness / Tauri 候选。当前 0.2.5-rc.1 已通过完整构建和最终 EXE 原生验收，独立目录正执行离线交付校验。用户于 2026-09-24 授权本地提交及后续里程碑自动提交；不推送、不发布。以下各节保留对应里程碑发生时的状态，旧的“待授权／未准入”不代表当前状态。
 
 ## 已完成里程碑
 
@@ -12,6 +12,14 @@ Harness fork 已提交 `dad014b7efd3e1d76a36e6bd9646487d28d9037e`。运行时只
 
 ## 后续里程碑及 Gate
 
+### S6：完整构建与最终 EXE 原生验收（2026-09-24）
+
+最终完整 Gate 回执为 `faaf05d4-9328-43ff-88ef-e0c20e3ea121`，319 项输入和最终输出一致。Rust 93 项通过，默认忽略的真实快照集成测试已单独双协议通过；13 提供方/105 模型、27 个别名模型、38 项前缀、双协议工具/工程操作/缓存/热切换/冷恢复/隐私、迁移及 staging 故障恢复全部通过。证据为 `evidence/0.2.5/build-receipt.json` 和 `build.log`。
+
+EXE SHA256 为 `cbaec9533f4f9700ceaeca56fe4a288be93480b5cd5cbd35413f0e3e9f377d95`。重编译指纹不同于预验收 EXE，因此实际换用回执 EXE 重测：合成任务完成 read/edit/pwsh，原生浮窗、快照入口、主题与桌宠拖动/关闭可用，受控重启后历史可打开且请求数不增加；正常菜单退出后宿主与两代后端均不存在。首次过期确认按设计拒绝，重新检查后重启成功。原生首次连接保存/热应用在同源码及同资源的预验收 EXE 完成，最终 EXE 使用该合成连接；双协议热更新另有完整 Gate。详见 `native-final-verification.json`，不将开发或预验收 EXE 冒充最终交付。
+
+正式构建运行时已原子切换为新封存源码，完整旧树保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`；未修改正式用户数据或旧 dist。源码主题包使用同版本 CLI 携带的仓库 MIT 许可证，同步脚本验证两包版本和许可声明后读取该文本。新增构建入口保护，遗漏源码产物/复用参数时在接触 runtime 前拒绝旧 registry 准备，9 项源码契约通过。中途修改构建输入后必须重跑完整 Gate，不复用旧回执。
+
 ### S5e：独立连接继承内置模型目录（2026-09-24）
 
 用户授权最小 `catalogProvider` 接口后，fork 已本地提交 `5e2879f0478ba9336128312e715dee7a9f56c3db`。目录默认值与连接身份分离，桌面仅为已识别 preset 写入继承来源；自定义连接保持手工模型配置。完整 compat、reasoning、input 等字段通过整个模型对象比较验证，暂停旧请求期间更换配置仍保持旧 endpoint/key/scope。真实 Loader 配置加载、类型、lint、42 项文档 Gate 和提交检查通过。详见 `evidence/0.2.5/catalog-provider-fork.json`。
@@ -19,6 +27,8 @@ Harness fork 已提交 `dad014b7efd3e1d76a36e6bd9646487d28d9037e`。运行时只
 完整文档检查同时发现并修复此前 payload hook 的 scoped 注释及 `ctx.bail` 扫描遗漏，没有更改 payload 行为。额外 SDK `text-turn` 回放在 Windows 的 feedback 断言失败，重新构建后相同；原因尚未确定，单独保留失败记录，不冒充桌面或 SDK 回放通过。新源码产物已封存 27,876 文件、275 个工作区生产包；桌面 0.2.5-rc.1 的全量 Gate 与最终原生验收继续执行。
 
 S5e 后续验证：新提交资格目录封存 28,219 个文件，实际 Host RPC 对照 ZAI 10、Anthropic 14、DeepSeek 3 个模型，27 个模型全部一致（`source-catalog-alias.json`）。双协议热应用在新产物上复测通过（`source-catalog-hot-wire.json`）。据此前原生宿主验证及本轮源码接口验证，构建组合准入已开启；这只允许完整桌面 Gate，最终交付状态仍以该 Gate 和最终 EXE 原生验收为准。
+
+额外使用编译后的公开 Cordis/LLM 插件，对 DeepSeek、ZAI 和 Anthropic 原路由及别名共发送 6 次合成 loopback 请求，完整 body、鉴权与协议 header 相等，payload scope 仍使用独立路由；见 `source-catalog-native-wire.json`，复现脚本与报告同目录。首次 mock 未识别 Anthropic URL 的 beta 查询串，修正测试端路径解析后通过，未改变产品代码。
 
 ### S5d：热切换诊断标记与比较（2026-09-24）
 

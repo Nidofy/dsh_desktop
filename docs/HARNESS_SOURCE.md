@@ -82,17 +82,17 @@ pnpm 会把上游已批准的 `dsh-subprocess-local` postinstall 的相对 file 
   desktop-admission.json
 ```
 
-完成 [下一阶段适配](PLAN-0.2.5-SOURCE-INTEGRATION.md) 后，审查并更新源码 pin、正式 DSH 版本和依赖选择，再显式运行：
+固定源码组合通过适配资格验证后，显式运行完整构建：
 
 ```powershell
 ./scripts/build-windows.ps1 -HarnessSourceArtifact .build/harness-source/<run>/artifact -SkipPackage
 ```
 
-当前执行这条命令会在运行时准备前拒绝不匹配的引擎和未批准适配。不能只把 `desktopAdapterApproved` 改成 true 就当作适配完成：完整构建仍须执行协议、缓存、恢复、UI 及离线门禁。该参数不能与 `-ReusePreparedRuntime` 合用。未传参数时保留现有 registry 锁定构建路径。
+这条命令在运行时准备前拒绝不匹配的引擎和未批准适配。不能只把 `desktopAdapterApproved` 改成 true 就当作适配完成：完整构建仍须执行协议、缓存、恢复、UI 及离线门禁。该参数不能与 `-ReusePreparedRuntime` 合用。0.2.5 不使用旧 registry 安装路径；复用已准备源码运行时时，必须同时传 `-LegacyRuntime <完整旧运行时>`，用于实际旧 writer 迁移与旧桥回归。
 
 正式接入时 `prepare-dsh.ps1` 先在 `.build/source-prepared-*` 导入源依赖、复制固定 Node/WebView2、同步桌面扩展并验证完整 runtime；全部通过后才替换 runtime，将完整旧树保留在 `.build/source-previous-*`。普通替换失败会回滚；硬终止后的恢复已验证精确 journal、进程退出和新旧完整树指纹后进行。未知锁、资料变化或恢复冲突保留现场。具体测试与限制见 [0.2.5 记录](IMPLEMENTATION-0.2.5.md)。运行时校验会绑定源码 receipt、commit、版本、锁及每个文件，release receipt 也纳入源码 pin。
 
-目前没有替换正式 `runtime/dsh`、创建新版合格离线包或修改既有发布目录。隔离开发 Tauri EXE 已重建并做原生验证，但尚不具备完整 release receipt；下一次新包必须重新完成构建，不能沿用改动前的构建回执。
+本机构建 `runtime/` 已通过原子暂存切换到固定源码，完整旧运行时保存在 `.build/source-previous-79580316a07746aea34a0e386513afd5`。这不修改用户数据或既有 dist。交付包必须匹配本轮完整 release receipt，不能沿用改动前的构建回执。fork 新接口目前只有本地提交，未推送；其他构建机需先获得对应提交的 checkout，不能假定远端已经包含它。
 
 ## 上游同步规则
 

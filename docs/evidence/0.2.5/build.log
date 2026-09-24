@@ -1,0 +1,324 @@
+PASS pinned WebView2 153.0.4234.48, 257 files verified
+Generated 13 bundled provider presets.
+Synchronized pinned DSH palette and shared desktop appearance assets.
+Pet source checksums verified; production assets staged (preview/scripts excluded).
+Synchronized desktop host modules and native DSH client navigation extension.
+{"kind":"RUNTIME_BASELINE_CREATED","files":28218}
+Built user icon (7 sizes), transparent wallpaper, and offline desktop theme.
+{"kind":"desktop-build-start","status":"STARTED","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}
+PASS release receipt: complete build identity, source/UI drift, added inputs, stale EXE/runtime, failed new run, mid-build edits and version mismatch
+PASS runtime integrity: exact tree, deterministic hashes, modified/missing/extra files, path traversal, duplicate case, links, cancellation, Node pin
+PASS runtime module staging: stale modules removed, native/upstream retained, idempotence, non-files rejected
+✔ source build entry points refuse registry preparation before touching runtime (1161.7104ms)
+✔ pin and artifact identity reject changed commits, dependency locks and targets (0.49ms)
+✔ candidate source cannot silently replace current desktop engine (0.4709ms)
+✔ verified candidate import creates a complete new tree and refuses existing destinations (48.7819ms)
+✔ changed bytes, added files and missing successful smoke reject before import (39.6959ms)
+✔ deployment cannot depend on checkout links outside its own directory (7.8062ms)
+✔ import refuses an artifact with traversal manifest paths (16.6489ms)
+✔ workspace closure includes runtime peers and cycles, excludes dev-only packages (0.3953ms)
+✔ production source validation binds imported receipt, files, approval and version (43.4444ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1398.5924
+✔ desktop admission refuses source and unknown engines before any home writes (20.8041ms)
+✔ custom profile initializes once; restart preserves configuration and omits initializer (9.7229ms)
+✔ source qualification requires isolated candidate identity and the reviewed source receipt (14.2886ms)
+✔ native manager bundles survive restart while changed foundations and path specifiers fail closed (39.6414ms)
+✔ interrupted initialization is refused without deleting or repairing evidence (7.91ms)
+✔ probe rejects a shared home, relative paths and linked profile ancestors (3.0524ms)
+✔ real preload rejects unqualified engine before CLI and settings migration execute (258.5361ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 427.6214
+PASS local frontend commands have explicit Tauri registration and correctly scoped permissions
+Migration evidence: C:\Users\enxi1\AppData\Local\Temp\dsh-source-migration-x63DOp
+✔ real v3 writer copy migrates to v4, continues and restores an independent v3 downgrade copy (1263.1079ms)
+✔ unknown session generation refuses opening without rewriting historical data (16.5942ms)
+✔ profile has editable provider reference, native fields survive restart and launcher has no overriding provider (151.5958ms)
+✔ unknown or legacy settings are refused before import and original bytes survive (24.0227ms)
+✔ prior profile revision adds isolated first-use policy without changing registered projects (81.5743ms)
+✔ profile transaction recovers after each durable interruption point (312.6352ms)
+✔ competing edits stop a connection replacement and preserve the live profile (50.9381ms)
+✔ experiment restore retains a native profile override across restart (132.6167ms)
+✔ legacy settings migrate atomically and preserve exact original bytes (175.8006ms)
+✔ legacy settings recover every transaction interruption without repeating sections (314.207ms)
+✔ unknown fields, inline secrets and unknown legacy locks are preserved and refused (36.6749ms)
+✔ private key snapshots are immutable and stale engine messages cannot mutate settings (1.8244ms)
+✔ policy follows immutable credential revision during settings publication and rollback (0.7953ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1411.8835
+PASS source staging: 7 scenarios; complete backup, rollback after rename, failed candidate retained, unknown lock retained, outside/link/missing paths refused, recovery conflict retains lock and backup. Evidence: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\staging-test-61fa1077e641461490723cdc8459620e
+PASS 5 forced-termination scenarios: pre-move, both rename gaps, completed publication, and changed-tree refusal; known lock recovered only after owner exit and full inventory match.
+PASS distribution verifier: real pinned Node, complete synthetic package, extra/changed files, verifier tamper refused before execution
+{"root":"D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\.build\\distribution-check-mb6wIk","shell":"C:\\Users\\enxi1\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe"}
+PASS ZIP integrity: 3 files, including package manifest, match the staged package
+PASS archive contracts: valid/missing/extra/case duplicate/traversal/changed; D:\Documents\FeiyangChen\devApps\dshWinUi\.build\archive-integrity-740e517a9d7d42598f7947aee514b1e7
+PASS native settings synchronization: stale overrides, default selection, unrelated settings/comments, backup, idempotence, malformed input preservation
+PASS settings transaction: six interruption points, original provider and experiment baseline, encryption, idempotent recovery
+PASS settings transaction: missing/null, external edits, corrupt journal, unavailable protection, failed write and recovery
+PASS settings transaction: external edit between read/render and prepare is preserved
+PASS settings protection: real Windows CurrentUser DPAPI roundtrip and tamper rejection
+PASS model selection: retired desktop route repaired; independent native selection retained
+PASS workspace migration: merged history, attachments and workspace lists; original data retained; collision refusal and restart idempotence
+Evidence: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\workspace-migration-qJ7DCN
+PASS same-directory identity merge, session union, completed migration repair, exact backup, idempotence and ambiguous identity refusal
+PASS migration version bounds: future shared/source formats byte-identical; repair once and explicit repair
+PASS Harness duplicate workspace startup: reproduced upstream service rejection, automatic backed-up repair, session/archive preservation and second boot
+Evidence: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\workspace-recovery-wire-boy672\c-d8bfda23a7d94763acf8dcea1772465c
+PASS startup errors: fixed classifications, synchronous exit receipt, no exception payload
+PASS: dual vision protocols, payload/auth, limits, no redirect, redacted errors, cancellation/timeout.
+PASS observer: identity passthrough, cancellation, errors, fail-open, bounds, privacy, fingerprints, preferences and official spill policy
+PASS experiments: weighted coverage, v1/v2 import, quality gate, overlap union, privacy, continuity, native/PTC tools, bounded persistence, matrix order, subprocess exit/timeout, custom restore, Git summary
+PASS project actions: trust changes, shared queue, cancellation, cwd escape, persistent interruption, retention
+Evidence workspace: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\actions-KD3bCz
+PASS desktop appearance: DSH settings mirror, light/dark/system, font size, native/web transport, live changes, restart continuity
+PASS task recovery: native-event fold, interruption/unknown side effects, approval/input, bounded state, fork boundary, metadata-only projection
+PASS desktop health: explicit services, unavailable vs ready, optional degradation, no exception content
+✔ private control observes all native queues/approvals and cancellation is not completion (1.7158ms)
+✔ drag serializes start/moves/end and coalesces pointer flood (4.4908ms)
+✔ drag failure clears active gesture without endless retries (0.7681ms)
+✔ pointer-down anchors before threshold and taps never move the window (0.7151ms)
+✔ fast drags retain pointer-down anchor while native IPC is pending (0.4603ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 89.5629
+PASS storage admission: uncertain grant/release, refusal before effects, cumulative bounds, shutdown final writes, action log and self-test/probe final persistence under full quota
+PASS snapshot private pipe: bounded requests, cancellation/late reply, duplicate steps, end barrier, failed admission, disabled and subagent isolation
+PASS notifications: live-event dedup, resolved waits, cancellation, subagent suppression, bounded TTL, metadata-only feed, independent durable preference, corrupt config recovery
+✔ every frame has its declared interval and idle excludes neutral look (0.7946ms)
+✔ idle randomness is deterministic, bounded and never scheduled during task work (0.7089ms)
+✔ mood is idle-only local state, disabled and offline cases preserve affinity (0.1543ms)
+✔ template substitution remains literal and custom duration applies to completed bubble (0.438ms)
+✔ snapshot/delta repairs evictions, invalid cursors and engine changes (0.3953ms)
+✔ default timers never use the gesture object as a browser timer receiver (2.16ms)
+✔ mouse gesture conflict/cancel/long/drag (0.3631ms)
+✔ touch gesture conflict/cancel/long/drag (0.286ms)
+✔ pen gesture conflict/cancel/long/drag (0.1537ms)
+✔ 16 directions, center neutral and boundary debounce (0.3683ms)
+✔ drag reaction preserves wait, event beats interaction, bounded cooldown (0.6494ms)
+✔ extension frames/durations/crops are explicit and untrusted triggers rejected (6.7065ms)
+✔ bounded minimal projection rejects reordered events and snapshot races (1.1016ms)
+✔ wait survives interaction and new wait cancels a celebration; cancellation silent (0.4594ms)
+✔ cold reads and child completion do not replay transient art (0.1649ms)
+✔ pin identity, priority, expiry, revision and engine isolation (0.1858ms)
+✔ repeated waiting snapshot preserves interaction; a new wait still interrupts it (0.1718ms)
+✔ unrelated native events never refresh an old completion timer or turn a cold read into a notice (0.1157ms)
+✔ cancellation or task reassignment immediately ends an old task reaction (0.8364ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.9334
+PASS pet settings: pending changes, acknowledged baseline, errors and recovery warnings
+PASS package decoding, v2 geometry, bounded ZIP, normalization and unsafe fixtures
+PASS v1 fixture; preview/import/replace/export/delete; built-in protection; no private export; bounded ZIP/JSON; junction rejection; root=D:\Documents\FeiyangChen\devApps\dshWinUi\.build\pet-package-tests-1mvc2l
+PASS desktop client: notification/BroadcastChannel navigation, validated identities, no startup action, superseded click handling, disposal
+PASS blank-session environment: header-only context, query disposal, Git branch/status, instruction sources and bounded environment fields
+PASS environment Git: branch list/stats, create, dirty refusal, stale preview, one-use receipt, staged-only commit, branch comparison, explicit local push
+PASS cache probe: bounded opt-in requests, isolated stable prefixes, no tools/history, cancellation, no output retention, unknown zero counters, export allowlist
+PASS cache center: read-only state, metadata-only declarations, credential/config invalidation, cross-origin rejection, normal adapter dispatch, retry/config-change refusal before requests, persistence
+PASS independent cache key: scoped stable HMAC, missing session/model suppression, retention preserved, native/other-provider isolation, pinned source guard and real adapter import
+PASS prefix classifier: appended history, precise allowed breaks, schema/order changes, Anthropic marker movement, metadata-only result
+PASS self-test lifecycle: intent persistence, cancellation, cold interruption, no replay, 20-report retention, metadata allowlist, provider retry refusal and same-origin controls
+PASS real git: preexisting/task/committed changes, selected patches, literal Unicode path, bounded/binary/link reads, cold baseline, config execution suppressed
+PASS real hg: preexisting/task/committed changes, selected patches, literal Unicode path, bounded/binary/link reads, cold baseline, config execution suppressed
+PASS native hook contract: opt-in, awaited before first step, per-turn dedup, failure containment, same-origin preference
+Evidence: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\changes-H47nzR
+PASS selected diff: repository-bound target, stale preview refusal, selected-only payload, exclusive claim, unknown receipt, expiry/quota, native CAS append with chips/attachments retained, blocked composer refusal
+PASS artifacts: controlled paths, no automatic launch, open allowlist, changed/expired references, binary/empty download, persistent registration, native delivery projection, Project Actions association/trust
+Evidence: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\artifacts-gcb0M7
+   Compiling dsh-desktop v0.2.5-rc.1 (D:\Documents\FeiyangChen\devApps\dshWinUi\src-tauri)
+    Finished `release` profile [optimized] target(s) in 48.26s
+     Running unittests src\main.rs (src-tauri\target\x86_64-pc-windows-msvc\release\deps\DSHDesktop-7148279bc0031c5b.exe)
+
+running 94 tests
+test artifacts::tests::only_exact_opaque_artifact_exports_use_native_save ... ok
+test config::tests::rejects_embedded_secrets_and_bad_urls ... ok
+test config::tests::rejects_empty_duplicate_and_missing_default_models ... ok
+test config::tests::model_limits_migrate_validate_and_preserve_wire_ids ... ok
+test engine::tests::accepts_only_real_loopback_readiness ... ok
+test browser_runtime::tests::rejects_missing_or_network_browser_without_using_system_runtime ... ok
+test engine::tests::startup_failures_accept_only_fixed_codes ... ok
+test engine_control::tests::confirmation_is_bound_and_expires ... ok
+test engine_snapshots::tests::slow_capture_does_not_block_exit_and_next_generation_waits_for_drain ... ok
+test engine_http::tests::hung_query_never_blocks_control_or_accumulates_requests ... ok
+test config::tests::unknown_model_has_no_inferred_reasoning_and_binding_is_route_specific ... ok
+test environments::checkpoint_tests::process_locks_separate_environments_but_refuse_duplicate_instances ... ok
+test environments::tests::identifiers_cannot_escape ... ok
+test notifications::pet_focus_tests::pet_focus_does_not_suppress_background_notifications ... ok
+test notifications::tests::notification_identity_and_metadata ... ok
+test notifications::tests::suppression_and_polling_never_replay_alerts ... ok
+test config::tests::legacy_connection_and_multiple_models_use_native_protocols ... ok
+test pet_config::tests::local_affinity_has_cooldown_no_offline_penalty_and_switch ... ok
+test pet_config::tests::preferences_are_bounded ... ok
+test pet_config::tests::stale_settings_preserve_native_position_mood_and_hidden_state ... ok
+test pet_config::tests::versions_are_idempotent_and_future_is_not_overwritten ... ok
+test pet_packages::tests::escape_and_relative_paths_are_rejected ... ok
+test pets::tests::allocation_is_distinct_wait_first_and_stable ... ok
+test pets::tests::delta_merge_rejects_old_revision_and_wrong_epoch ... ok
+test pets::tests::stale_navigation_never_crosses_profile_engine_or_missing_session ... ok
+test engine_http::tests::authentication_redirect_and_core_health_are_separate ... ok
+test config::tests::independent_cache_key_is_explicit_and_model_scoped ... ok
+test desktop_theme::tests::native_shell_reads_only_validated_dsh_appearance ... ok
+test environments::checkpoint_tests::default_source_launch_is_version_scoped_and_preserves_stable_and_unknown_data ... ok
+test config::tests::preflight_refuses_changed_bridge_before_config_mutation ... ok
+test profile_recovery::tests::recovery_preserves_broken_current_and_has_no_automatic_fallback ... ok
+test profiles::tests::network_policy_validates_and_exports_native_launch_environment ... ok
+test pet_config::tests::disk_migration_backup_recovery_and_mood_persistence ... ok
+test source_providers::tests::process_network_changes_require_reload ... ok
+test profile_recovery::tests::recovery_can_undo_and_preserves_all_history_and_unavailable_ca ... ok
+test config::tests::cache_settings_migrate_and_emit_only_native_supported_combinations ... ok
+test config::tests::windows_credential_bridge_keeps_key_out_of_config ... ok
+test source_providers::tests::same_model_connections_keep_distinct_routes_and_private_keys ... ok
+test storage::tests::storage_actions_pair_and_fixture_tree_are_complete ... ok
+test storage::tests::storage_changed_file_and_replaced_identity_refuse ... ok
+test profile_recovery::tests::recovery_refuses_stale_files_rebinding_and_backup_failure ... ok
+test storage::tests::storage_partial_cleanup_retains_ownership_and_has_no_replay ... ok
+test storage::tests::storage_preview_does_not_block_live_atomic_rotation ... ok
+test storage::tests::storage_ownership_links_streams_and_busy_files_refuse ... ok
+test storage::tests::storage_selection_only_deletes_desktop_records ... ok
+test config::tests::bundled_provider_presets_keep_model_capabilities ... ok
+test credential_cleanup::tests::cleanup_namespace_excludes_other_credentials_and_never_exposes_values ... ok
+test credential_cleanup::tests::cleanup_pins_config_and_refuses_hardlinks_and_missing_catalog ... ok
+test browser_runtime::tests::appcontainer_read_access_can_be_granted_without_elevation ... ok
+test storage_quota::tests::quota_serializes_parallel_reservations_and_drop_releases ... ok
+test storage_quota::tests::quota_recounts_writes_and_retains_existing_data_when_full ... ok
+test storage_quota::tests::quota_settings_invalid_or_locked_keep_original ... ok
+test storage_quota::tests::quota_refuses_incomplete_inventory_and_outside_admission ... ok
+test storage_quota::tests::quota_settings_persist_cas_and_keep_existing_leases ... ok
+test environments::checkpoint_tests::bounded_copy_is_inert_refuses_collisions_and_links ... ok
+test task_snapshots::tests::automatic_snapshots_real_dsh_wire ... ignored, requires the prepared pinned DSH runtime and protocol fixtures
+test storage::tests::storage_junctions_never_touch_outside_records ... ok
+test process::tests::closing_job_reaps_backend_and_grandchild ... ok
+test task_snapshots::tests::automatic_scopes_are_explicit_revisioned_and_identity_bound ... ok
+test task_snapshots::tests::archive_export_is_create_only_outside_workspace_and_requires_valid_originals ... ok
+test task_snapshots::tests::failed_task_capture_cannot_be_replayed_after_files_change ... ok
+test task_snapshots::tests::snapshot_browse_stays_in_scope_and_omits_metadata_and_links ... ok
+test task_snapshots::tests::archive_rejects_corrupt_missing_extra_and_linked_payloads ... ok
+test storage_quota::tests::quota_counts_hidden_profiles_temporary_and_unknown_managed_files_only ... ok
+test task_snapshots::tests::archive_unconfirmed_task_stays_unconfirmed_after_import ... ok
+test task_snapshots::tests::automatic_bridge_enforces_pipe_authority_scope_and_revoke_before_confirmation ... ok
+test credential_cleanup::tests::cleanup_preserves_all_config_and_active_references_and_grace ... ok
+test task_snapshots::tests::snapshot_navigation_only_selects_existing_task_and_never_restores ... ok
+test task_snapshots::tests::snapshot_details_reject_false_receipts_and_explain_partial_backups ... ok
+test task_snapshots::tests::snapshots_busy_files_and_hardlinks_refuse_without_writes ... ok
+test task_snapshots::tests::snapshot_details_preserve_historical_results_without_workspace_access ... ok
+test task_snapshots::tests::automatic_bridge_seals_original_scope_after_disarm_and_rejects_restart ... ok
+test task_snapshots::tests::snapshots_late_edit_after_preview_is_conflict_and_cannot_reseal ... ok
+test task_snapshots::tests::snapshots_interrupted_journal_is_visible_and_never_replayed ... ok
+test task_snapshots::tests::snapshots_corrupt_backup_and_replaced_root_fail_closed ... ok
+test task_snapshots::tests::snapshots_windows_handles_block_concurrent_writes_and_parent_rename ... ok
+test task_snapshots::tests::failed_task_seal_cannot_sample_later_changes ... ok
+test task_snapshots::tests::task_snapshot_deadline_identity_and_local_ipc_are_bounded ... ok
+test task_snapshots::tests::snapshots_failed_creation_is_interrupted_and_keeps_original_backup ... ok
+test task_snapshots::tests::snapshots_partial_write_failure_rolls_back_and_preserves_recovery_copies ... ok
+test task_snapshots::tests::snapshots_replacement_with_same_bytes_and_new_file_are_not_overwritten ... ok
+test credential_cleanup::tests::cleanup_refuses_stale_selection_and_malformed_backup_without_deletion ... ok
+test task_snapshots::tests::storage_leases_release_while_busy_and_on_engine_drop ... ok
+test task_snapshots::tests::snapshots_reject_streams_junctions_reserved_names_and_outside_paths ... ok
+test task_snapshots::tests::task_snapshot_rejects_changed_scope_restarted_engine_and_wrong_confirmation ... ok
+test task_snapshots::tests::archive_roundtrip_preserves_binary_dirty_files_and_restore_receipts ... ok
+test profile_recovery::tests::recovery_migrates_legacy_credential_without_json_secret ... ok
+test task_snapshots::tests::task_snapshot_restore_uses_existing_conflict_and_backup_contract ... ok
+test task_snapshots::tests::task_snapshot_tampered_confirmation_cannot_enable_restore ... ok
+test task_snapshots::tests::snapshots_roundtrip_dirty_binary_created_deleted_without_touching_metadata ... ok
+test task_snapshots::tests::task_snapshot_requires_confirmation_and_preserves_original_on_duplicate ... ok
+test task_snapshots::tests::snapshots_limits_retain_existing_records_and_connections_are_separate ... ok
+test profiles::tests::profiles_share_history_support_edits_and_preserve_credentials ... ok
+test settings_owner::tests::recovery_requires_tag_and_confirmed_dead_writer ... ok
+
+test result: ok. 93 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.95s
+
+PASS native provider catalog: 13 providers, 105 models, no external requests
+{"status":"PASS","differences":0,"report":"C:\\Users\\enxi1\\AppData\\Local\\Temp\\dsh-desktop-build-tests\\catalog-alias-xNrJRu\\report.json"}
+PASS native session continues custom -> known ZAI -> custom; no external requests
+PASS native known-provider scoped cache key on final wire
+PASS native session continues custom -> known ZAI -> custom; no external requests
+PASS profile network: native proxy sockets, loopback bypass, TLS verification, enterprise CA, fail-closed CA startup
+Evidence directory: D:\Documents\FeiyangChen\devApps\dshWinUi\.build\profile-network-vWTYjB
+PASS openai: catalog, default, model switch, auth, streaming, read tool, restart persistence, shared workspace history without replay
+PASS anthropic: catalog, default, model switch, auth, streaming, read tool, restart persistence, shared workspace history without replay
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\protocol-models-S0ZvkH
+PASS openai: native analyze_image, filesystem/image validation, credential service, live settings, restart persistence
+PASS anthropic: native analyze_image, filesystem/image validation, credential service, live settings, restart persistence
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-iQDWkY
+    Finished `release` profile [optimized] target(s) in 0.37s
+     Running unittests src\main.rs (src-tauri\target\x86_64-pc-windows-msvc\release\deps\DSHDesktop-7148279bc0031c5b.exe)
+
+running 1 test
+test task_snapshots::tests::automatic_snapshots_real_dsh_wire ... PASS openai snapshot native wire; evidence D:\Documents\FeiyangChen\devApps\dshWinUi\.build\task-snapshot-wire-EUHigs
+PASS anthropic snapshot native wire; evidence D:\Documents\FeiyangChen\devApps\dshWinUi\.build\task-snapshot-wire-5O59TC
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 38.94s
+
+PASS openai: 19 native wire prefix cases
+PASS anthropic: 19 native wire prefix cases
+Evidence: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\prefix-wire-QxL3Ca
+PASS openai: 25 self-test contracts; native local checks, five bounded requests, metadata export, cancellation, restart and crash without replay
+PASS anthropic: 25 self-test contracts; native local checks, five bounded requests, metadata export, cancellation, restart and crash without replay
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-pXf3zm
+PASS openai: 25 self-test contracts; native local checks, five bounded requests, metadata export, cancellation, restart and crash without replay
+PASS anthropic: 25 self-test contracts; native local checks, five bounded requests, metadata export, cancellation, restart and crash without replay
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-kNjVMF
+PASS openai independent key wire: automatic
+PASS openai independent key wire: long
+PASS openai independent key wire: short-markers
+PASS openai independent key wire: key-only
+PASS openai independent key wire: key-long
+PASS openai independent key wire: key-markers
+PASS openai independent key wire: off-long
+PASS openai independent key wire: real native tool loop, next turn, restart and session isolation
+PASS anthropic independent key wire: automatic
+PASS anthropic independent key wire: long
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-MUrY6a
+PASS openai: same-name providers, in-flight snapshot, hot credentials/endpoint, empty/stale/invalid refusal, restart
+PASS anthropic: same-name providers, in-flight snapshot, hot credentials/endpoint, empty/stale/invalid refusal, restart
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-6JcubS
+PASS openai: native delivery projection + Project Actions artifacts/logs + authenticated controlled download
+PASS openai: Project Actions UI API + model tool + native sandbox + cancellation + durable results
+PASS openai: native cache probe, exact repeat wire, isolated groups, no real context/tools, bounded requests, metadata exports
+PASS openai: cache automatic matches pinned adapter wire contract
+PASS openai: cache long matches pinned adapter wire contract
+PASS openai: cache short-markers matches pinned adapter wire contract
+PASS openai: native cold-session recovery after forced exit; no prompt/tool replay
+PASS openai: identical final wire, usage, read, error/cancel, auth, privacy, persisted toggles, key scope
+PASS anthropic: native delivery projection + Project Actions artifacts/logs + authenticated controlled download
+PASS anthropic: Project Actions UI API + model tool + native sandbox + cancellation + durable results
+PASS anthropic: native cache probe, exact repeat wire, isolated groups, no real context/tools, bounded requests, metadata exports
+PASS anthropic: cache automatic matches pinned adapter wire contract
+PASS anthropic: cache long matches pinned adapter wire contract
+PASS anthropic: native cold-session recovery after forced exit; no prompt/tool replay
+PASS anthropic: identical final wire, usage, read, error/cancel, auth, privacy, persisted toggles, key scope
+Evidence directory: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\observability-wire-Jx02kP
+PASS native change review: pre-step durable capture, two turns, preexisting vs during-task, authenticated routes, no model calls on review
+Evidence: C:\Users\enxi1\AppData\Local\Temp\dsh-desktop-build-tests\change-wire-PLNQKu\c-8585c713c2e3423ca2da7b51916cf131
+   Compiling dsh-desktop v0.2.5-rc.1 (D:\Documents\FeiyangChen\devApps\dshWinUi\src-tauri)
+    Finished `release` profile [optimized] target(s) in 1m 41s
+{"kind":"RUNTIME_VERIFIED","files":28218,"bytes":1428762773}
+{"kind":"desktop-build-receipt","status":"PASS","id":"faaf05d4-9328-43ff-88ef-e0c20e3ea121","desktopVersion":"0.2.5-rc.1","inputs":319}

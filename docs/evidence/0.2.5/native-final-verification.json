@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "verifiedAt": "2026-09-24T02:44:41.4535843Z",
+  "desktopVersion": "0.2.5-rc.1",
+  "buildId": "faaf05d4-9328-43ff-88ef-e0c20e3ea121",
+  "exeSha256": "cbaec9533f4f9700ceaeca56fe4a288be93480b5cd5cbd35413f0e3e9f377d95",
+  "runtimeManifestSha256": "28bf77f3da0f9f85a347cd48037ac56d5514148458d24cfeb6e0da356a07dd5e",
+  "sourceCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "nativeTauriWindow": true,
+  "syntheticDataOnly": true,
+  "candidate": "c-b52c987b566a56a97b853164bbc68f64",
+  "fixtureRoot": "C:\\Users\\enxi1\\AppData\\Local\\Temp\\dsh-native-025-final-9caae984374b4bf18af43dffe544597b",
+  "preflightExe": "9981bbb930989535142a941b29c01ea0a244b98f01560a3a77e75ecfb10e83d2",
+  "preflightWasNotFinal": true,
+  "finalHostPid": 20164,
+  "finalBackendPids": [
+    44456,
+    21320
+  ],
+  "checks": {
+    "isolatedWorkspace": true,
+    "completedResponse": "MOCK_LLM_OK",
+    "petPositionSurvivesRestart": true,
+    "nativeReadEditPwsh": true,
+    "snapshotNavigation": true,
+    "finalExeMatchesBuild": true,
+    "petDragPersisted": [
+      268.57142857142856,
+      252.57142857142858
+    ],
+    "controlledRestart": true,
+    "historyOpenAfterRestart": true,
+    "runtimeMatchesBuild": true,
+    "expiredConfirmationRefused": true,
+    "petAtlasDecoded": true,
+    "ownedHostAndBackendsExited": true,
+    "wallpaperAndSharedThemeVisible": true,
+    "petDisable": true,
+    "requestCountBeforeRestart": 10,
+    "normalMenuQuit": true,
+    "requestCountAfterHistoryOpen": 10,
+    "environmentPopover": true
+  },
+  "preflightChecks": {
+    "backendPidStayed": 6100,
+    "toolRequests": 5,
+    "nativeConnectionSaveAndHotApply": true,
+    "freshRootStartup": true
+  },
+  "finalToolRequests": 5,
+  "requestTotal": 10,
+  "realProviderRequests": 0,
+  "limits": [
+    "Final EXE uses the preflight-created synthetic connection; native initial save/hot-apply was on preflight EXE with identical source/runtime",
+    "Snapshots full lifecycle and both protocols covered by complete Gate; native window check covers navigation",
+    "No real intranet, sleep, mixed DPI, touch/pen, long load or clean enterprise-image acceptance"
+  ]
+}

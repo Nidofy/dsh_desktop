@@ -1,0 +1,17 @@
+1790216430797 UTC-epoch-ms webview2=fixed version=153.0.4234.48 path=D:\Documents\FeiyangChen\devApps\dshWinUi\.build\native-025-final\resources/webview2 os=Windows 10.0 build 26200
+1790216432553 UTC-epoch-ms system tray initialized; window close hides to tray
+1790216432554 UTC-epoch-ms desktop=0.2.5-rc.1 node=24.16.0 supervisor started; engine identity pending verification
+1790216454020 UTC-epoch-ms backend ready pid=6100 port=53035 startup_ms=21461
+1790216850562 UTC-epoch-ms pet local window created
+1790216851129 UTC-epoch-ms pet production module loaded
+1790216851301 UTC-epoch-ms pet production atlas decoded in native window
+1790217101106 UTC-epoch-ms backend job closed; supervisor stopped
+1790217135447 UTC-epoch-ms webview2=fixed version=153.0.4234.48 path=D:\Documents\FeiyangChen\devApps\dshWinUi\.build\native-025-final\resources/webview2 os=Windows 10.0 build 26200
+1790217135986 UTC-epoch-ms system tray initialized; window close hides to tray
+1790217135987 UTC-epoch-ms desktop=0.2.5-rc.1 node=24.16.0 supervisor started; engine identity pending verification
+1790217136422 UTC-epoch-ms pet local window created
+1790217136478 UTC-epoch-ms pet production module loaded
+1790217136584 UTC-epoch-ms pet production atlas decoded in native window
+1790217140519 UTC-epoch-ms backend ready pid=44456 port=52618 startup_ms=4530
+1790217496617 UTC-epoch-ms backend ready pid=21320 port=56711 startup_ms=1920
+1790217815045 UTC-epoch-ms backend job closed; supervisor stopped

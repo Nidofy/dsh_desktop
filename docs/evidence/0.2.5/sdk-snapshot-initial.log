@@ -1,0 +1,41 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 D:/Documents/FeiyangChen/devApps/deepseek-harness
+
+ ❯ snapshots/sdk/sdk.snapshot.ts (22 tests | 1 failed | 21 skipped) 5051ms
+     × replays text-turn through dsh --profile sdk 5049ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  snapshots/sdk/sdk.snapshot.ts > TypeScript SDK snapshots over the jsonrpc runtime > replays text-turn through dsh --profile sdk
+AssertionError: expected [] to deeply equal [ 'feedback/record', …(4) ]
+
+- Expected
++ Received
+
+- [
+-   "feedback/record",
+-   "feedback/record",
+-   "feedback/message-put",
+-   "feedback/message-put",
+-   "feedback/message-delete",
+- ]
++ []
+
+ ❯ runScenario snapshots/sdk/sdk.snapshot.ts:647:53
+    645|         if (scenario.manifest.environment?.DSH_SNAPSHOT_FEEDBACK === '…
+    646|           const feedback = result.events.filter(event => event.type.st…
+    647|           expect(feedback.map(event => event.type)).toEqual([
+       |                                                     ^
+    648|             'feedback/record', 'feedback/record', 'feedback/message-pu…
+    649|           ])
+ ❯ snapshots/sdk/sdk.snapshot.ts:837:104
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 skipped (22)
+   Start at  09:30:49
+   Duration  11.43s (transform 1.46s, setup 629ms, import 5.52s, tests 5.05s, environment 0ms)
+

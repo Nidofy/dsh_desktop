@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "status": "PASS",
+  "method": "built public Cordis/LLM plugin composition against loopback mocks",
+  "modelRequests": 6,
+  "results": [
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "api": "openai-completions",
+      "completeBodyEqual": true,
+      "authAndProtocolHeadersEqual": true,
+      "routeScopeIndependent": true
+    },
+    {
+      "provider": "zai-coding-cn",
+      "model": "glm-5.3",
+      "api": "openai-completions",
+      "completeBodyEqual": true,
+      "authAndProtocolHeadersEqual": true,
+      "routeScopeIndependent": true
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "api": "anthropic-messages",
+      "completeBodyEqual": true,
+      "authAndProtocolHeadersEqual": true,
+      "routeScopeIndependent": true
+    }
+  ]
+}
