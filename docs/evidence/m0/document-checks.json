@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-29",
+  "count": 21,
+  "missing": [],
+  "checks": [
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/source-lock.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/verify-source.mjs",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/couplings.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/win-unpacked",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "evidence/m0/artifact.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/evidence/packaging-result.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/smoke-desktop.mjs",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/evidence/desktop-ui.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/migration/m0/evidence/workspace.png",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/apps/cli/tests/profiles/headless/tests/session-format-guard.expected.e2e.ts",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "target": "../electron/apps/desktop/tests/migration-m0-connection.spec.ts",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-M0-IMPLEMENTATION-2026-09-29.md",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "../versions.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "../build-deps/harness-source.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "evidence/migration-2026-09-29/baseline.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "evidence/0.2.5/distribution-verification.json",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "exists": true
+    }
+  ]
+}

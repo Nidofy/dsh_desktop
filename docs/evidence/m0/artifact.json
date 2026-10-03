@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-29",
+  "status": "PASS",
+  "scope": "Unsigned directory package, upstream prepared and final ASAR payload/Host smoke checks",
+  "sourceCommit": "4878cdabd87d4041bdaff61d04c966883b9fd07a",
+  "sourceDirty": true,
+  "productionSourceModified": false,
+  "packageDirectory": "D:\\Documents\\FeiyangChen\\devApps\\dshWinUi\\electron\\apps\\desktop\\.desktop-build\\targets\\win-x64\\unsigned-artifacts\\win-unpacked",
+  "fileCount": 9763,
+  "bytes": 1057490240.0,
+  "release": {
+    "schemaVersion": 1,
+    "version": "0.2.0-rc.1",
+    "hostProtocolVersion": 4,
+    "nodeVersion": "24.18.1",
+    "pnpmVersion": "11.7.0"
+  },
+  "electron": "44.0.0",
+  "toolNode": "24.21.0",
+  "python": "3.12.14",
+  "dshInventoryFiles": 12448,
+  "dshInventorySha256": "882c0a3b3e2070e69022cc56d7a1e35819f6245bd78a5246632ba5278e02f0e9",
+  "artifacts": [
+    {
+      "path": "DeepSeek Harness.exe",
+      "bytes": 244468224,
+      "sha256": "c4733e5999f9efd1e31e4ec869945a77564befd8a8b9a0af69fee676ea059509"
+    },
+    {
+      "path": "resources/app.asar",
+      "bytes": 118196194,
+      "sha256": "6e34c44d326a098962f4fa53066fbfdd27fcee8d495c241977f8881ac000c1c9"
+    },
+    {
+      "path": "resources/runtime/versions.json",
+      "bytes": 66,
+      "sha256": "bbafe1947ae4555b8085d3f3ab5eee899fa29dd3b5c3250e275403480cbf6218"
+    },
+    {
+      "path": "resources/runtime/primary-runtime/runtime.json",
+      "bytes": 597,
+      "sha256": "664be52a7a73f048958194805750d98fcfbfce103223614d8240711a9f927f51"
+    }
+  ],
+  "signatureStatus": "NotSigned",
+  "networkIsolationCertified": false,
+  "published": false
+}

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-29",
+  "timezone": "Asia/Shanghai",
+  "scope": "Targeted static source comparison and migration planning only",
+  "upstream": {
+    "repository": "https://github.com/deepseek-ai/deepseek-harness",
+    "tag": "dsh-v0.2.0-rc.1",
+    "commit": "4878cdabd87d4041bdaff61d04c966883b9fd07a",
+    "releaseUrl": "https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.0-rc.1",
+    "releaseDate": "2026-09-28",
+    "prerelease": true,
+    "checkout": ".investigation/audit-20260929-dsh-020rc1",
+    "clean": true,
+    "remoteTagCheck": "ls-remote refs/tags/dsh-v0.2.0* returned only dsh-v0.2.0-rc.1 at the pinned SHA"
+  },
+  "comparison": {
+    "from": "477b4f420553e8a52c2fbccc464d7561b239c443",
+    "to": "4878cdabd87d4041bdaff61d04c966883b9fd07a",
+    "filesChanged": 1109,
+    "insertions": 20374,
+    "deletions": 77957,
+    "nameStatus": "upstream-changes.tsv",
+    "note": "Includes documentation, version and generated content; not a count of behavioral changes",
+    "unchangedTargetedPaths": [
+      {
+        "path": "packages/llm/llm-pi-ai/src",
+        "unchanged": true,
+        "changedFiles": []
+      },
+      {
+        "path": "packages/llm/llm-retry/src",
+        "unchanged": true,
+        "changedFiles": []
+      },
+      {
+        "path": "packages/core/session/src/types.ts",
+        "unchanged": true,
+        "changedFiles": []
+      },
+      {
+        "path": "apps/desktop/src/host-protocol.ts",
+        "unchanged": true,
+        "changedFiles": []
+      },
+      {
+        "path": "apps/desktop/src/web-document.ts",
+        "unchanged": true,
+        "changedFiles": []
+      },
+      {
+        "path": "apps/desktop/src/mandatory-update-policy.ts",
+        "unchanged": true,
+        "changedFiles": []
+      }
+    ]
+  },
+  "desktopCommit": "1e8d84f813fafda00abf34b7b5c294d9b67ee3da",
+  "localHarnessCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "localHarnessClean": true,
+  "upstreamHashes": [
+    {
+      "path": "package.json",
+      "sha256": "b046e4035885d2ac404b5fe03d57024cd5aa47a071e29689fe04db156ba997b9"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "081d9f8641590187c359477a5ee01efe99e0f216d19b8ac946d50cc710cdfb8b"
+    },
+    {
+      "path": "apps/desktop/package.json",
+      "sha256": "01472cd50aaf6ab9bd3f8973cdbe300c41f25541227ef36e0dd5ec6ed11fc0bc"
+    },
+    {
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "sha256": "9c2be64f46a193eff3cca190c26e697e8e8eee25c9b40149dfdb56f8142c252d"
+    },
+    {
+      "path": "packages/bundle/web-app/cordis.patch.yml",
+      "sha256": "df7653ee4c324dca706034631926c86f13a2cf17c280cc018f8c070a0aaad19e"
+    },
+    {
+      "path": "packages/experimental/schedule-bundle/cordis.patch.yml",
+      "sha256": "2c2bf8478c735344e1b799b43c4b0a7c73ee5413af14e3aa5b5bf3ab9ef2218b"
+    }
+  ],
+  "localEvidenceHashes": [
+    {
+      "path": "versions.json",
+      "sha256": "a4276a39863a85016fee550d05c414a8d790fb217f35247c5be7e34452d69b5f"
+    },
+    {
+      "path": "build-deps/harness-source.json",
+      "sha256": "dbcef6a4f11b06130791c67406055bb75c2cc44b296c39abd426ee41e227f5eb"
+    },
+    {
+      "path": "docs/evidence/0.2.5/distribution-verification.json",
+      "sha256": "d716e9ef816c84ded5e47f3a9f566152fcea8444a16d5a1ac51cbc454c1492ad"
+    }
+  ],
+  "newProductTestsRun": false,
+  "productBuildRun": false,
+  "userDataMigrated": false,
+  "credentialsAccessed": false,
+  "published": false,
+  "historicalEvidenceIsNotNewTestResult": true
+}

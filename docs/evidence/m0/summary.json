@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-29",
+  "phase": "M0",
+  "status": "PARTIAL",
+  "upstreamCommit": "4878cdabd87d4041bdaff61d04c966883b9fd07a",
+  "forkMasterAtLastFetch": "4878cdabd87d4041bdaff61d04c966883b9fd07a",
+  "branch": "codex/electron-intranet",
+  "sourceVerification": "PASS",
+  "frozenInstall": "PASS",
+  "unsignedPackage": "PASS",
+  "packagedDesktopEntry": "PASS",
+  "focusedTests": {
+    "passed": 81,
+    "failed": 0
+  },
+  "profileSmokesQualifiedNode": {
+    "node": "24.21.0",
+    "passed": 18,
+    "failed": 0
+  },
+  "sessionFormatAfterTestCorrection": {
+    "passed": 4,
+    "failed": 0
+  },
+  "legacyProtection": {
+    "passed": 30,
+    "ignored": 1
+  },
+  "legacyFixtureGeneration": {
+    "passed": 1
+  },
+  "legacyProtectionWire": {
+    "status": "FAIL",
+    "protocolReached": "openai",
+    "failure": "Self-test remains RUNNING at tests/task-snapshot-wire.mjs:99",
+    "anthropic": "NOT_RUN"
+  },
+  "observations": [
+    "Build-host Node 24.16.0 fails missing-assets SDK shutdown; Electron Node 24.18.1 and tool Node 24.21.0 pass the isolated scenario",
+    "Profile config replacement requires complete webserver config",
+    "Mutable credentials are not frozen by prepared adapter model generation",
+    "Windows Session ownership uses named semaphores, not a session.lock file"
+  ],
+  "remaining": [
+    "Combined new Desktop slice: protected tool execution, in-flight switch, loop retry and history reopen",
+    "Resolve or isolate legacy wire self-test lifecycle failure before accepting that regression",
+    "Port two legacy model extension behaviors deliberately"
+  ],
+  "productionSourceModified": false,
+  "networkIsolationCertified": false,
+  "realModelRequestsInitiated": false,
+  "userDataMigrated": false,
+  "remotePublished": false,
+  "gitCommitCreated": false
+}

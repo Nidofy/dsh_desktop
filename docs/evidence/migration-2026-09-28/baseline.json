@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-28",
+  "timezone": "Asia/Shanghai",
+  "scope": "Targeted static source review and planning; no application build, product execution, model requests or credential access",
+  "desktopCommit": "1e8d84f813fafda00abf34b7b5c294d9b67ee3da",
+  "localHarnessCommit": "5e2879f0478ba9336128312e715dee7a9f56c3db",
+  "initialUntrackedFiles": [
+    "REVIEW-TAURI-VS-OFFICIAL.md"
+  ],
+  "referenceSources": [
+    {
+      "name": "dsh",
+      "repository": "https://github.com/deepseek-ai/deepseek-harness",
+      "ref": "dsh-v0.1.7-rc.2",
+      "commit": "477b4f420553e8a52c2fbccc464d7561b239c443",
+      "checkout": ".investigation/audit-20260928-dsh",
+      "clean": true
+    },
+    {
+      "name": "codex",
+      "repository": "https://github.com/openai/codex",
+      "ref": "default-branch snapshot",
+      "commit": "1cc7e2361237ce7244430ee1d581c77f95c57ac8",
+      "checkout": ".investigation/audit-20260928-codex",
+      "clean": true
+    },
+    {
+      "name": "zcode",
+      "repository": "https://github.com/zai-org/ZCode",
+      "ref": "default-branch snapshot",
+      "commit": "29628c9acdb81b703bbd4080c207a0e7ce5e276e",
+      "checkout": ".investigation/audit-20260928-zcode",
+      "clean": true
+    },
+    {
+      "name": "opencode",
+      "repository": "https://github.com/anomalyco/opencode",
+      "ref": "v1.18.32",
+      "commit": "545f51d26cc39a907d2867492d498d9607ea5fa4",
+      "checkout": ".investigation/audit-20260928-opencode",
+      "clean": true
+    }
+  ],
+  "localEvidenceHashes": [
+    {
+      "path": "versions.json",
+      "sha256": "a4276a39863a85016fee550d05c414a8d790fb217f35247c5be7e34452d69b5f"
+    },
+    {
+      "path": "build-deps/harness-source.json",
+      "sha256": "dbcef6a4f11b06130791c67406055bb75c2cc44b296c39abd426ee41e227f5eb"
+    },
+    {
+      "path": "runtime-src/source-provider-control.mjs",
+      "sha256": "ea794efb42e2d2919203977b734c8a49463cb16409dca4563395951d5c80f8ae"
+    },
+    {
+      "path": "runtime-src/source-credentials.mjs",
+      "sha256": "8155159be7b9e6567cc737e9d6fe084a00eaeeea51954ac200257c8e810e02d1"
+    },
+    {
+      "path": "runtime-src/source-profile.mjs",
+      "sha256": "e3964508b524a56251fe0163570d74380e7566ec073ffc82fe79f48a9d9ae7c4"
+    },
+    {
+      "path": "runtime-src/task-snapshot-integration.mjs",
+      "sha256": "95b4fa588250d547e2faf9a4568d08950e05b4a7f79662865f939924b76d103d"
+    },
+    {
+      "path": "runtime-src/change-review-integration.mjs",
+      "sha256": "5512c71b85f5bd26778c06cea0cdcbbd03fb8bde3489d8d722b74b42a76782ba"
+    },
+    {
+      "path": "runtime-src/desktop-observability.mjs",
+      "sha256": "727d04e9f6301d3eaa0a9a56f909aa3d9b6d668b3e5804865785acd23d527fe1"
+    },
+    {
+      "path": "runtime-src/project-actions-integration.mjs",
+      "sha256": "0f362117fa7b53756175d747b75692be27bcdd7da1011c6c478ff17063abd9a3"
+    },
+    {
+      "path": "src-tauri/src/source_providers.rs",
+      "sha256": "1c589a28cb6eda8a5014b9cb54f53b901aba3dfcb75dd7e21d84db118562c3cf"
+    },
+    {
+      "path": "src-tauri/src/task_snapshots.rs",
+      "sha256": "8fcd9c7631ed9a4746a96742e2a7637960625c791ac01af8fdeb9af379f079d1"
+    },
+    {
+      "path": "docs/evidence/0.2.5/distribution-verification.json",
+      "sha256": "d716e9ef816c84ded5e47f3a9f566152fcea8444a16d5a1ac51cbc454c1492ad"
+    }
+  ],
+  "newProductTestsRun": false,
+  "historicalEvidenceIsNotNewTestResult": true
+}

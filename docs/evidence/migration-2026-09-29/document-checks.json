@@ -1,0 +1,679 @@
+{
+  "date": "2026-09-29",
+  "scope": "Markdown local links and pinned source paths only; not product testing or general live URL validation",
+  "checkedCount": 107,
+  "missingCount": 0,
+  "checks": [
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "../versions.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "../build-deps/harness-source.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "evidence/migration-2026-09-29/baseline.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/bundle/web-app/cordis.patch.yml",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/client/product-analytics/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/host/product-telemetry-otel/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/apps/desktop/src/main.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/bundle/base/cordis.patch.yml",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/boot/app-boot/src/profile.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/experimental/schedule-bundle/cordis.patch.yml",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/core/session/src/repair.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/boot/config-editor/src/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/settings/settings/tests/configuration-inheritance.spec.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/packages/client/ui-workspace/src/client/contract/slots.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/apps/desktop/package.json",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/4878cdabd87d4041bdaff61d04c966883b9fd07a/apps/desktop/src/release.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "evidence/0.2.5/distribution-verification.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/tree/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "evidence/0.2.5/distribution-verification.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "evidence/migration-2026-09-28/baseline.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/llm/llm-pi-ai/src/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/openai/codex/blob/1cc7e2361237ce7244430ee1d581c77f95c57ac8/codex-rs/http-client/src/network_policy.rs",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/provider/src/registry-service.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/services/src/zcode-agent/zcodeAgentConnectionScope.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/NOTICE.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/server/routes/instance/httpapi/handlers/config.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/provider/provider.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/snapshot/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "target": "ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/release.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/core-package-set.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/runtime-tree.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/boot/plugin-manager/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/docs/session-format-status.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/core/session/src/types.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "evidence/migration-2026-09-29/baseline.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "evidence/migration-2026-09-28/baseline.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../versions.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../build-deps/harness-source.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../README.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "RELEASE-0.2.5-rc.1.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "HARNESS_SOURCE.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "evidence/0.2.5/distribution-verification.json",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/source-provider-control.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/source-credentials.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../src-tauri/src/source_providers.rs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/task-snapshot-integration.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/change-review-integration.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../src-tauri/src/task_snapshots.rs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../src-tauri/src/artifacts.rs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/desktop-observability.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/source-profile.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/project-actions-integration.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/settings-protection.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../runtime-src/settings-transaction.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../tests/source-provider-control.mjs",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/welcome-api.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/welcome-backend.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/main.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/mandatory-update-policy.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/scripts/desktop-package-environment.mjs",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/web-document.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/paths.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop-host/src/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/host-protocol.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/llm/llm-pi-ai/src/adapter.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/llm/llm-pi-ai/src/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/spill/spill-policy/src/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "HARNESS_UPGRADE.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "HARNESS_ADAPTER.md",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "../scripts/check-harness-upstream.ps1",
+      "kind": "local-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/release.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/core-package-set.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/apps/desktop/src/runtime-tree.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/boot/plugin-manager/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/docs/session-format-status.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/deepseek-ai/deepseek-harness/blob/477b4f420553e8a52c2fbccc464d7561b239c443/packages/core/session/src/types.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/openai/codex/blob/1cc7e2361237ce7244430ee1d581c77f95c57ac8/codex-rs/app-server-protocol/src/protocol/common.rs",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/openai/codex/blob/1cc7e2361237ce7244430ee1d581c77f95c57ac8/codex-rs/app-server-protocol/src/protocol/v2/thread.rs",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/openai/codex/blob/1cc7e2361237ce7244430ee1d581c77f95c57ac8/codex-rs/http-client/src/network_policy.rs",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/openai/codex/blob/1cc7e2361237ce7244430ee1d581c77f95c57ac8/codex-rs/app-server/README.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/provider/src/registry-service.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/provider/src/config-overlay.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/provider/src/effective-model-selection.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/provider-node/src/zcode-builtin-remote-synchronizer.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/services/src/zcode-agent/zcodeAgentConnectionScope.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/services/src/zcode-agent/zcodeProtocolClient.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/NOTICE.md",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/server/routes/instance/httpapi/handlers/config.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/provider/provider.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/core/src/models-dev.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/permission/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    },
+    {
+      "document": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "target": "https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/snapshot/index.ts",
+      "kind": "pinned-source-path",
+      "exists": true
+    }
+  ],
+  "documentHashes": [
+    {
+      "path": "docs/ELECTRON-MIGRATION-PLAN-0.2.0-rc.1.md",
+      "sha256": "7ddcc73dcdc0b2322d35ed6020f229e19090bf57a2b83f705372de17b509865e"
+    },
+    {
+      "path": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "sha256": "b43fe31c3d9b7108a00981c6e6c319fcd5eb429bdaeab97ed2ca0a4a9e186362"
+    },
+    {
+      "path": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "sha256": "340bb2251d54fe48e8f30af4a1a6b94c913bcc9a275aef0c5d936101d81c9c50"
+    },
+    {
+      "path": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "sha256": "a760949bdcefd0978eb1edd945571e7a4db4753b004e2781cc665d188e1eceba"
+    }
+  ],
+  "otherExternalLinks": [
+    "https://ai.google.dev/gemini-api/docs/billing",
+    "https://antigravity.google/docs/cli/headless/",
+    "https://antigravity.google/docs/plans",
+    "https://antigravity.google/terms",
+    "https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.7-rc.2",
+    "https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.0-rc.1",
+    "https://learn.chatgpt.com/docs/app-server"
+  ],
+  "newProductTestsRun": false,
+  "baselineCommit": "4878cdabd87d4041bdaff61d04c966883b9fd07a"
+}

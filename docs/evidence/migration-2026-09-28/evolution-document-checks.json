@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-28",
+  "scope": "Upstream evolution planning supplement",
+  "checkedLinks": 94,
+  "unresolvedTargets": [],
+  "productTestsRun": false,
+  "upgradeRehearsalRun": false,
+  "documents": [
+    {
+      "path": "docs/ELECTRON-MIGRATION-ANALYSIS-2026-09-28.md",
+      "sha256": "6271681ab0d5e0c6aaf7c3ad229b96f5c31f53ebe123186a31b226b86d86a054"
+    },
+    {
+      "path": "docs/ELECTRON-MIGRATION-SOURCES-2026-09-28.md",
+      "sha256": "66cd7c59747868a679d3454e1e27583b3989d38d4ad27cf262481c1d6cd6a92f"
+    },
+    {
+      "path": "docs/ELECTRON-UPSTREAM-EVOLUTION-2026-09-28.md",
+      "sha256": "cec0de23813a209851675eb9331090bac93f387c23c23eb16081f79a07f8ac05"
+    }
+  ]
+}

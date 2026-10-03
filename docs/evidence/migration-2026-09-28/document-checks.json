@@ -1,0 +1,8 @@
+{
+  "date": "2026-09-28",
+  "checkedMarkdownLinks": 74,
+  "unresolvedLocalOrPinnedSourcePaths": 0,
+  "referenceCheckoutsClean": true,
+  "productTestsRun": false,
+  "note": "Validated documentation targets against local files and pinned source checkouts; did not execute product or re-run historical acceptance."
+}

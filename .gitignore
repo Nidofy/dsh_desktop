@@ -1,4 +1,7 @@
 .investigation/
+/.pnpm-store/
+# Independent checkout of Nidofy/deepseek-harness for the Electron migration.
+electron/
 .build/
 runtime/
 dist/

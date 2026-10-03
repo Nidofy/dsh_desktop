@@ -61,7 +61,7 @@ $env:DSH_TEST_FIXTURE_ROOT=Join-Path $env:TEMP 'dsh-desktop-build-tests'
 上述旧运行时路径为本机保留的产物，其他机器需自行准备完整的 0.1.5-rc.2 运行时。首次源码构建使用 `-HarnessSourceArtifact <已构建的实际 artifact 路径>`，并提供 `-LegacyRuntime`；不能仅去掉复用参数走 registry 安装。默认打包命令可生成 ZIP。源码仓库为 `https://github.com/Nidofy/dsh_desktop`；`runtime/`、`dist/` 和 `.build/` 为本机构建数据，不随 Git clone 获取。
 
 当前 0.2.5-rc.1 隔离候选使用 DSH **0.1.7-alpha.2**，固定 fork 提交 `5e2879f0478ba9336128312e715dee7a9f56c3db`；包含已授权的 payload hook 和 catalogProvider 接口。旧 0.2.0/0.2.4 交付目录仍保留各自的旧引擎，正式用户数据未自动迁移。
-按用户要求，本轮仅推送桌面 main，Harness 适配提交仍在本地；其他机器仅 clone GitHub 仓库尚不能复现当前源码构建，需另行取得固定提交。离线运行包不依赖该源码 checkout。
+上述为旧 Tauri 候选的源码记录。后续 Electron 迁移源码单独维护在 [deepseek-harness 的 codex/rc2-m4 分支](https://github.com/Nidofy/deepseek-harness/tree/codex/rc2-m4)，以官方 `0.2.0-rc.2` 为基线；本仓库保存 Tauri 源码及迁移报告。克隆本仓库不会自动获取被忽略的 `electron/` checkout。当前实现保留官方模式，工作笔记作为独立插件，“压缩时自动整理”默认关闭；会话与笔记继续使用原试用数据目录。桌面构建产物和用户数据不随 Git 提交。
 M1 T1–T6 的完整构建、最终原生 EXE 和独立离线目录 Gate 已通过；真实内网、目录 ACL 限制及额外 SDK feedback 回放失败分开记录。见 [交付说明](docs/RELEASE-0.2.5-rc.1.md)、[实施记录](docs/IMPLEMENTATION-0.2.5.md)、[源码工作流](docs/HARNESS_SOURCE.md) 和 [后续引擎升级流程](docs/HARNESS_UPGRADE.md)。
 
 - [构建](docs/BUILD.md) / [运行前提](docs/RUNTIME_REQUIREMENTS.md) / [离线部署](docs/OFFLINE_DEPLOYMENT.md)
