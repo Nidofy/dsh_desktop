@@ -1,0 +1,464 @@
+{
+  "schemaVersion": 1,
+  "scope": "manual-dispatch-only",
+  "repository": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron",
+  "maxImplementers": 3,
+  "optionalTasks": ["T21", "T22"],
+  "gates": [
+    {
+      "id": "G-A",
+      "model": "GPT-6 Astra / high",
+      "dependencies": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "optionalDependencies": [],
+      "prompt": "prompts/G-A.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G-B",
+      "model": "GPT-6 Astra / high",
+      "dependencies": [
+        "G-A",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T23"
+      ],
+      "optionalDependencies": [],
+      "prompt": "prompts/G-B.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G-C",
+      "model": "GPT-6.1-Sol / high；跨权限疑点交 Astra",
+      "dependencies": [
+        "G-B",
+        "T11",
+        "T12",
+        "T13",
+        "T17"
+      ],
+      "optionalDependencies": [],
+      "prompt": "prompts/G-C.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G-D",
+      "model": "GPT-6.1-Sol / high",
+      "dependencies": [
+        "G-C",
+        "T14",
+        "T15",
+        "T16",
+        "T18"
+      ],
+      "optionalDependencies": [],
+      "prompt": "prompts/G-D.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G-E",
+      "model": "GPT-6.1-Sol / high；启用侧边分析时由 Astra 复核权限",
+      "dependencies": [
+        "G-D",
+        "T19",
+        "T20"
+      ],
+      "optionalDependencies": [
+        "T21",
+        "T22"
+      ],
+      "prompt": "prompts/G-E.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "G-F",
+      "model": "GPT-6 Astra / high；修复由 GPT-6.1-Sol 实施",
+      "dependencies": [
+        "G-E",
+        "T24",
+        "T26"
+      ],
+      "optionalDependencies": [],
+      "prompt": "prompts/G-F.txt",
+      "status": "NOT_STARTED"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T00",
+      "title": "基线、接口约定与派工登记",
+      "model": "GPT-6 Astra",
+      "effort": "high",
+      "review": "GPT-6.1-Sol",
+      "stage": "S0",
+      "dependencies": [],
+      "prompt": "prompts/T00-baseline-contracts.txt",
+      "status": "READY_FOR_REVIEW",
+      "deliveryRegistry": "../registry.json",
+      "handoff": "../handoffs/T00.md"
+    },
+    {
+      "id": "T01",
+      "title": "连接退化启动与凭据保留",
+      "model": "GLM-5.3",
+      "effort": "使用当前连接支持的编码推理档",
+      "review": "GPT-6.1-Sol；G-A 由 Astra 复核",
+      "stage": "S1",
+      "dependencies": [
+        "T00"
+      ],
+      "prompt": "prompts/T01-connection-recovery.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T02",
+      "title": "Windows 安全凭据后端与转换",
+      "model": "Claude Opus 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6 Astra",
+      "stage": "S1",
+      "dependencies": [
+        "T01"
+      ],
+      "prompt": "prompts/T02-secure-credentials.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T03",
+      "title": "Notebook 活动集、历史与 v2 转换",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S1",
+      "dependencies": [
+        "T00"
+      ],
+      "prompt": "prompts/T03-notebook-v2.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T04",
+      "title": "压缩证据预算与提交游标",
+      "model": "Claude Opus 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6 Astra",
+      "stage": "S1",
+      "dependencies": [
+        "T03"
+      ],
+      "prompt": "prompts/T04-compaction-budget.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T05",
+      "title": "Notebook 增量同步与长历史测量",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S1",
+      "dependencies": [
+        "T04"
+      ],
+      "prompt": "prompts/T05-notebook-incremental.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T06",
+      "title": "受管存储计量、配额与跨进程预留",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6 Astra",
+      "stage": "S2",
+      "dependencies": [
+        "T02",
+        "T05"
+      ],
+      "prompt": "prompts/T06-storage-quota.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T07",
+      "title": "原生安全清理与快照操作接线",
+      "model": "GPT-6.1-Sol",
+      "effort": "high",
+      "review": "GPT-6 Astra",
+      "stage": "S2",
+      "dependencies": [
+        "T06"
+      ],
+      "prompt": "prompts/T07-native-cleanup-snapshots.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T08",
+      "title": "存储与快照管理界面",
+      "model": "Claude Sonnet 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6.1-Sol",
+      "stage": "S2",
+      "dependencies": [
+        "T07"
+      ],
+      "prompt": "prompts/T08-storage-snapshot-ui.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T09",
+      "title": "高级连接、缓存与部署网络设置",
+      "model": "Claude Sonnet 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6.1-Sol",
+      "stage": "S2",
+      "dependencies": [
+        "T02"
+      ],
+      "prompt": "prompts/T09-advanced-settings.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T10",
+      "title": "旧数据迁移向导与恢复回执",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol；数据发布部分 Astra 抽查",
+      "stage": "S2",
+      "dependencies": [
+        "T07",
+        "T09"
+      ],
+      "prompt": "prompts/T10-migration-wizard.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T11",
+      "title": "任务验证回执与过期判断",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6 Astra",
+      "stage": "S3",
+      "dependencies": [
+        "T07",
+        "T10"
+      ],
+      "prompt": "prompts/T11-verification-records.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T12",
+      "title": "持久通知偏好与统一去重",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S3",
+      "dependencies": [
+        "T11"
+      ],
+      "prompt": "prompts/T12-durable-notifications.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T13",
+      "title": "显式会话绑定与轻量角色状态",
+      "model": "GPT-6.1-Sol",
+      "effort": "high",
+      "review": "GPT-6 Astra",
+      "stage": "S3",
+      "dependencies": [
+        "T05",
+        "T12"
+      ],
+      "prompt": "prompts/T13-companion-scope.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T14",
+      "title": "静态角色、动态说明与窄屏入口",
+      "model": "Claude Sonnet 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6.1-Sol",
+      "stage": "S4",
+      "dependencies": [
+        "T13"
+      ],
+      "prompt": "prompts/T14-companion-ui.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T15",
+      "title": "固定单模型 Live2D 渲染插件",
+      "model": "Claude Sonnet 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6.1-Sol；资源生命周期 Opus 抽查",
+      "stage": "S4",
+      "dependencies": [
+        "T14"
+      ],
+      "prompt": "prompts/T15-live2d-renderer.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T16",
+      "title": "角色与桌宠关注、互动协调",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S4",
+      "dependencies": [
+        "T12",
+        "T13",
+        "T14"
+      ],
+      "prompt": "prompts/T16-pet-coordination.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T17",
+      "title": "中文历史检索与显式项目分组",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol；权限范围 Astra 抽查",
+      "stage": "S3",
+      "dependencies": [
+        "T05",
+        "T10"
+      ],
+      "prompt": "prompts/T17-local-history-search.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T18",
+      "title": "规则 Hint 与项目返回卡",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "Claude Sonnet 5.5 审 UI；GPT-6.1-Sol 集成",
+      "stage": "S4",
+      "dependencies": [
+        "T11",
+        "T12",
+        "T14",
+        "T17"
+      ],
+      "prompt": "prompts/T18-hints-return-card.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T19",
+      "title": "Electron 自检中心",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S5",
+      "dependencies": [
+        "T10",
+        "T11",
+        "T23"
+      ],
+      "prompt": "prompts/T19-selftest-center.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T20",
+      "title": "任务级 A/B 实验与有界矩阵",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S5",
+      "dependencies": [
+        "T11",
+        "T19"
+      ],
+      "prompt": "prompts/T20-ab-experiments.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T21",
+      "title": "受控侧边分析",
+      "model": "Claude Opus 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6 Astra",
+      "stage": "S5-可选",
+      "dependencies": [
+        "T18",
+        "T23"
+      ],
+      "prompt": "prompts/T21-side-analysis.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T22",
+      "title": "自然语言设置与可选口吻",
+      "model": "Claude Sonnet 5.5",
+      "effort": "Thinking",
+      "review": "GPT-6.1-Sol；动作权限 Astra 抽查",
+      "stage": "S5-可选",
+      "dependencies": [
+        "T09",
+        "T16",
+        "T21"
+      ],
+      "prompt": "prompts/T22-natural-settings.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T23",
+      "title": "工作区出口策略与网络边界",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6 Astra",
+      "stage": "S2",
+      "dependencies": [
+        "T02",
+        "T09"
+      ],
+      "prompt": "prompts/T23-egress-policy.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T24",
+      "title": "候选构建、升级回退与发行证据",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol；最终 Astra",
+      "stage": "S6",
+      "dependencies": [
+        "G-E"
+      ],
+      "prompt": "prompts/T24-release-qualification.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T25",
+      "title": "独立验收场景与故障注入",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S0起贯穿",
+      "dependencies": [
+        "T00"
+      ],
+      "prompt": "prompts/T25-independent-acceptance.txt",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "T26",
+      "title": "用户文档、支持矩阵与交付核对",
+      "model": "GLM-5.3",
+      "effort": "编码推理档",
+      "review": "GPT-6.1-Sol",
+      "stage": "S6",
+      "dependencies": [
+        "T24"
+      ],
+      "prompt": "prompts/T26-docs-capability-matrix.txt",
+      "status": "NOT_STARTED"
+    }
+  ]
+}

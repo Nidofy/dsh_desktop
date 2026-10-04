@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "note": "Current dispatch document byte fingerprints; not Git identities or execution prerequisites. Prompts preserved; T00 synchronizes PLAN.md, EXECUTION.md and tasks.json with actual delivery status.",
+  "files": [
+    {
+      "path": "migration/roadmap/dispatch/EXECUTION.md",
+      "sha256": "6b1e9104292b8cf386d3942044a5c1007c2baeb04eca8a717bb705e70a9693a3"
+    },
+    {
+      "path": "migration/roadmap/dispatch/HANDOFF_TEMPLATE.md",
+      "sha256": "d508ef4e57d0de6fa0b4a4abe7e1888ed7337f32ed94a9b51f003d81b575d6d7"
+    },
+    {
+      "path": "migration/roadmap/dispatch/PLAN.md",
+      "sha256": "b3262fc45fd73c947b738ec24172b8cbb2b3edfd9a9caae902119bb687721295"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-A.txt",
+      "sha256": "fc2e3b3c818271f96a48bd74c8ba5ee9e66c1dc7bbf6856b5e803350c5605444"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-B.txt",
+      "sha256": "1293d46ad822eee61d1e05096b3670590e1e063b09e5063d1bb8398a8263aa57"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-C.txt",
+      "sha256": "030d38ecce3765245761385f61f66349042d179fbf43c50cd37b16cf874fda7e"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-D.txt",
+      "sha256": "05756934db6657b541cae7871b442f98c8651ffa36201be3ae892c70279d70fc"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-E.txt",
+      "sha256": "90e24d70b58ee90e8bbc568761a40194c97bbd07e19d5cf38c0847c8cc1b3adf"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/G-F.txt",
+      "sha256": "e3dfb70611a1595a16d372dded224d0f5681830f9def8874fccd4a955fe5c1e3"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/INTEGRATE.txt",
+      "sha256": "7e4970ad03b78183bbe9bebd7a6737b7d9332116da05bce7e3d717eb4da34b9e"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/REVIEW.txt",
+      "sha256": "d30e22d0f2242ad102790feb8a6a69df6ef29bffe86cf7f0540d9db8bca1607b"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T00-baseline-contracts.txt",
+      "sha256": "fdff1148534779cee1d559ca49ff2b359d42d3d4afaa09316c65da55fdbfd5d3"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T01-connection-recovery.txt",
+      "sha256": "c51516decc4b9fc8b3c4cb8db971ebdddea691fcb14af24a0c984ac4e458fdf6"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T02-secure-credentials.txt",
+      "sha256": "055478c08b09de1ff740d5b5aa12d08f456d60e8ac8aaf33c4a327fe8b1bda1a"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T03-notebook-v2.txt",
+      "sha256": "ef55c852ae50bcc220fd478ea7fb0a0c7895a16cc98e1ed3c66e7631366862ed"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T04-compaction-budget.txt",
+      "sha256": "8a4deb5f8720a814e784b5c9b60cd589ff23c8abd726da4e7f19410e06e676ac"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T05-notebook-incremental.txt",
+      "sha256": "bca7ebbc349f185f581b42a121cf4431507dc250373a81ff0c31ad008ffefe32"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T06-storage-quota.txt",
+      "sha256": "a8d2da7d6b2d06473d930bbd3fc29ce7c0900df8c5b3cc81f2f9bf6724a731a5"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T07-native-cleanup-snapshots.txt",
+      "sha256": "929c77a878fce6ecee504b833b56e87fbaeaa167152cab178920062b84d03be5"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T08-storage-snapshot-ui.txt",
+      "sha256": "23f4569890bb40121f965a824cbf3cd9c4abfe50e482ef8758601b19bb4e3459"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T09-advanced-settings.txt",
+      "sha256": "cce4b8a0680a35696e9ddf668bce83fc323cb8df3ac59ad0ef32544df0b34035"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T10-migration-wizard.txt",
+      "sha256": "a888704fe4cd9f991580a8ccc0f93fdd3fec2a2de707d723759471a0bc3d962b"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T11-verification-records.txt",
+      "sha256": "90b61b752ec8646359ecda8ccc00cbb81bd51cd02339d198c1a471fb2d5f0ca3"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T12-durable-notifications.txt",
+      "sha256": "b4a67a8d8b1146e6c170f2db13ea6345789b24f21cf20397d4c93d4388d73e48"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T13-companion-scope.txt",
+      "sha256": "2be0e47e14c21cd09d0f9f3e2d194858860e373544fbf74c48b8135eaf4142f2"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T14-companion-ui.txt",
+      "sha256": "831dcd11f1b7afe01a3c84c4296307005f5169cdade717c8f623b406ccb3148f"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T15-live2d-renderer.txt",
+      "sha256": "2ad882d1f47b3c55a843a0cc72486448f2acf65ca6e5985f9c6f7faabbdda8fa"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T16-pet-coordination.txt",
+      "sha256": "17195207478341a6af3e3fdf0e0a25e4c70ec409f00319fed2d55070c1ac3216"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T17-local-history-search.txt",
+      "sha256": "6a82776b02e69618845cff99a8c8ff23a5de103ac4e660b9ad3b58689ca17765"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T18-hints-return-card.txt",
+      "sha256": "4178b41284362cb33006b077289d4fb06e971231dbce872d50d33fabea2c4df5"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T19-selftest-center.txt",
+      "sha256": "330b8b2f9693c76527c32ee0358710a8cf02bc656a080424442ec52b62b45bb0"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T20-ab-experiments.txt",
+      "sha256": "e154a2c9ae93e268e3e779cbb578eedf2922d81a43079e600b8c76f0aac47515"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T21-side-analysis.txt",
+      "sha256": "fc810c728e569dc780f59ae6894bc29b2bae4bf821e6e02d603177c75a80bf1e"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T22-natural-settings.txt",
+      "sha256": "8e52a3edc25281bc753093bc0543ce6390c7990cf59ef3494fcdbcec6c8cfbc4"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T23-egress-policy.txt",
+      "sha256": "d9c6ccd81bebf84c6902c58aaa8c1fa9185851910cc35b8398947104198f809b"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T24-release-qualification.txt",
+      "sha256": "b506923b41265990c3f8b65f830878621ca017e4bef969a9f056301ef1c593e9"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T25-independent-acceptance.txt",
+      "sha256": "43a21cc411e747cbbc34a780c822ac97a444f20395313a3eb986613657301858"
+    },
+    {
+      "path": "migration/roadmap/dispatch/prompts/T26-docs-capability-matrix.txt",
+      "sha256": "023d44d160c0095f363f63694eb63d0ff4d43f4963e1b300134fc800a1a3d304"
+    },
+    {
+      "path": "migration/roadmap/dispatch/SCOPE.md",
+      "sha256": "3469de50d82a0ca68480e7918caadad4bdf1298ef9a90ac13815393493ca6b20"
+    },
+    {
+      "path": "migration/roadmap/dispatch/tasks.json",
+      "sha256": "e87db7c01cc385566bdf5e036b13b54bb84bd9f676c4b4c91f9a394d4fe8c252"
+    }
+  ]
+}

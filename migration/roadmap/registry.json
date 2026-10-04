@@ -1,0 +1,1194 @@
+{
+  "schemaVersion": 1,
+  "authority": "T00 ownership and delivery registry; dispatch/tasks.json owns dependency graph and recommendations",
+  "maxImplementers": 3,
+  "maxReviewers": 1,
+  "slots": [
+    {
+      "id": "I1",
+      "plannedTask": "T01",
+      "assigned": false
+    },
+    {
+      "id": "I2",
+      "plannedTask": "T03",
+      "assigned": false
+    },
+    {
+      "id": "I3",
+      "plannedTask": "T25",
+      "assigned": false
+    },
+    {
+      "id": "R",
+      "plannedRole": "review/integration",
+      "assigned": false
+    }
+  ],
+  "sharedFilesOwner": "R",
+  "tasks": [
+    {
+      "id": "T00",
+      "title": "基线、接口约定与派工登记",
+      "stage": "S0",
+      "recommendedModel": "GPT-6 Astra",
+      "actualModel": "not-recorded",
+      "assigned": true,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron",
+      "status": "READY_FOR_REVIEW",
+      "launchState": "AUTHOR_DELIVERY",
+      "dependencies": [],
+      "dependencyCapabilitiesReady": true,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T00-baseline-contracts.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md"
+      ],
+      "objective": "把总实施方案转成可独立开发的已冻结接口和文件归属。核验当前实际代码、配置和测试并建立状态说明；已有未提交实现也纳入检查，不把旧报告或提交号当成当前状态。",
+      "interfaces": [
+        "contracts-v1.md"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "migration/roadmap/ 下的基线、接口说明、任务登记和验收清单，以及已提供派工资料的初始提交；只为立即启动任务定义最小接口，不修改业务逻辑。",
+      "acceptance": "1. 确认当前目录是 Electron 独立 Git 仓库；任务资料、代码、worktree 和测试数据均在用户指定 Electron 目录内。\n2. 待启动任务具备输入、接口、文件归属、验收及回退条目。\n3. 从状态可分清 READY/REVIEW/INTEGRATED/QUALIFIED；未执行项不写 PASS。",
+      "verificationFocus": "现有 connections、protection、notebook、context-integration、working-notebook settings 五个测试；记录实际命令和结果。",
+      "rollback": "停止使用本版派工设计，撤回本次纯文档交付；无业务数据变化。",
+      "actualChangedPaths": [
+        "migration/roadmap/dispatch/",
+        "migration/roadmap/contracts-v1.md",
+        "migration/roadmap/baseline.md",
+        "migration/roadmap/baseline.json",
+        "migration/roadmap/dispatch-inputs.json",
+        "migration/roadmap/ownership.md",
+        "migration/roadmap/registry.json",
+        "migration/roadmap/wiring-queue.md",
+        "migration/roadmap/milestones.md",
+        "migration/roadmap/handoffs/T00.md"
+      ],
+      "validation": [
+        {
+          "kind": "existing-behavior",
+          "result": "PASS",
+          "files": 5,
+          "tests": 29,
+          "exitCode": 0,
+          "record": "baseline.json"
+        },
+        {
+          "kind": "independent-review",
+          "result": "NOT_RUN"
+        },
+        {
+          "kind": "package-qualification",
+          "result": "NOT_RUN"
+        },
+        {
+          "kind": "doc-quick",
+          "result": "FAIL_EXISTING",
+          "passed": 20,
+          "failed": 1,
+          "exitCode": 1,
+          "log": ".build/dispatch/evidence/T00/test-docs.log"
+        },
+        {
+          "kind": "doc-sync",
+          "result": "FAIL_EXISTING",
+          "passed": 42,
+          "failed": 1,
+          "exitCode": 1,
+          "log": ".build/dispatch/evidence/T00/doc-sync.log"
+        },
+        {
+          "kind": "lint",
+          "result": "FAIL_EXISTING",
+          "diagnostics": 108,
+          "path": "packages/nidofy/desktop-extras/src/client/locales.ts",
+          "exitCode": 1,
+          "log": ".build/dispatch/evidence/T00/lint.log"
+        },
+        {
+          "kind": "roadmap-structure",
+          "result": "PASS",
+          "exitCode": 0,
+          "log": ".build/dispatch/evidence/T00/roadmap-validation-final.log"
+        }
+      ],
+      "handoff": "handoffs/T00.md"
+    },
+    {
+      "id": "T01",
+      "title": "连接退化启动与凭据保留",
+      "stage": "S1",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T01",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_T00_REVIEW_AND_ENV",
+      "dependencies": [
+        "T00"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T01-connection-recovery.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T00.md"
+      ],
+      "objective": "凭据失效时仍能进入工作区修复，其他有效连接正常；保存非秘密设置时可保留已有凭据。",
+      "interfaces": [
+        "connection-availability-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "apps/desktop-host/src/connections/{store,runtime,api,ui}.ts 及对应连接测试；Host index.ts 仅最小就绪接线。",
+      "acceptance": "1. 三种缺 Key 和全部连接不可用均可进入修复入口；有效路由继续可用。\n2. A 在途切 B 后 A 重试仍用 A，新请求用 B；撤销/回收不误删新秘密。\n3. 状态、日志、导出无秘密；并发保存冲突明确。",
+      "verificationFocus": "连接所有者故障注入、Host 就绪集成、keep/replace 与旧修订回收、最小 UI 回放。",
+      "rollback": "暂停新保存，保留 state/journal 和未知 operationId；退回旧程序时使用修改前副本，不删除旧修订秘密。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T01.md"
+    },
+    {
+      "id": "T02",
+      "title": "Windows 安全凭据后端与转换",
+      "stage": "S1",
+      "recommendedModel": "Claude Opus 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T02",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T01"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T02-secure-credentials.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T01.md"
+      ],
+      "objective": "为派生桌面提供 Windows 安全秘密存储，覆盖实际官方消费者，后端不可用仍可修复。",
+      "interfaces": [
+        "connection-availability-v1",
+        "official-CredentialProvider"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "派生 credentials provider/平台适配及对应测试；复用官方 credentials 服务定义；bundle 最小接线由集成人员独占。",
+      "acceptance": "1. 写入、重启、轮换、撤销、并发刷新、后端拒绝均有真实 Windows 或明确标注的替身证据。\n2. P1 的退化启动在后端拒绝时仍成立；应用身份和隔离 home 不串凭据。\n3. 迁移中断保留可恢复状态；一般导出不包含秘密。",
+      "verificationFocus": "Provider 全接口契约测试、Windows 隔离凭据集成、迁移故障注入、T01 回归；没有平台能力时保留未验收状态。",
+      "rollback": "保留旧凭据副本和转换回执；仅在新后端验证失败时停止切引用，不明文静默回落或默认删除源。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T02.md"
+    },
+    {
+      "id": "T03",
+      "title": "Notebook 活动集、历史与 v2 转换",
+      "stage": "S1",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T03",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_T00_REVIEW_AND_ENV",
+      "dependencies": [
+        "T00"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T03-notebook-v2.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T00.md"
+      ],
+      "objective": "退休笔记不再占活动条目额度，保持来源、置顶和历史可追溯，并提供有界活动投影。",
+      "interfaces": [
+        "notebook-v2-active-cursors"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "desktop-extras/src/notebook.ts、shared/notebook-types.ts、working-notebook 配置与对应测试；context/compaction 仅提交接线需求。",
+      "acceptance": "1. 活动项不超限时累计 1000 次新增退休后仍能新增。\n2. 置顶、来源引用、CAS、历史查询和重启一致；转换前旧字节不变。\n3. 局部存储有界且无静默丢证据；未来 quota 接口可适配。",
+      "verificationFocus": "来源校验、UTF-8 边界、连续退休、ID 复用、并发更新、中断迁移、活动投影快照。",
+      "rollback": "保留 v1 原字节和 v2 副本；旧程序使用 v1 副本，不把 v2 current 原地降级。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T03.md"
+    },
+    {
+      "id": "T04",
+      "title": "压缩证据预算与提交游标",
+      "stage": "S1",
+      "recommendedModel": "Claude Opus 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T04",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T03"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T04-compaction-budget.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T03.md"
+      ],
+      "objective": "长历史下按预算增量整理，只有官方压缩成功持久化后才发布笔记并推进准确游标。",
+      "interfaces": [
+        "notebook-v2-active-cursors",
+        "official-compaction"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "desktop-extras/src/compaction.ts、Notebook 候选提交适配、对应 integration 测试；T05 尚不启动。",
+      "acceptance": "1. 长中文、工具大结果、旧笔记接近上限仍能做有界增量；超大单条明确处理。\n2. 成功/失败/取消/持久化拒绝的回放结果正确；模型新增输入可日志重建。\n3. 同样的压缩输入和预算得到确定的证据选择，未检查事件不丢失。",
+      "verificationFocus": "真实 Loader/Session 压缩集成、三轮连续压缩、取消、flush 拒绝、开关变化、中文预算边界和模型输入快照。",
+      "rollback": "关闭自动整理并排空候选，保留已提交 Notebook/Session，不回退已提交游标或重复模型调用。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T04.md"
+    },
+    {
+      "id": "T05",
+      "title": "Notebook 增量同步与长历史测量",
+      "stage": "S1",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T05",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T04"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T05-notebook-incremental.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T04.md"
+      ],
+      "objective": "启动补齐、提交增量、回合只读已提交活动快照，消除稳定态每回合完整遍历。",
+      "interfaces": [
+        "notebook-v2-active-cursors"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "desktop-extras/src/context.ts、Notebook 读投影/UI 状态接口及对应性能测试；不得再改 T04 游标语义。",
+      "acceptance": "1. 稳定态无新事件的回合不做全量同步；代次变化不会错误复用缓存。\n2. 关闭插件后监听器、队列和请求排空；只读功能不偷偷更新笔记。\n3. 输出前后测量数据、环境和未达标项，不把合成性能当真实工程结果。",
+      "verificationFocus": "T03/T04 回归、冷启动补齐、增量一致性、卸载、长历史 benchmark、中文 UI 状态。",
+      "rollback": "停增量消费者并排空队列；从原始日志按代次重建派生缓存，不删除 Session。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T05.md"
+    },
+    {
+      "id": "T06",
+      "title": "受管存储计量、配额与跨进程预留",
+      "stage": "S2",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T06",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T02",
+        "T05"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T06-storage-quota.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T02.md",
+        "handoffs/T05.md"
+      ],
+      "objective": "建立唯一受管存储所有者，统一模块写入预留与磁盘余量约束。",
+      "interfaces": [
+        "quota-lease-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "Host 新 storage owner、storage-admission 调用者、Notebook 配额适配及测试；删除和 native 由 T07 负责。",
+      "acceptance": "1. 并发写入不超授额度；进程崩溃、丢 ACK、满盘、降低额度均保持保守一致。\n2. T03 历史写入和已有模块纳入；同文件不重复计量。\n3. 已开始任务仍能保存终态；未获配额不启动有副作用的对应操作。",
+      "verificationFocus": "多进程竞争、持久租约恢复、容量扫描异常、模块准入拒绝、结束记录与取消。",
+      "rollback": "停止新准入；保留在途终态预留和账本，确认 owner 退出后重扫，不因超时直接释放。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T06.md"
+    },
+    {
+      "id": "T07",
+      "title": "原生安全清理与快照操作接线",
+      "stage": "S2",
+      "recommendedModel": "GPT-6.1-Sol",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T07",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T06"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T07-native-cleanup-snapshots.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T06.md"
+      ],
+      "objective": "复用已有句柄与归档逻辑，安全开放清理、手动采集、导入导出。",
+      "interfaces": [
+        "quota-lease-v1",
+        "native-identity-preview"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "native/nidofy-protection、connections/protection.ts、原生清理适配及其测试；不做大规模 UI 改版。",
+      "acceptance": "1. 导出→隔离副本校验→导入→选择恢复完整链可证明。\n2. 预览后替换、占用、只读、崩溃与取消均给准确结果，不假称全回滚。\n3. 自动保护原有准入、父子任务共享和失败关闭行为不退化。",
+      "verificationFocus": "真实 Windows 句柄/链接/锁竞争与原生回归、Host 白名单、归档破坏测试、配额准入。",
+      "rollback": "停止后续破坏性操作；查询每项 native 回执，保留预览与备份，未知结果不自动重放。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T07.md"
+    },
+    {
+      "id": "T08",
+      "title": "存储与快照管理界面",
+      "stage": "S2",
+      "recommendedModel": "Claude Sonnet 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T08",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T07"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T08-storage-snapshot-ui.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T07.md"
+      ],
+      "objective": "让用户完成准确总览、清理预览、逐项回执、手动快照和归档操作。",
+      "interfaces": [
+        "quota-lease-v1",
+        "T07-reviewed-native-operations"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "工程工作台存储/快照 UI 和对应 locale、UI tests；服务方法消费 T06/T07 已集成接口。",
+      "acceptance": "1. 取消对话框无副作用；旧预览不可执行；部分失败可理解。\n2. 用户能分清导入归档与恢复工程；加载失败不显示为零空间。",
+      "verificationFocus": "组件/真实打包 UI 检查，空目录、损坏数据、并发改动、窄屏与中文输入。",
+      "rollback": "关闭 UI 新入口；保留 Host 执行回执，不能以 UI 取消冒充撤销已执行删除。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T08.md"
+    },
+    {
+      "id": "T09",
+      "title": "高级连接、缓存与部署网络设置",
+      "stage": "S2",
+      "recommendedModel": "Claude Sonnet 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T09",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T02"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T09-advanced-settings.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T02.md"
+      ],
+      "objective": "开放已有高级字段且保存不丢信息，网络变更清楚说明重启范围。",
+      "interfaces": [
+        "connection-availability-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "connections/ui.ts 及必要 schema 适配、缓存 UI、部署网络设置适配和测试；不重写 pi-ai。",
+      "acceptance": "1. 高级配置往返不丢字段，keep 模式不要求重新输入 Key。\n2. 活动请求配置不被部署设置偷偷改变；未知能力/计数不显示为支持或命中。",
+      "verificationFocus": "双协议 schema/UI roundtrip、旧配置加载、模型覆盖优先级、网络重启提示、缓存 payload 回归。",
+      "rollback": "排空并重启回到旧部署配置副本；保留未编辑高级字段和凭据。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T09.md"
+    },
+    {
+      "id": "T10",
+      "title": "旧数据迁移向导与恢复回执",
+      "stage": "S2",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T10",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T07",
+        "T09"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T10-migration-wizard.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T07.md",
+        "handoffs/T09.md"
+      ],
+      "objective": "提供可预览、复制、校验、恢复的旧数据迁移流程，保持源数据不变。",
+      "interfaces": [
+        "connection-availability-v1",
+        "quota-lease-v1",
+        "T07-reviewed-native-operations"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "connections/import.ts、迁移向导 UI/报告及测试；凭据转换复用 T02，不改其所有权。",
+      "acceptance": "1. 源目录前后摘要不变，重复执行无重复导入或明确冲突。\n2. 断点失败、新版未知格式、缺空间、凭据重绑均有明确回执。",
+      "verificationFocus": "Tauri 支持格式 fixtures、源不可写、部分复制失败、提交后丢 ACK、未知格式、恢复旧副本。",
+      "rollback": "停止发布，保留源副本、阶段文件和 operationId；查询后恢复，不覆盖源或重复导入。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T10.md"
+    },
+    {
+      "id": "T11",
+      "title": "任务验证回执与过期判断",
+      "stage": "S3",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T11",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T07",
+        "T10"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T11-verification-records.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T07.md",
+        "handoffs/T10.md"
+      ],
+      "objective": "将源码、实际命令、测试、产物与用户验收关联，区分执行成功与可信验证通过。",
+      "interfaces": [
+        "verification-receipt-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "verification 包、workbench/owner.ts 最小执行接线及相应测试；复用 ProjectActions/Artifacts/ChangeReview。",
+      "acceptance": "1. 旧日志不能为新代码制造通过；验证后修改相关输入会过期。\n2. 产物身份与实际 run 关联，未知与未执行可区分。",
+      "verificationFocus": "真实合成 Shell 动作、成功/失败/超时/崩溃、脏文件、同 hash 产物、日志截断与过期。",
+      "rollback": "关闭新消费者，保留原运行日志/回执；新旧代码不能共用通过结论。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T11.md"
+    },
+    {
+      "id": "T12",
+      "title": "持久通知偏好与统一去重",
+      "stage": "S3",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T12",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T11"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T12-durable-notifications.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T11.md"
+      ],
+      "objective": "关闭工作台仍可收到新任务完成通知，并提供角色/桌宠共享的提示去重依据。",
+      "interfaces": [
+        "verification-receipt-v1",
+        "notice-id-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "Host 终态事件/通知 owner、apps/desktop/src/workbench.ts 与持久偏好；工作台 UI 移除旧重复观察路径。",
+      "acceptance": "1. 关工作台仍通知；重启不补弹历史；同一新事件不多处重复催促。\n2. 审批仍可定位，禁用通知不删除执行回执。",
+      "verificationFocus": "关闭/重开/多窗口、重启游标、发送失败、重复事件和 prefs CAS。",
+      "rollback": "停系统弹出但保留事件、游标、审批和回执；未知 ACK 不补弹。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T12.md"
+    },
+    {
+      "id": "T13",
+      "title": "显式会话绑定与轻量角色状态",
+      "stage": "S3",
+      "recommendedModel": "GPT-6.1-Sol",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T13",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T05",
+        "T12"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T13-companion-scope.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T05.md",
+        "handoffs/T12.md"
+      ],
+      "objective": "角色准确跟随当前视图，状态独立于 pets/Notebook 开关，向 UI 提供有界快照。",
+      "interfaces": [
+        "companion-scope-v1",
+        "notice-id-v1",
+        "notebook-v2-active-cursors"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion 核心、Environment 数据适配、共享任务投影；官方 UI 最小只读 seam 如确有必要才增加。",
+      "acceptance": "1. 双窗口/子会话/快速切换无串项目；pets 关闭角色仍更新。\n2. 状态载荷有上限；断线不装作工作中；卸载无订阅残留。",
+      "verificationFocus": "真实 UI service composition、作用域竞态、插件组合开关、旧会话冷读、重连快照。",
+      "rollback": "释放绑定/订阅，作废旧 epoch/revision；保留用户关注意图待重新验证。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T13.md"
+    },
+    {
+      "id": "T14",
+      "title": "静态角色、动态说明与窄屏入口",
+      "stage": "S4",
+      "recommendedModel": "Claude Sonnet 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T14",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T13"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T14-companion-ui.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T13.md"
+      ],
+      "objective": "即使没有 Live2D，也能准确展示状态并操作原有工作入口。",
+      "interfaces": [
+        "companion-scope-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion client、Environment 布局/locale/appearance、对应 UI tests；不改状态语义。",
+      "acceptance": "1. 静态模式可独立使用；点击不破坏草稿、附件、光标或 IME。\n2. 窄屏可访问同样的功能；无额外模型请求。",
+      "verificationFocus": "真实浏览器/打包 UI、固定请求回放等价、窄屏、焦点、IME、单插槽卸载。",
+      "rollback": "释放插槽返回既有静态入口；不删除草稿、附件或绑定数据。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T14.md"
+    },
+    {
+      "id": "T15",
+      "title": "固定单模型 Live2D 渲染插件",
+      "stage": "S4",
+      "recommendedModel": "Claude Sonnet 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T15",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T14"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T15-live2d-renderer.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T14.md"
+      ],
+      "objective": "为已有角色业务加入离线 Live2D 表现，失败可退回立绘。",
+      "interfaces": [
+        "T14-renderer-view-consumer-only"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion-live2d 包、固定资源清单和测试；配套 bundle 接线交集成人员。",
+      "acceptance": "1. 断网加载真实模型；缺失/损坏/WebGL 禁用可回退且业务按钮可用。\n2. 100 次启停无循环/监听器持续累积；输出固定机器 CPU/GPU/内存实测。\n3. 纯展示主请求不变、额外模型调用为零；发布许可状态明确。",
+      "verificationFocus": "真实资产 smoke、生命周期及 context loss、离线打包资源闭包、100 次启停、性能记录。",
+      "rollback": "卸载 renderer、排空资源并回立绘；保留固定资源摘要和失败证据。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T15.md"
+    },
+    {
+      "id": "T16",
+      "title": "角色与桌宠关注、互动协调",
+      "stage": "S4",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T16",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T12",
+        "T13",
+        "T14"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T16-pet-coordination.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T12.md",
+        "handoffs/T13.md",
+        "handoffs/T14.md"
+      ],
+      "objective": "角色跟随前台项目，桌宠可关注指定会话并做去重的本地互动。",
+      "interfaces": [
+        "companion-scope-v1",
+        "notice-id-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion 协调器、apps/desktop/src/pet.ts 受控上层动作、pet projection/tests；不改 Live2D renderer。",
+      "acceptance": "1. 切前台不改变已固定宠物；导航正确会话；过期/重复动作不执行。\n2. 通知与 T12 去重，关闭任意一个插件不破坏其他 owner。",
+      "verificationFocus": "IPC 发送者拒绝、绑定竞态、旧会话、重连、功能组合启停、双窗口。",
+      "rollback": "解除受控关注动作并去重；不修改 pet sender 权限，不补播过期动作。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T16.md"
+    },
+    {
+      "id": "T17",
+      "title": "中文历史检索与显式项目分组",
+      "stage": "S3",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T17",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T05",
+        "T10"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T17-local-history-search.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T05.md",
+        "handoffs/T10.md"
+      ],
+      "objective": "改善中文子串、文件名和错误码召回，引用定位准确且不扩大工作区范围。",
+      "interfaces": [
+        "notebook-v2-active-cursors",
+        "official-session-query"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "历史检索适配/派生索引、项目分组与测试；context.ts 接线排他排期，禁止擅改官方会话日志格式。",
+      "acceptance": "1. 中文子串测试改善，标识符精确查询不退化；另一未关联项目不泄漏。\n2. 引用回到原事件，索引陈旧不会制造不存在来源。",
+      "verificationFocus": "固定中英文检索评估、两字/单字、路径错误码、权限拒绝、跨代次和索引重建。",
+      "rollback": "停派生检索并按代次重建索引；保留原日志与显式项目关联权限。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T17.md"
+    },
+    {
+      "id": "T18",
+      "title": "规则 Hint 与项目返回卡",
+      "stage": "S4",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T18",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T11",
+        "T12",
+        "T14",
+        "T17"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T18-hints-return-card.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T11.md",
+        "handoffs/T12.md",
+        "handoffs/T14.md",
+        "handoffs/T17.md"
+      ],
+      "objective": "提供少量有证据的提示，来源清楚、条件消失即失效。",
+      "interfaces": [
+        "verification-receipt-v1",
+        "notice-id-v1",
+        "companion-scope-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion 规则引擎、返回卡和偏好/测试；不扩展任意模型推理。",
+      "acceptance": "1. 提示有可检查依据；切会话/条件解除清除旧提示。\n2. 无新增模型调用；未装/禁用能力不被推荐为可直接执行。",
+      "verificationFocus": "规则真值、来源过期、去重、静音、快速切换与 UI locale。",
+      "rollback": "停规则展示，保留忽略/静音偏好及通知已处理状态。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T18.md"
+    },
+    {
+      "id": "T19",
+      "title": "Electron 自检中心",
+      "stage": "S5",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T19",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T10",
+        "T11",
+        "T23"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T19-selftest-center.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T10.md",
+        "handoffs/T11.md",
+        "handoffs/T23.md"
+      ],
+      "objective": "实现本机/连接/现场三组检查与可中断报告，不照搬旧 WebView2 检查。",
+      "interfaces": [
+        "verification-receipt-v1",
+        "quota-lease-v1",
+        "T23-egress-policy"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "独立自检 runner、报告 store/UI、对应测试；复用配额、模型路由与工程执行权限。",
+      "acceptance": "1. 能定位每项实际测量及未覆盖范围；报告历史可冷读。\n2. 预算和配额拒绝发生在副作用前；中断不补发请求。",
+      "verificationFocus": "合成工具/提供方集成、进度、取消、持久化失败、导出、现场 UNKNOWN。",
+      "rollback": "取消后续检查、在途标中断；保留逐项报告，重启不补发模型请求。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T19.md"
+    },
+    {
+      "id": "T20",
+      "title": "任务级 A/B 实验与有界矩阵",
+      "stage": "S5",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T20",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T11",
+        "T19"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T20-ab-experiments.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T11.md",
+        "handoffs/T19.md"
+      ],
+      "objective": "让实验指标对应相同验收任务和真实执行记录。",
+      "interfaces": [
+        "verification-receipt-v1",
+        "T19-bounded-runner"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "实验 runner、诊断归档扩展、比较 UI 与测试；不改模型主循环或重新造执行器。",
+      "acceptance": "1. 可从图表数字追到原始运行和验收；计数缺失不按零算。\n2. 导入报告验证 schema/大小/来源，失败无任务自动重放。",
+      "verificationFocus": "合成双方案比较、预算耗尽、中断、不可比样本、归档导入及真实 receipt 关联。",
+      "rollback": "取消后续实验轮次并保留每 run 回执；只恢复隔离工程副本。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T20.md"
+    },
+    {
+      "id": "T21",
+      "title": "受控侧边分析",
+      "stage": "S5-可选",
+      "recommendedModel": "Claude Opus 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T21",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T18",
+        "T23"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T21-side-analysis.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T18.md",
+        "handoffs/T23.md"
+      ],
+      "objective": "按需分析选定上下文，不污染主聊天，完整保留模型输入记录。",
+      "interfaces": [
+        "companion-scope-v1",
+        "connection-availability-v1",
+        "T23-egress-policy"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "可选 companion analysis 插件及其官方 Session/LLM 消费适配、UI 和测试。",
+      "acceptance": "1. 提示注入无法增加工具或跨出口发送；主对话历史不出现侧边消息。\n2. 取消/预算耗尽无暗中后续调用；日志能重建实际请求。",
+      "verificationFocus": "官方 session composition、连接租约/策略、并发切换、取消、成本分开、主草稿回放。",
+      "rollback": "停可选插件并排空独立会话；保留请求日志，不回灌主聊天。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T21.md"
+    },
+    {
+      "id": "T22",
+      "title": "自然语言设置与可选口吻",
+      "stage": "S5-可选",
+      "recommendedModel": "Claude Sonnet 5.5",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T22",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T09",
+        "T16",
+        "T21"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T22-natural-settings.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T09.md",
+        "handoffs/T16.md",
+        "handoffs/T21.md"
+      ],
+      "objective": "把自然语言理解转为有限动作，并准确说明已生效或下一轮生效。",
+      "interfaces": [
+        "companion-scope-v1",
+        "owner-action-receipts"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "companion action intent 解析、预览和回执 UI、可选风格设置；执行始终转原 owner。",
+      "acceptance": "1. 旧预览和伪造动作拒绝；重复提交按操作 ID 处理。\n2. 口吻开关影响范围可回放；关闭后不残留工具或监听器。",
+      "verificationFocus": "结构化意图边界、越权拒绝、真实执行回执、取消、prompt 快照及设置往返。",
+      "rollback": "关闭意图/口吻功能，排空动作；已提交动作查 owner 回执，不依据模型文案反向执行。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T22.md"
+    },
+    {
+      "id": "T23",
+      "title": "工作区出口策略与网络边界",
+      "stage": "S2",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T23",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T02",
+        "T09"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T23-egress-policy.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T02.md",
+        "handoffs/T09.md"
+      ],
+      "objective": "应用可控外发入口执行同一工作区策略，清楚保留子进程依赖企业网络管控的范围。",
+      "interfaces": [
+        "connection-availability-v1"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "派生发行策略服务及模型/vision/probe/MCP 配置的实际消费点、测试；不重写任意进程网络沙箱。",
+      "acceptance": "1. 允许目标可用，拒绝目标和重定向不能绕过；策略变化不能扩大已准备请求权限。\n2. 普通官方发行不被派生策略误伤；凭据不转发到错误 origin。",
+      "verificationFocus": "本地合成 endpoint/重定向 sink、执行入口拒绝、策略 revision、所有消费面覆盖，真实现场留待验收。",
+      "rollback": "排空受影响请求并恢复已验证策略副本；不放宽 intranet 限制。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T23.md"
+    },
+    {
+      "id": "T24",
+      "title": "候选构建、升级回退与发行证据",
+      "stage": "S6",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T24",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "G-E"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T24-release-qualification.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "milestone:G-E"
+      ],
+      "objective": "把集成源码与最终包、插件组合和真实验收证据绑定。",
+      "interfaces": [
+        "integrated-feature-and-artifact-evidence"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "候选构建/验收脚本、migration/roadmap/evidence 与发布说明；只对合成/明确副本做运行验收。",
+      "acceptance": "1. 用户拿到的具体包就是实际验收过的产物，且能对应构建时的实际源码与配置；源码测试通过不能替代包验收。\n2. 升级前副本能配旧程序恢复；不能宣称旧程序原地降级新版数据。",
+      "verificationFocus": "T25 集成回归、打包 UI smoke、离线闭包、独立副本升级/恢复、条件具备的真实系统检查。",
+      "rollback": "旧包配升级前数据副本恢复；不原地降级新版数据，不自动清理构建证据。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T24.md"
+    },
+    {
+      "id": "T25",
+      "title": "独立验收场景与故障注入",
+      "stage": "S0起贯穿",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T25",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_T00_REVIEW_AND_ENV",
+      "dependencies": [
+        "T00"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T25-independent-acceptance.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T00.md"
+      ],
+      "objective": "从需求与不变量独立设计可执行验收，持续揭露接口和恢复问题。",
+      "interfaces": [
+        "contracts-v1.md",
+        "actual-present-APIs-only"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "专用 tests/fixtures、owner-local 集成测试和基准；不修改被测业务代码、不改作者测试来迁就失败。",
+      "acceptance": "1. 测试能在独立 worktree 复现，拥有独立端口、数据根、子进程与清理。\n2. 业务作者摘要不作为通过依据；失败报告有命令、实际代码状态与可重现证据。",
+      "verificationFocus": "根据当前已集成功能执行行为、故障、UI、性能；不默认每轮全仓测试。",
+      "rollback": "撤回独立新增验收文件，保留失败最小复现；不得修改业务实现或删作者失败测试。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T25.md"
+    },
+    {
+      "id": "T26",
+      "title": "用户文档、支持矩阵与交付核对",
+      "stage": "S6",
+      "recommendedModel": "GLM-5.3",
+      "actualModel": "not-recorded",
+      "assigned": false,
+      "worktree": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T26",
+      "status": "NOT_STARTED",
+      "launchState": "WAIT_ACTUAL_DEPENDENCY_CAPABILITIES",
+      "dependencies": [
+        "T24"
+      ],
+      "dependencyCapabilitiesReady": false,
+      "dependencyEvidence": [],
+      "inputs": [
+        "dispatch/prompts/T26-docs-capability-matrix.txt",
+        "dispatch/SCOPE.md",
+        "baseline.md",
+        "contracts-v1.md",
+        "ownership.md",
+        "handoffs/T24.md"
+      ],
+      "objective": "让用户看到的能力和具体候选包一致，消除旧迁移文档留下的错误承诺。",
+      "interfaces": [
+        "actual-T24-artifact-capability-matrix"
+      ],
+      "fileOwnership": "ownership.md",
+      "allowedScope": "本次模块 README、迁移/升级指南、功能支持与已知限制、发行证据索引；不改历史封存报告。",
+      "acceptance": "1. 所有可感知变更有对应说明；文档链接与命令实际存在。\n2. Windows 与其他平台、真实与模拟验收、Live2D 资产许可状态准确。",
+      "verificationFocus": "适用文档门禁和链接检查；核对实际功能、构建记录与包摘要，无需无关全套业务测试。",
+      "rollback": "撤回与实际包不符的新说明；不重写历史封存证据。",
+      "actualChangedPaths": [],
+      "validation": [],
+      "handoff": "handoffs/T26.md"
+    }
+  ],
+  "gates": [
+    {
+      "id": "G-A",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "optionalDependencies": [],
+      "evidence": []
+    },
+    {
+      "id": "G-B",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "G-A",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T23"
+      ],
+      "optionalDependencies": [],
+      "evidence": []
+    },
+    {
+      "id": "G-C",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "G-B",
+        "T11",
+        "T12",
+        "T13",
+        "T17"
+      ],
+      "optionalDependencies": [],
+      "evidence": []
+    },
+    {
+      "id": "G-D",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "G-C",
+        "T14",
+        "T15",
+        "T16",
+        "T18"
+      ],
+      "optionalDependencies": [],
+      "evidence": []
+    },
+    {
+      "id": "G-E",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "G-D",
+        "T19",
+        "T20"
+      ],
+      "optionalDependencies": [
+        "T21",
+        "T22"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G-F",
+      "status": "NOT_RUN",
+      "dependencies": [
+        "G-E",
+        "T24",
+        "T26"
+      ],
+      "optionalDependencies": [],
+      "evidence": []
+    }
+  ],
+  "executionBasis": "Actual task-directory code, configuration, interfaces, uncommitted changes and executed validation; no Git SHA verification or readiness condition."
+}
