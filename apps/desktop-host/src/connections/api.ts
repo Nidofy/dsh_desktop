@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import { object } from './store.ts'
 import { installConnections } from './runtime.ts'
+import type { ConnectionStore } from './store.ts'
 import { importLegacy } from './import.ts'
 import { connectionsHtml } from './ui.ts'
 import { installProtection } from './protection.ts'
@@ -29,18 +30,27 @@ function keeps(before: unknown, after: unknown): boolean {
     && Object.entries(before).every(([key, item]) => Object.hasOwn(after, key) && keeps(item, Reflect.get(after, key)))
   return Object.is(before, after)
 }
+/** A secret-free stability code for the owner-install diagnostic surfaced on degraded endpoints. */
+function ownerDiagnosticOf(error: unknown): string {
+  const message = error instanceof Error && 'code' in error && typeof error.code === 'string' ? error.code
+    : error instanceof Error ? error.message : ''
+  return /^[A-Z][A-Z0-9_]+$/.test(message) ? message : 'CONNECTION_OWNER_FAILED'
+}
 
 /** Mount the local editor and migration operations on the existing Host.
+ * The authenticated handler is registered before any subsystem installs, and a failed
+ * connection-owner installation degrades to that repair surface instead of removing it;
+ * failures of other subsystems stay visible to the caller.
  * @param ctx - Authenticated official Host connection dispatcher.
  * @param home - Distribution-isolated Harness home.
  */
 export async function installConnectionApi(ctx: Context, home: string): Promise<void> {
-  const store = await installConnections(ctx, join(home, 'nidofy-connections'))
-  const protection = installProtection(ctx, home, process.env.DSH_DESKTOP_PROTECTION_HELPER ?? '')
-  const workbench = installWorkbench(ctx, protection, home)
+  let store: ConnectionStore | undefined
+  let ownerDiagnostic: string | undefined
   let importedConnections: unknown = []
-  try { importedConnections = JSON.parse(await readFile(join(home, 'nidofy-import-connections.json'), 'utf8')) as unknown }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+  // Installed after the handler registers; read through the holder so requests during a
+  // failed installation observe the missing subsystem instead of an unassigned binding.
+  const subsystems: { protection?: ReturnType<typeof installProtection>; workbench?: ReturnType<typeof installWorkbench> } = {}
   const validate = (namespace: string, config: unknown): void => {
     const row = ctx.configEditor.configuration().find(item => item.entry.options.id === namespace)
     const runtime = row?.entry.fiber?.runtime
@@ -57,7 +67,8 @@ export async function installConnectionApi(ctx: Context, home: string): Promise<
       response.end(workbenchHtml(url.searchParams.get('locale') === 'zh-CN')); return
     }
     if (url.pathname === '/api/nidofy/workbench/artifact/download' && request.method === 'GET') {
-      try { await workbench.download(url.searchParams.get('id') ?? '',response) }
+      if (subsystems.workbench === undefined) { response.writeHead(503); response.end('{}'); return }
+      try { await subsystems.workbench.download(url.searchParams.get('id') ?? '',response) }
       catch (_error) { if (!response.headersSent) {response.writeHead(400);response.end('ARTIFACT_NOT_CONFIRMED')} else response.destroy() }
       return
     }
@@ -77,7 +88,12 @@ export async function installConnectionApi(ctx: Context, home: string): Promise<
       }
       const data = object(JSON.parse(Buffer.concat(chunks).toString()) as unknown)
       if (url.pathname.startsWith('/api/nidofy/workbench/')) {
-        response.end(JSON.stringify(await workbench.request(url.pathname.slice('/api/nidofy/workbench/'.length),data))); return
+        if (subsystems.workbench === undefined) { response.writeHead(503); response.end(JSON.stringify({ error: 'WORKBENCH_UNAVAILABLE' })); return }
+        response.end(JSON.stringify(await subsystems.workbench.request(url.pathname.slice('/api/nidofy/workbench/'.length),data))); return
+      }
+      if (store === undefined) {
+        response.writeHead(503)
+        response.end(JSON.stringify({ error: 'CONNECTION_OWNER_UNAVAILABLE', diagnosticCode: ownerDiagnostic })); return
       }
       let result: unknown
       switch (url.pathname) {
@@ -85,7 +101,10 @@ export async function installConnectionApi(ctx: Context, home: string): Promise<
         case '/api/nidofy/mutate': result = await store.mutate(data); break
         case '/api/nidofy/collect': await store.collect(); result = store.status(); break
         case '/api/nidofy/import': result = await importLegacy(data, join(home, '..', 'imports'), validate); break
-        case '/api/nidofy/protection': result = await protection.configure(data); break
+        case '/api/nidofy/protection': {
+          if (subsystems.protection === undefined) { response.writeHead(503); response.end(JSON.stringify({ error: 'PROTECTION_UNAVAILABLE' })); return }
+          result = await subsystems.protection.configure(data); break
+        }
         default: response.writeHead(404); response.end('{}'); return
       }
       response.end(JSON.stringify(result))
@@ -97,4 +116,14 @@ export async function installConnectionApi(ctx: Context, home: string): Promise<
       response.end(JSON.stringify({ error: code, ...(error instanceof WorkbenchCommandError ? { detail: error.detail } : {}) }))
     }
   })
+  try { store = await installConnections(ctx, join(home, 'nidofy-connections')) }
+  catch (error) {
+    // Owner-handled degradation keeps its routes; an installation failure keeps the
+    // authenticated repair surface reporting the failure instead of removing it.
+    ownerDiagnostic = ownerDiagnosticOf(error)
+  }
+  try { importedConnections = JSON.parse(await readFile(join(home, 'nidofy-import-connections.json'), 'utf8')) as unknown }
+  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+  subsystems.protection = installProtection(ctx, home, process.env.DSH_DESKTOP_PROTECTION_HELPER ?? '')
+  subsystems.workbench = installWorkbench(ctx, subsystems.protection, home)
 }

@@ -33,7 +33,7 @@ it('isolates same-model connections and retains A across updates until its last 
   expect([a.key, b.key, c.key]).toEqual(['synthetic-A', 'synthetic-B', 'synthetic-C'])
   await store.collect(); expect(keys.size).toBe(3)
   a.release(); await store.collect(); expect(keys.size).toBe(2)
-  expect(() => store.acquire(first)).toThrow('REVOKED_OR_RETIRED')
+  expect(() => store.acquire(first)).toThrow('CONNECTION_RETIRED')
   expect(await readFile(join(root, 'state.json'), 'utf8')).not.toContain('synthetic-')
   expect(JSON.stringify(store.status())).not.toContain('synthetic-')
   b.release(); c.release(); await store.close()
