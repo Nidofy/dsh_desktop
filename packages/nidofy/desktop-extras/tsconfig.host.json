@@ -9,6 +9,9 @@
     "src"
   ],
   "references": [
+    { "path": "../../util/crypto" },
+    { "path": "../../workspace/workspace" },
+    { "path": "../../session/session-persistence" },
     {
       "path": "../../llm/llm"
     },

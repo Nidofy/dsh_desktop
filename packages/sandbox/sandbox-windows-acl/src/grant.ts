@@ -1,14 +1,5 @@
-/**
- * Server-side write-grant materialization. The sandbox seam holds one
- * standing workspace grant per workspace and one revocable temp grant per
- * live session/workspace pair. Workspace identities survive by deterministic
- * derivation and their standing ACE; temp identities derive from random
- * private paths and are deliberately new after a restart.
- *
- * Fail-closed: `add` throws on any grant failure and the caller disposes the
- * instance (revoking every path granted so far); `dispose` revokes every
- * revocable grant, leaves the standing workspace edits in place, and reports
- * every cleanup failure.
+/** Server-side workspace leases and private-temp grants. Workspace release restores
+ * snapshotted permissions after the last live process lease; failures retain recovery data.
  * @module @deepseek-ai/dsh-sandbox-windows-acl/grant
  */
 
@@ -17,17 +8,10 @@ import { allocPtrSlot, decodePtr, isNullPtr, throwLastError, win32Sync } from '.
 import type { NativePtr, Win32Bindings } from './ffi.ts'
 import { makeWellKnownSid } from './token.ts'
 import * as abi from './win32-abi.ts'
+import { recoverAbandonedGrants, WorkspaceGrantLease } from './recovery.ts'
 
-/**
- * One write SID's provider-lifetime grant materialization: the parsed SID
- * pointer plus every directory whose DACL currently carries its ACE and whose
- * label ACL carries the Low mandatory label. Workspace paths are added
- * STANDING (their security descriptor edits are the cross-session reuse cache
- * and outlive the grant — dispose() skips revoking them, or the next
- * provision would re-propagate the whole tree); temp paths are revocable
- * (dispose() revokes them — an inheritable ACE must not outlive its
- * session's temp directory). Create with {@link AclWriteGrant.create};
- * dispose revokes the revocable paths and frees every SID.
+/** One capability owner. add(path, true) acquires a recoverable workspace lease;
+ * add(path) grants a disposable private-temp directory. dispose releases both and frees SIDs.
  */
 export class AclWriteGrant {
   /** The write SID in SDDL string form. */
@@ -38,6 +22,8 @@ export class AclWriteGrant {
   private readonly worldSidPtr: NativePtr
   private readonly revocablePaths: string[] = []
   private readonly standingPaths: string[] = []
+  private readonly workspaceLeases = new Map<string, WorkspaceGrantLease>()
+  private disposed = false
 
   private constructor(
     api: Win32Bindings,
@@ -88,23 +74,42 @@ export class AclWriteGrant {
   }
 
   /**
-   * Grant the write ACE, the ambient-delete deny, and the Low mandatory label
-   * on one directory (idempotent: an already-standing exact ACE, deny, and
-   * label skip the eager full-tree re-propagation — see {@link grantWrite})
-   * and record the path for {@link dispose} unless it is standing. The path is
-   * recorded BEFORE the grant: a post-apply throw (a LocalFree failure after
-   * SetNamedSecurityInfoW succeeded) must still revoke it, and revoking an
-   * ungranted path is a no-op merge. Callers treat a throw as a failed
-   * materialization and dispose the instance to revoke the paths granted so
-   * far.
-   * @param path - the directory whose DACL and label gain the grant.
-   * @param standing - the edits outlive this grant (the workspace reuse
-   *   cache; dispose() skips revoking it). Default false (revoked on
-   *   dispose — the temp-directory lifecycle).
+   * Grant a private-temp directory or acquire a recoverable workspace lease.
+   * Repeated adds on this owner are idempotent. Failed workspace preparation
+   * rolls back or retains its original snapshot for recovery. Dispose after failure.
+   * @param path - existing directory, disjoint from recovery storage.
+   * @param standing - compatibility flag: true now means a shared, recoverable
+   *   workspace lease; false means a disposable private-temp grant.
    */
   add(path: string, standing = false): void {
-    ;(standing ? this.standingPaths : this.revocablePaths).push(path)
+    if (this.disposed) throw new Error('AclWriteGrant has been disposed')
+    if (standing) {
+      const key = path.toLowerCase()
+      if (this.workspaceLeases.has(key)) return
+      this.workspaceLeases.set(key, WorkspaceGrantLease.acquire(this.api, path, this.writeSid))
+      this.standingPaths.push(path)
+      return
+    }
+    if (this.revocablePaths.some(existing => existing.toLowerCase() === path.toLowerCase())) return
+    this.revocablePaths.push(path)
     grantWrite(this.api, path, this.sidPtr, this.lowLabelSidPtr, this.worldSidPtr)
+  }
+
+  /** Return a live workspace authorization for a runner to join.
+   * @param path - workspace previously acquired with add(path, true).
+   * @returns process-held owner reference; stale references cannot create grants.
+   */
+  authorization(path: string): string {
+    const lease = this.workspaceLeases.get(path.toLowerCase())
+    if (this.disposed || lease === undefined) throw new Error(`No live Windows ACL workspace authorization: ${path}`)
+    return lease.authorization
+  }
+
+  /** Recover abandoned grants during provider startup, preserving failures for diagnosis.
+   * @returns recovery failures; each affected workspace still refuses a new grant.
+   */
+  static recover(): readonly unknown[] {
+    return recoverAbandonedGrants(win32Sync())
   }
 
   /** Every directory currently carrying the grant, in grant order. */
@@ -112,9 +117,14 @@ export class AclWriteGrant {
     return [...this.standingPaths, ...this.revocablePaths]
   }
 
-  /** Revoke every revocable grant (standing security descriptor edits stay) and free the SIDs; reports every cleanup failure. */
+  /** Release workspace leases, revoke private-temp grants and free SIDs; aggregate cleanup failures. */
   dispose(): void {
+    if (this.disposed) return
+    this.disposed = true
     const failures: unknown[] = []
+    for (const lease of this.workspaceLeases.values()) {
+      try { lease.dispose() } catch (error) { failures.push(error) }
+    }
     for (const path of this.revocablePaths) {
       try {
         revokeWrite(this.api, path, this.sidPtr)

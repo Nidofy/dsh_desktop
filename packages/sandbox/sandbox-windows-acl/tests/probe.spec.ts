@@ -18,7 +18,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { AclSandbox } from '../src/index.ts'
+import { AclSandbox, workspaceWriteSid } from '../src/index.ts'
+import { isolatedRecovery } from './fixtures/isolated-recovery.ts'
+
+isolatedRecovery()
 
 const isWin32 = process.platform === 'win32'
 
@@ -52,7 +55,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('AclSandbox write restriction', ()
     sandbox = new AclSandbox({
       writableDirs: [writableDir],
       tempDir: isolatedTemp,
-      writeSid: 'S-1-4-9000-4',
+      writeSid: workspaceWriteSid(writableDir),
       tempWriteSid: 'S-1-4-9000-4-1',
       mode: 'workspace-write',
     })
@@ -95,12 +98,12 @@ describe.skipIf(!isWin32 || !pwshAvailable())('AclSandbox write restriction', ()
   it('fails closed when the write SID cannot be parsed (no unrestricted fallback)', async () => {
     // A malformed SID makes ConvertStringSidToSidW fail; init must throw
     // before any grant is applied and never spawn unrestricted.
-    const broken = new AclSandbox({ writableDirs: [writableDir], tempDir: null, writeSid: 'S-1-4-abc-1', mode: 'workspace-write' })
-    await expect(broken.init()).rejects.toThrow(/ConvertStringSidToSidW/u)
+    expect(() => new AclSandbox({ writableDirs: [writableDir], tempDir: null, writeSid: 'S-1-4-abc-1', mode: 'workspace-write' }))
+      .toThrow(/requires workspaceWriteSid/u)
   }, 15_000)
 
   it('failed init clears provisional temp state before a retry', async () => {
-    const broken = new AclSandbox({ writableDirs: [writableDir], tempDir: null, writeSid: 'S-1-4-abc-1', mode: 'workspace-write' })
+    const broken = new AclSandbox({ writableDirs: [writableDir], tempDir: null, writeSid: 'S-1-4-abc-1', mode: 'workspace-write', manageDacls: false })
     const provisionalState = broken as unknown as { tempDirResolved: string | undefined }
     provisionalState.tempDirResolved = isolatedTemp
 

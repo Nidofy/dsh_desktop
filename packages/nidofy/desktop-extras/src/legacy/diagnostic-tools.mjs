@@ -3,6 +3,7 @@ export class ToolTelemetry {
   clear(){this.rows=[];this.dropped=0;}
   suspend(){for(const row of this.rows)if(row.status==='running')row.status='observation-stopped';}
   event(session,event){
+    if(['step/end','turn/end'].includes(event.type)){const sessionId=this.capture.id(session.header.id);for(const row of this.rows)if(row.session===sessionId&&row.status==='running'&&row.turn===event.data.turn&&(event.type==='turn/end'||row.step===event.data.step))row.status='unconfirmed';return;}
     const d=event.data, nested=event.type.startsWith('tool/ptc-'), start=['tool/call','tool/ptc-dispatch-start'].includes(event.type);
     if(!start&&!['tool/result','tool/ptc-dispatch'].includes(event.type))return;
     const sessionId=this.capture.id(session.header.id), block=d.message?.role==='tool'?d.message:d.message?.content?.[0];

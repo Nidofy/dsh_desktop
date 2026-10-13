@@ -15,11 +15,14 @@
   en: 813b9e6ace0ba331
   zh: 652573d43ef457b4
 /nidofy-dsh-desktop-extras/use-this-package:
-  en: c1e47cd7629e1466
-  zh: f9ea49d2a240e7f9
+  en: 4b5606ac0c714e6c
+  zh: 20b9c5e4843ca9d0
 /nidofy-dsh-desktop-extras/ownership-and-persistence:
-  en: 2fb1c02f41592f5b
-  zh: aa6e568aef0cd3c0
+  en: fd2bb8071849caa6
+  zh: aedeff5ab23010e9
+/nidofy-dsh-desktop-extras/client-lifecycle-and-local-controls:
+  en: 9fe04b505fb2395b
+  zh: 038ecc38da21c62a
 /nidofy-dsh-desktop-extras/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
@@ -27,17 +30,17 @@
   en: 386f3bf22def09b4
   zh: 97a0ce1df2004a82
 /nidofy-dsh-desktop-extras/model-experience/optional-image-tool-and-explicit-requests/what-the-model-sees:
-  en: eb32f9bd1f8fc41f
-  zh: ab6b34f322eab76f
+  en: 8b145373ebaf6b67
+  zh: 132698a77636e694
 /nidofy-dsh-desktop-extras/model-experience/optional-image-tool-and-explicit-requests/token-effect:
   en: c3731c30601ab852
   zh: 99dba11381a3117e
 /nidofy-dsh-desktop-extras/model-experience/optional-image-tool-and-explicit-requests/kv-cache-effect:
-  en: acebe18a7a4583dd
-  zh: 4d42f49274139ef3
+  en: 249873d39402a47a
+  zh: 1516b21f1337e1d0
 /nidofy-dsh-desktop-extras/known-limitations-and-deferred-work:
-  en: 4f0a8bdedab16e78
-  zh: f457da6da91f2c96
+  en: ed5b00ca6d0e1607
+  zh: 33f35205de0a6d2f
 /nidofy-dsh-desktop-extras/known-limitations-and-deferred-work/dev-note:
   en: 3f591b66fa879d8f
   zh: edb1bdd08da6cc52

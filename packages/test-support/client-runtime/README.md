@@ -9,6 +9,8 @@ English | [中文](README.zh.md)
 
 ## Summary
 
+Bundle roster resolution recognizes an anchored package’s own manifest before searching installed links. It supports actual Host-row closure from a source checkout without creating a self-link. Mounted Client fixtures exercise production Loader and renderer lifetimes with isolated external APIs; jsdom is not native Electron qualification.
+
 `SlotTestRuntime.create()` lets Vitest suites drive production slots, stores, typed Session and Workspace fixtures, and local DOM assertions in jsdom. For plugin activation, reload, reconnect, and cleanup tests, `createClientTest` starts the web profile's bundle roster with endpoint-named Remote mocks, without a business Host. Missing services and unstubbed calls fail explicitly. The whole-client fixture owns startup and disposal; the local runtime provides idempotent disposal. Use this package through `devDependencies` for client tests; it is not a product plugin.
 
 Linked bundles resolve dependencies from their real package directories; dependencies next to any bundle take precedence over packages inherited from ancestor directories.

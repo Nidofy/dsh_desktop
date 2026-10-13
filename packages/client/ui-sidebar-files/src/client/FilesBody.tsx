@@ -194,7 +194,7 @@ export function FilesBody({
     <div className={css.root} data-files-state="tree" data-files-root={state.root}>
       <div className={css.header}>
         <PathLabel path={state.root} className={css.path} data-files-path />
-        <span hidden>
+        <span>
           <button type="button" className={css.tool} aria-label={t('autoRefresh')}
             aria-pressed={state.autoRefresh} data-files-auto-refresh
             title={t(state.autoRefresh ? 'autoRefresh.disable' : 'autoRefresh.enable')}

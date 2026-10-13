@@ -10688,6 +10688,130 @@
       }
     },
     {
+      "key": "event:nidofy/notebook-compaction",
+      "kind": "event",
+      "event": "nidofy/notebook-compaction",
+      "surface": false,
+      "digest": "1c3218e0484d634fadfddd61203ed85c5ba34b42c16fcbe384aa927be38fb66d",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 11,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 12,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "compactionId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "extraRequests",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "input",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "kind",
+                "type": 4,
+                "optional": false
+              },
+              {
+                "name": "schemaVersion",
+                "type": 10,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "union",
+            "types": [
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "budget-skipped"
+          },
+          {
+            "kind": "literal",
+            "value": "invalid-fallback"
+          },
+          {
+            "kind": "literal",
+            "value": "no-new-evidence"
+          },
+          {
+            "kind": "literal",
+            "value": "persisted"
+          },
+          {
+            "kind": "literal",
+            "value": "request"
+          },
+          {
+            "kind": "literal",
+            "value": 1
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "nidofy/notebook-compaction"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:permission/preset",
       "kind": "event",
       "event": "permission/preset",
@@ -10921,7 +11045,7 @@
       "kind": "event",
       "event": "request/header",
       "surface": false,
-      "digest": "4208123b50df5006b181481ab45fcf1cde807b88d3fd4d340090bc2e202fac41",
+      "digest": "2f09e4b30487c64bcaf3edce3ba0c987fb7823f16cf37e4ceceb36228262ed2b",
       "schema": {
         "root": 0,
         "nodes": [
@@ -11040,6 +11164,11 @@
                 "name": "provider",
                 "type": 7,
                 "optional": false
+              },
+              {
+                "name": "providerIdentity",
+                "type": 7,
+                "optional": true
               },
               {
                 "name": "reasoningEffort",
@@ -22213,6 +22342,11 @@
       "sources": []
     },
     {
+      "digest": "1c3218e0484d634fadfddd61203ed85c5ba34b42c16fcbe384aa927be38fb66d",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "1c5a58f4599bd4a9711712551ffe2442a5e5fcd0758bafe630cc4ead850bdaa7",
       "names": [],
       "sources": []
@@ -22349,6 +22483,11 @@
       "sources": []
     },
     {
+      "digest": "22775bccd1017960a66bdbe8791e90df00e7959629db05f96b95b6189c6ca0a9",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "234142ee4f996f38cc9fa3b8b3e3de29b03c9aefe5ebf6c224eddd564505aa85",
       "names": [],
       "sources": []
@@ -22454,6 +22593,11 @@
       "sources": []
     },
     {
+      "digest": "2ab325d5b2e06dd6474d39ae8acaae5308ad7e09a959e36430bea4652a40be97",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "2abb711460e6238d851c30f3e4bdd87a2aa1887ee70575b3d3b7b25610673095",
       "names": [],
       "sources": [
@@ -22511,6 +22655,11 @@
       ]
     },
     {
+      "digest": "2f09e4b30487c64bcaf3edce3ba0c987fb7823f16cf37e4ceceb36228262ed2b",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "2f1e6a7ebace43d727ae138ddcd352eb3813960009e5805b8c5ac84300c97716",
       "names": [
         "packages/attachment/attachment/src/types.ts#ImageMediaType"
@@ -22562,7 +22711,7 @@
         "packages/llm/llm/src/call-config.ts#LlmCallConfigAdapterDefaults"
       ],
       "sources": [
-        "packages/llm/llm/src/call-config.ts:36"
+        "packages/llm/llm/src/call-config.ts:40"
       ]
     },
     {
@@ -22703,6 +22852,15 @@
       "sources": []
     },
     {
+      "digest": "3c7904d22ac0af69bebb9e9699922822384f82290f4ae76cd4570605c1acb5f1",
+      "names": [
+        "packages/llm/llm/src/call-config.ts#LlmCallConfig"
+      ],
+      "sources": [
+        "packages/llm/llm/src/call-config.ts:23"
+      ]
+    },
+    {
       "digest": "3cfc3a56502da1f8c6153c2c56657bab4b749056968634dd0991d325ec1c919f",
       "names": [
         "packages/core/tools/src/index.ts#ToolRestriction"
@@ -22763,11 +22921,6 @@
     },
     {
       "digest": "408927267422a7b2beb6df354ff7c1406d929a5646554f48adf85eb8372f811c",
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "4208123b50df5006b181481ab45fcf1cde807b88d3fd4d340090bc2e202fac41",
       "names": [],
       "sources": []
     },
@@ -22969,6 +23122,11 @@
     },
     {
       "digest": "4e44c9118152f6829634bfd508e47669ab0497caffa380c94b4be91f9390d35d",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "4e7937aa6e19df6c80dc0a7337f6999bf6b7a3c7ff512010903cd5d7e3961384",
       "names": [],
       "sources": []
     },
@@ -23291,6 +23449,11 @@
       "sources": []
     },
     {
+      "digest": "637ecfa014db92df216d0bbdb957df7e805b4d9d96a1ef2b16bd1d049de220a8",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "6487b10ba7542f3c447b1e41a1c6a590b7bfafe0b9b66b49f34028da85bb970f",
       "names": [
         "packages/subagent/subagent/src/descriptor.ts#ContinuableSubagentDescriptorData"
@@ -23333,15 +23496,6 @@
       ],
       "sources": [
         "packages/skill/skill/src/index.ts:146"
-      ]
-    },
-    {
-      "digest": "67d5f73ceae82f5265258142ad6cf172de2c1fef93ba551b7f0454e0a93bffe0",
-      "names": [
-        "packages/llm/llm/src/call-config.ts#LlmCallConfig"
-      ],
-      "sources": [
-        "packages/llm/llm/src/call-config.ts:23"
       ]
     },
     {
@@ -23835,6 +23989,11 @@
       "sources": []
     },
     {
+      "digest": "8a87fc761e086bc4cccdeeecf42e513ed94f160bafa9aed1c2347fb99b161dd5",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "8a9c990773f798eac10ca8878e6bcc531ee080bc589cac956730e462cc6a09ad",
       "names": [],
       "sources": [
@@ -24055,15 +24214,6 @@
       ]
     },
     {
-      "digest": "9a930283b91d493d6347146f2475bb107294b379415ca02162354f46a64164f7",
-      "names": [
-        "packages/core/session/src/types.ts#EpochHeader"
-      ],
-      "sources": [
-        "packages/core/session/src/types.ts:240"
-      ]
-    },
-    {
       "digest": "9ac52f0f84fec2eb9f71c2937e497d759db5ca0da4836d93a679d113684141f2",
       "names": [],
       "sources": []
@@ -24193,6 +24343,13 @@
       ]
     },
     {
+      "digest": "a5305e4c2e05cf9506d04fce1ebd4c6af8c88d04236e8bf7772a41b6750be543",
+      "names": [],
+      "sources": [
+        "packages/nidofy/desktop-extras/src/compaction.ts:17"
+      ]
+    },
+    {
       "digest": "a5d80b5a2f3a6bbaf8f0334126632b78f94d8346122c68e8122ea89906d63d26",
       "names": [],
       "sources": [
@@ -24203,6 +24360,13 @@
       "digest": "a6567ccb2e530606b775371eb4fa31468d72084339968e8b0440a516a23b39dc",
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "a6a6a9008edf14dbd694aaa9fa97ae24fb067aac37d52a92eb21bb9a3ae5e75d",
+      "names": [],
+      "sources": [
+        "packages/core/session/src/types.ts:390"
+      ]
     },
     {
       "digest": "a6b41f5bede8094d7bf635be5d69b1bd7a25e006ca9cf9415bceb9322f1a7feb",
@@ -24328,13 +24492,6 @@
       "sources": []
     },
     {
-      "digest": "ad0c38a0adb82a94c925456df41586d9b5f9202fca18593eae2213d4445b4585",
-      "names": [],
-      "sources": [
-        "packages/core/session/src/types.ts:390"
-      ]
-    },
-    {
       "digest": "ad22a5ca5bbaab2e1440779cd3648e85ddfc6f73b5207394eda699555cf31430",
       "names": [],
       "sources": []
@@ -24451,6 +24608,15 @@
       "digest": "b2245a906e13aa94f2d3cc6cf7b04cfa0267f7b7f4d468de1b00b1a314e54626",
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "b25f09558302e1a700c1ff3d1d3617da41940801ab28685ddc87e97270f5012b",
+      "names": [
+        "packages/core/session/src/types.ts#EpochHeader"
+      ],
+      "sources": [
+        "packages/core/session/src/types.ts:240"
+      ]
     },
     {
       "digest": "b2a5c8c008a31e3dc6c3013502f2356aca13894b31c8e70601fa92f2d40d1dba",
@@ -24792,6 +24958,11 @@
       "sources": []
     },
     {
+      "digest": "ccd85a05b86b4df5cc02956e2c8e0a282aa21bcd94a9edc3a5f79fd0bd99aa07",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "cd186c309e2bef305705e1d324139240f5e681f4f6a957d6a25b0225f65560df",
       "names": [],
       "sources": []
@@ -24865,6 +25036,11 @@
     },
     {
       "digest": "d63b8b8ffad9c02fd80c43a17df4f240c1fe8118ecca9de34f9d5871838ab5b9",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "d6984a60dc6935f36ef1c03fc6585b71d926f8ed7687604a934a23ca1161b940",
       "names": [],
       "sources": []
     },

@@ -99,7 +99,7 @@ export function installModelSelection(agentCtx: Context, selection: ModelSelecti
       const resolved = await next()
       const selected = selection.assembled
       if (selected === undefined) return resolved
-      const { reasoningEffort: _inheritedEffort, ...withoutInheritedEffort } = resolved
+      const { reasoningEffort: _inheritedEffort, providerIdentity: _inheritedIdentity, ...withoutInheritedEffort } = resolved
       return {
         ...withoutInheritedEffort,
         provider: selected.provider,
@@ -118,7 +118,10 @@ export function installModelSelection(agentCtx: Context, selection: ModelSelecti
       // The loop skips an empty first step and an emptied offered continuation.
       if (decision.messages.length === 0 && (step === 1 || messages.length > 0)) return decision
       const selected = selection.assembled
-      const previous = agent.session.requestHeader()?.config
+      const previousConfig = agent.session.requestHeader()?.config
+      const previous = previousConfig === undefined ? undefined : {
+        ...previousConfig, provider: previousConfig.providerIdentity ?? previousConfig.provider,
+      }
       if (selected === undefined || previous === undefined || sameRoute(selected, previous)) return decision
       return { ...decision, messages: [...decision.messages, modelSwitchNotice(previous, selected)] }
     },

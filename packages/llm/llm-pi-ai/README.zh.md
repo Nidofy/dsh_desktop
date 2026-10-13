@@ -107,6 +107,8 @@ profile 的 `models` 列表会替换而非扩展路由的已安装目录；每�
 
 对于自托管 Chat Completions 端点，`thinkingTokenBudgetField` 选择推理预算参数，`vllmPriority` 在服务端启用优先级调度时设置整数调度优先级。模板参数接受 `$var: thinking.budget`。`openai-responses` 网关可设置 `supportsMaxOutputTokens: false` 来省略 `max_output_tokens`；Azure 与 Codex 传输会忽略这个共享兼容字段。这些控制均需显式启用；目录拥有的 Anthropic effort 和回退能力不是可配置开关。
 
+对于提供方明确接受无签名思考历史的 Anthropic 兼容模型，可在该模型设置 `compat.allowEmptySignature: true`，让无签名推理在工具往返中保持 thinking 块。省略该选项或设为 false 时，SDK 把无签名推理作为 text 回放；带签名的 thinking 保留签名。应将选项限定在已验证的路由/模型。它既不改变推理档位，也不启用 adaptive thinking，不能证明提供方会接受请求或因此更快。`forceAdaptiveThinking` 会改变思考协议，不能替代独立的 effort 字段。
+
 <a id="control-transport-routing-metadata"></a>
 
 ### 控制传输路由元数据
@@ -134,6 +136,8 @@ Config 更新严格验证发生变化的 provider。初始加载将已存储的�
 只修改 `displayName`、`apiKeyEnv` 或 `baseURL` 而未解决提供方的模型配置错误时，保存仍会被拒绝。例如，OpenRouter 路由的模型 `111` 缺少 `api` 时，不能单独保存路由名称的修改：需要在同一份编辑草稿中修复或删除该模型，再保存完整的提供方配置。中间修复状态保留在草稿中，直到整条提供方配置通过校验；其他提供方可以独立保存。
 
 -----
+
+已安装的应用 HTTP 策略由 `prepareCall` 捕获，并在凭据及每次 SDK fetch 前复验。使用本 provider 时，请求要求显式凭据及两种已验证 SSE API 之一：`openai-completions` 或 `anthropic-messages`；不受支持的原生鉴权、API 及 WebSocket 传输拒绝。模型发现在解析 Key 前使用相同授权。未安装策略 provider 的普通启动保持既有路由。参见 [Desktop 策略参考](../../../apps/desktop-host/src/connections/README.zh.md)。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现

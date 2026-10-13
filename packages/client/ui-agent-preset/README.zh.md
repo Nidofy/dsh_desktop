@@ -9,6 +9,8 @@ kind: "package-reference"
 
 ## 概述
 
+预设选择与设置同步消费导航 owner 的显式 mainBinding。后台保留不能选择空白会话或显示其选择器。binding 与 catalog 订阅共同释放。
+
 在 Web 中选择 Agent preset 和新任务默认值，查看各模式的说明与声明的配置。创建与修改引导至创造模式。
 
 ## 目录

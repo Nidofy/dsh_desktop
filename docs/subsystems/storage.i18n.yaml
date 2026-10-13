@@ -3,8 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/storage.md
 /storage:
-  en: ca316310c10348c3
-  zh: 066885a031d283cc
+  en: b0b10f9551387365
+  zh: 751d46b3c89adc36
+/storage/desktop-managed-quota:
+  en: 2a413dfd927bee61
+  zh: fb7da7ca432609d8
 /storage/the-hub-ctx-storage:
   en: b11e06e7c0e0fd13
   zh: 4585f26ff416cb41

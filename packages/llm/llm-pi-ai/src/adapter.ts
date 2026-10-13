@@ -56,6 +56,7 @@ import type {
   StreamChunk,
 } from '@deepseek-ai/dsh-llm'
 import type { AttachmentStore, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
+import type { HttpEgressLease } from '@deepseek-ai/dsh-http-proxy'
 import { idleWatchdog, timeoutOf } from '@deepseek-ai/dsh-timeout'
 import type { ResolvedPiAiProviderProfile } from './config.ts'
 import { toPiContext } from './context.ts'
@@ -86,6 +87,8 @@ export interface PiAiPayloadScope {
 
 /** Constructor options for {@link PiAiAdapter}: request resolution and payload hooks. */
 export interface PiAiAdapterOptions {
+  /** Capture optional application HTTP authorization before authentication. */
+  prepareHttp?: (url: string) => Promise<HttpEgressLease | undefined>
   /**
    * Capture an optional transport-payload transform once before the credential await.
    * The returned callback must preserve logged content, tools and generation parameters.
@@ -336,21 +339,30 @@ export class PiAiAdapter extends LlmAdapter {
     }
   }
 
-  override prepareCall(provider: string, model: string, _signal?: AbortSignal): Promise<PreparedAdapterCall> {
+  override async prepareCall(provider: string, model: string, _signal?: AbortSignal): Promise<PreparedAdapterCall> {
     const snapshot = this.current()
-    return Promise.resolve({
+    const route = this.modelOf(snapshot, provider, model), profile = this.profileOf(snapshot, provider)
+    const http = await this.config.prepareHttp?.(route.baseUrl)
+    if (http && (!['openai-completions', 'anthropic-messages'].includes(route.api)
+      || profile.apiKeyEnv === undefined || profile.transport !== undefined && profile.transport !== 'sse')) {
+      throw new LlmError('configured transport cannot enforce application HTTP policy', 'EGRESS_TRANSPORT_REFUSED')
+    }
+    return {
       model: this.modelInfo(snapshot, provider, model),
-      stream: options => this.streamWithSnapshot(options, snapshot),
-    })
+      stream: options => this.streamWithSnapshot(options, snapshot, http),
+    }
   }
 
   stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
-    return this.streamWithSnapshot(options, this.current())
+    return (async function* (adapter: PiAiAdapter) {
+      yield* (await adapter.prepareCall(options.provider, options.model, options.signal)).stream(options)
+    })(this)
   }
 
   private async * streamWithSnapshot(
     options: GenerateOptions,
     snapshot: PiAiSnapshot,
+    http?: HttpEgressLease,
   ): AsyncIterable<StreamChunk> {
     if (options.stop !== undefined) {
       throw new LlmError('llm-pi-ai does not support GenerateOptions.stop', 'UNSUPPORTED_OPTION')
@@ -373,7 +385,9 @@ export class PiAiAdapter extends LlmAdapter {
       baseURL: model.baseUrl,
       sessionId: options.sessionId === undefined ? undefined : String(options.sessionId),
     }))
+    await http?.check(options.sessionId)
     const apiKey = await this.config.resolveApiKey(options.provider, profile)
+    if (http && apiKey === undefined) throw new LlmError('application HTTP policy requires explicit authentication', 'EGRESS_AUTH_REFUSED')
 
     const consumer = new AbortController()
     const upstream = options.signal === undefined
@@ -407,6 +421,7 @@ export class PiAiAdapter extends LlmAdapter {
         }, onReplayDegrade)
       const events = snapshot.models.streamSimple(model, context, {
         ...profileOptions(profile, reasoning, apiKey),
+        ...http === undefined ? {} : { fetch: http.fetchFor(options.sessionId), transport: 'sse' as const },
         ...onPayload === undefined ? {} : { onPayload },
         ...options.temperature === undefined ? {} : { temperature: options.temperature },
         ...options.maxTokens === undefined ? {} : { maxTokens: options.maxTokens },

@@ -21,29 +21,29 @@
   en: 510d0b1ef7db159d
   zh: dc2cf25b3db14c63
 /deepseek-ai-dsh-sandbox-windows-acl/use-this-package/direct-api:
-  en: 16596607bbccc2a3
-  zh: 30bc370a5281bf0d
+  en: 8ca42a6afe916064
+  zh: 713181a29a1389a3
 /deepseek-ai-dsh-sandbox-windows-acl/use-this-package/what-confinement-gives-you:
   en: 289e65bddf20dd79
   zh: 7ff72ed64c4b4d1c
 /deepseek-ai-dsh-sandbox-windows-acl/use-this-package/failures-and-recovery:
-  en: 7fc0707debb1e67c
-  zh: e3b5529bf82f868e
+  en: b9d98b588a2d8df6
+  zh: b86236aefa2ab173
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation:
   en: c2cde86c85c2c619
   zh: a29a114e591f9d3f
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/mechanism:
-  en: a37ea37f2d527693
-  zh: 749b5a263d0e1534
+  en: 21fbf67580875408
+  zh: 45a8135882124c42
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/modes-and-token-lists:
-  en: 9c8d9af84f9abd99
-  zh: 1c82b355aa5f210f
+  en: 08a1f6890c492ed4
+  zh: 338eaf41898069e8
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/the-confinement-runner:
-  en: 0847de0e53e50061
-  zh: 90fa3dcaf080c3be
+  en: 93a68c20887d717e
+  zh: dea47cdb040bbb00
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/verified-boundaries:
-  en: ad02570eae90037f
-  zh: fd78c2318de18dda
+  en: 317c4aadad2b697b
+  zh: 9242610d74a5ce46
 /deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/header-verification-and-source-map:
   en: c19df6b7a756b779
   zh: b8267b26bd191d97
@@ -57,11 +57,11 @@
   en: 817eb1b7de13872e
   zh: 06fe175e41e7459b
 /deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work:
-  en: 046831a864786b2a
-  zh: 4a261fbab3396ea4
+  en: 2fed8edcd2357c7c
+  zh: b5c6faac1719675e
 /deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note:
   en: cc273320f6a1beaf
   zh: 5c57a312ddc50651
 /deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note/future-warnings-and-cleanup-surfaces:
-  en: 4c65be775f25c367
-  zh: 467b2ce99030dcf5
+  en: d71907c182b3656f
+  zh: a9536d259695fc62

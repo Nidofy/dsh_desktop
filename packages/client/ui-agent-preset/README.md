@@ -9,6 +9,8 @@ English | [中文](README.zh.md)
 
 ## Summary
 
+Preset selection and Settings synchronization consume the navigation owner’s explicit mainBinding. Background retention cannot select a blank Session or expose its chip. Binding and catalog subscriptions are disposed together.
+
 Choose Agent presets and the new-task default in Web, read what each mode does and what it declares. Authoring is guided to Creator mode.
 
 ## Table of Contents

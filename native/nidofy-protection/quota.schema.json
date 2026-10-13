@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nidofy quota journal v2 record body",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rootId",
+    "limitBytes",
+    "safetyBytes",
+    "measuredBytes",
+    "homes",
+    "owners",
+    "leases",
+    "imports"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "rootId": {
+      "type": "string",
+      "pattern": "^[0-9]+:[0-9]+:[0-9]+$"
+    },
+    "limitBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "safetyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "measuredBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "homes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "owners": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/process"
+      }
+    },
+    "leases": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/lease"
+      }
+    },
+    "imports": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/import"
+      }
+    }
+  },
+  "$defs": {
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid",
+        "creation"
+      ],
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "creation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "id",
+        "ownerEpoch",
+        "owner",
+        "home",
+        "scope",
+        "maxWriteBytes",
+        "terminalBytes",
+        "tokenHash",
+        "phase",
+        "worker"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "ownerEpoch": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/process"
+        },
+        "home": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "maxWriteBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "terminalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokenHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "phase": {
+          "enum": [
+            "reserved",
+            "running",
+            "terminal",
+            "finished",
+            "settled"
+          ]
+        },
+        "worker": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/process"
+            }
+          ]
+        }
+      }
+    },
+    "import": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "owner",
+        "fingerprint",
+        "directoryId",
+        "homeId",
+        "receiptDigest",
+        "spentBytes",
+        "retainedBytes",
+        "phase"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/process"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "directoryId": {
+          "type": "string"
+        },
+        "homeId": {
+          "type": "string"
+        },
+        "receiptDigest": {
+          "type": "string"
+        },
+        "spentBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "phase": {
+          "enum": [
+            "copying",
+            "publishing",
+            "ready",
+            "interrupted",
+            "adopted"
+          ]
+        }
+      }
+    }
+  }
+}

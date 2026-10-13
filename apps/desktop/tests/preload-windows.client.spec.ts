@@ -4,7 +4,8 @@ import { DESKTOP_IPC } from '../src/ipc.ts'
 import { syncWindowsAppearance } from '../src/preload-windows.ts'
 
 const send = vi.hoisted(() => vi.fn())
-vi.mock('electron', () => ({ ipcRenderer: { send } }))
+const zoom = vi.hoisted(() => ({ factor: 1 }))
+vi.mock('electron', () => ({ ipcRenderer: { send }, webFrame: { getZoomFactor: () => zoom.factor } }))
 vi.mock('../src/preload-menu.ts', () => ({ installWindowsMenu: () => ({ update: vi.fn(), dispose: vi.fn() }) }))
 
 afterEach(() => {
@@ -14,7 +15,7 @@ afterEach(() => {
   document.documentElement.lang = 'en'
   document.body.removeAttribute('data-ds-dark-theme')
   vi.restoreAllMocks()
-  send.mockClear()
+  send.mockClear(); zoom.factor = 1
 })
 
 it.each(['darwin', 'linux'] as const)('does not install Windows controls on %s', (platform) => {
@@ -44,6 +45,8 @@ it('synchronizes live language and palette changes and stops observing a closed 
   window.dispatchEvent(new Event('DOMContentLoaded'))
   expect(document.documentElement.style.getPropertyValue('--dsh-windows-titlebar-height')).toBe('40px')
   expect(send).toHaveBeenLastCalledWith(DESKTOP_IPC.windowsAppearance, 'en', 'rgba(255, 255, 255, 1)', 'rgba(0, 0, 0, 1)')
+  zoom.factor = 2; window.dispatchEvent(new Event('resize'))
+  expect(document.documentElement.style.getPropertyValue('--dsh-windows-titlebar-height')).toBe('20px')
   document.documentElement.lang = 'zh-CN'
   document.body.setAttribute('data-ds-dark-theme', '')
   await vi.waitFor(() => { expect(send).toHaveBeenLastCalledWith(DESKTOP_IPC.windowsAppearance, 'zh-CN', 'rgba(27, 27, 28, 1)', 'rgba(0, 0, 0, 1)') })

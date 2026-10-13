@@ -22,6 +22,7 @@ kind: "package-group"
 - [桌面 bundle](desktop-bundle/README.zh.md)通过 profile bundle 选择可选插件。
 - [工作笔记](working-notebook/README.zh.md)负责跨官方模式的可选笔记与压缩整理。
 - [桌面扩展](desktop-extras/README.zh.md)负责诊断、合成实验、识图、桌宠及暂停计划导入。
+- [安全凭据](secure-credentials/README.zh.md)在显式 overlay 下以 Windows DPAPI 保护受管引用与 record。
 
 [启动子系统](../../docs/subsystems/boot.zh.md)负责 profile 解析；[网页客户端子系统](../../docs/subsystems/web-client.zh.md)负责客户端生命周期和认证通信。
 
@@ -29,3 +30,5 @@ kind: "package-group"
 ## 开发备注
 
 这些包不实现 Agent Loop 或 Session writer。原生发行适配仍位于 Desktop Main 与 Host。
+
+[Workspace 约束检查](../../scripts/check-workspace-constraints.ts)要求本组包名为 `@nidofy/dsh-<directory>`，设置 `private: true` 且不含 `publishConfig`。官方 npm 发行要求保持独立。

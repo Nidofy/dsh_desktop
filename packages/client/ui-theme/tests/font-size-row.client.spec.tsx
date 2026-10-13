@@ -50,6 +50,7 @@ function mount(fontSize = 14) {
   const props: FontSizeRowComponentProps = {
     useSessions: emptySessions(),
     useSessionStatus,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: emptyWorkspaces(),
     useStore: bindSnapshotSelector(store),

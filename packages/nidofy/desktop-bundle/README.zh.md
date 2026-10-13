@@ -23,6 +23,10 @@ kind: "package-bundle"
 
 插件管理器在 `dsh.profile.bundles` 中选择本 bundle。其补丁启用历史和独立的[工作笔记插件](../working-notebook/README.zh.md)。诊断、识图、缓存实验与桌宠仍需按需启用。官方预设保持不变。自动整理笔记初始关闭，通过笔记开关启用；旧 Notebook 预设保留以兼容已保存的 Session，并遵循同一开关。更新上游后运行 `node packages/nidofy/desktop-bundle/generate-context-presets.mjs --check`。按[插件指南](../desktop-extras/README.zh.md)逐项启用。
 
+导出的 [secure-credentials overlay](secure-credentials.patch.yml)仅在显式选择时替换凭据行。它使用 [Windows provider](../secure-credentials/README.zh.md)，并要求显式 `DSH_HOME`。Bundle 的默认 patch 列表保留现有 provider。隔离 Loader 检查不授权自动迁移或默认启用。
+
+Bundle 要求 `DSH_DESKTOP_PROTECTION_HELPER` 指向应用拥有的 Windows helper，并安装共享[受管配额 owner](../../../native/nidofy-protection/README.zh.md)。工作笔记和扩展在启用前注入此 owner。搜索使用官方 provider 的 `:memory:` 索引；旧磁盘索引继续计量并保留。冷搜索重建会占用内存。旧导入采用显式有界准入及独立原位接纳，不改变当前运行 home；参见[升级指南](../../../docs/upgrade-guide/v0.2.0-rc.2/nidofy-quota/guide.zh.md)。
+
 <a id="model-experience"></a>
 ## 模型体验
 

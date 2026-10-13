@@ -3,6 +3,11 @@
 /** English strings (the key-set source of truth for this pair). */
 export const en = {
   nav: 'Models',
+  credentialUnavailable: 'Credential status could not be read. Saved keys have not been changed.',
+  discardTitle: 'Discard the unsaved API key?',
+  discardDescription: 'The key exists only in this editor. Leaving will discard it without saving.',
+  keepEditing: 'Keep editing',
+  discard: 'Discard key',
   deepSeekAccount: 'DeepSeek Account',
   title: 'Models',
   intro: 'Enter your API keys to use models from the following providers.',
@@ -123,6 +128,11 @@ export type ModelsKey = keyof typeof en
 /** Chinese strings (same keys as {@link en}). */
 export const zh: { [Key in keyof typeof en]: string } = {
   nav: '模型',
+  credentialUnavailable: '无法读取凭据状态，已保存的密钥未更改。',
+  discardTitle: '放弃未保存的 API 密钥？',
+  discardDescription: '此密钥仅保存在当前编辑器中，离开会放弃它，不会自动保存。',
+  keepEditing: '继续编辑',
+  discard: '放弃密钥',
   deepSeekAccount: 'DeepSeek 账号',
   title: '模型',
   intro: '填入各提供商的 API 密钥即可使用其模型。',

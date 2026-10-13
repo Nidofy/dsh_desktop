@@ -1,3 +1,5 @@
+import { fitWindowBounds, readWindowState, rememberWindowState } from './window-state.ts'
+import { DesktopPanels } from './panels.ts'
 import { installPetDesktop } from './pet.ts'
 import type { ProductEventMap, ProductEvent } from '@deepseek-ai/dsh-client-product-analytics/types'
 import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
@@ -7,7 +9,7 @@ import { installWorkbenchDesktop } from './workbench.ts'
 import { readFile, writeFile } from 'node:fs/promises'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { distributionPaths, permitsDistributionRequest, readDesktopDistribution } from './distribution.ts'
-import { distributionDataRoot, registerDesktopProtocol } from './distribution-protocol.ts'
+import { distributionDataRoot, distributionPortable, registerDesktopProtocol } from './distribution-protocol.ts'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -18,6 +20,7 @@ import {
   ipcMain,
   Menu,
   powerMonitor,
+  screen,
   nativeImage,
   nativeTheme,
   net,
@@ -33,6 +36,7 @@ import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError 
 import { DesktopPlatformView, PLATFORM_IPC, platformBounds } from './platform-view.ts'
 import { installDesktopDirectoryPicker } from './directory-picker.ts'
 import { installMicrophonePermissions } from './microphone-permissions.ts'
+import { CompanionNavigation } from './companion-navigation.ts'
 import { DesktopBackendController } from './backend-controller.ts'
 import { DESKTOP_IPC, SCHEME, assertDesktopSender, type DesktopUpdateState } from './ipc.ts'
 import { readDeviceInfo } from './device-info.ts'
@@ -67,9 +71,12 @@ import { DesktopBackgroundNotice } from './background-notice.ts'
 
 const distributionManifest = JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')) as { dshDistribution?: unknown }
 const distribution = readDesktopDistribution(distributionManifest.dshDistribution)
+const explicitDistributionRoot = distribution === undefined ? undefined
+  : distributionDataRoot(process.argv, process.env.NIDOFY_DESKTOP_DATA_ROOT)
+const portable = distributionPortable(process.argv, explicitDistributionRoot, distribution !== undefined)
 let distributionRoot: string | undefined
 if (distribution !== undefined) {
-  const paths = distributionPaths(app.getPath('appData'), distributionDataRoot(process.argv, process.env.NIDOFY_DESKTOP_DATA_ROOT), distribution.dataDirectory)
+  const paths = distributionPaths(app.getPath('appData'), explicitDistributionRoot, distribution.dataDirectory)
   distributionRoot = dirname(paths.userData)
   mkdirSync(paths.userData, { recursive: true, mode: 0o700 })
   app.name = distribution.productName
@@ -230,11 +237,16 @@ function platformLoginUrl(authorizeUrl: string): string {
 }
 
 function createWindow(preload: string, show = false, primary = false): BrowserWindow {
+  const statePath = join(app.getPath('userData'), 'window-state.json')
+  const saved = primary ? readWindowState(statePath) : undefined
+  const area = saved ? screen.getDisplayMatching(saved.bounds).workArea : screen.getPrimaryDisplay().workArea
+  const bounds = fitWindowBounds(saved?.bounds ?? {
+    x: area.x + (area.width - 1280) / 2, y: area.y + (area.height - 820) / 2, width: 1280, height: 820,
+  }, area)
   const window = new BrowserWindow({
-    width: 1280,
-    height: 820,
-    minWidth: 520,
-    minHeight: 600,
+    ...bounds,
+    minWidth: Math.min(520, area.width),
+    minHeight: Math.min(600, area.height),
     show,
     ...(process.platform === 'win32' && primary ? {
       titleBarStyle: 'hidden' as const,
@@ -262,6 +274,10 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
       devTools: true,
     },
   })
+  if (primary) {
+    rememberWindowState(window, statePath)
+    if (saved?.maximized) window.once('show', () => { window.maximize() })
+  }
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (['http:', 'https:'].includes(new URL(url).protocol)) void openExternal(url)
     return { action: 'deny' }
@@ -425,6 +441,8 @@ async function main(): Promise<void> {
   const applicationUrl = `${SCHEME}://app/`
   let hostUrl: string | undefined
   let hostCookie: string | undefined
+  let hostRevision = 0
+  let applicationRevision = 0
   const browserGuests = new DesktopBrowserGuests(() => hostUrl, distribution?.kind !== 'intranet')
   if (distribution?.kind === 'intranet') {
     session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
@@ -453,6 +471,26 @@ async function main(): Promise<void> {
       throw new Error('dsh desktop: rejected IPC from an unowned renderer')
     }
   }
+  // Only createMainWindow owns a Conversation root. Auxiliary windows do not inherit it.
+  const ownsApplicationFrame = (contentsId: number | undefined, frame: Electron.WebFrameMain | null | undefined): boolean => {
+    const owner = mainWindow
+    if (!owner || owner.isDestroyed() || contentsId !== owner.webContents.id
+      || !frame || frame !== owner.webContents.mainFrame) return false
+    try {
+      const url = new URL(frame.url)
+      return url.protocol === `${SCHEME}:` && url.host === 'app'
+        && (url.pathname === '/' || url.pathname === '/index.html')
+    } catch (_error) { return false /* A detached or not-yet-loaded frame grants no bootstrap. */ }
+  }
+  const captureApplication = (event: IpcMainInvokeEvent): (() => void) => {
+    const revision = applicationRevision
+    const check = (): void => {
+      if (revision !== applicationRevision || !ownsApplicationFrame(event.sender.id, event.senderFrame)) {
+        throw Error('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
+      }
+    }
+    check(); return check
+  }
   let navigation: { window: BrowserWindow; url: string; promise: Promise<void> } | undefined
   const navigateMain = (url: string): Promise<void> => {
     const window = mainWindow
@@ -475,18 +513,27 @@ async function main(): Promise<void> {
     const host = new DesktopHostProcess(resources.node, resources.dsh, activeProject,
       hostInspectPort, { ...hostEnvironment, DSH_CLIENT_VERSION: desktopClientVersion(),
         DSH_DESKTOP_DISTRIBUTION_PATCH: distribution === undefined ? undefined : join(app.getAppPath(), 'resources', `${distribution.kind}.patch.yml`),
+        DSH_DESKTOP_DISTRIBUTION_KIND: distribution?.kind,
+        DSH_DESKTOP_EGRESS_DISTRIBUTION: distribution === undefined ? undefined : join(app.getAppPath(), 'resources', `${distribution.kind}.egress.json`),
         DSH_DESKTOP_PROTECTION_HELPER: distribution === undefined ? undefined : join(process.resourcesPath, 'nidofy-protection.exe'),
       }, onFailure,
       primaryRuntime,
       resources, (next) => { if (distribution?.kind !== 'intranet') platformView.setSession(next) })
     return {
       start: async () => {
+        const revision = ++hostRevision
         const ready = await host.start()
+        if (revision !== hostRevision) throw new Error('Desktop Host stopped during startup')
+        // The distribution filter needs this origin for Main's authentication requests.
         hostUrl = ready.url
-        hostCookie = await authenticateWebHost(ready.url)
+        const cookie = await authenticateWebHost(ready.url)
         if (ready.injections === undefined) throw new Error('Desktop Host did not provide boot injections')
+        const connected = await connectDesktopWelcome(ready.url, (input, init) => net.fetch(input, init), async () => (await session.defaultSession.cookies.get({ url: ready.url })).map(cookie => `${cookie.name}=${cookie.value}`).join('; '))
+        if (revision !== hostRevision) throw Error('Desktop Host stopped during authentication')
+        hostUrl = ready.url
+        hostCookie = cookie
         injections = ready.injections
-        welcomeBackend = await connectDesktopWelcome(ready.url, (input, init) => net.fetch(input, init), async () => (await session.defaultSession.cookies.get({ url: ready.url })).map(cookie => `${cookie.name}=${cookie.value}`).join('; '))
+        welcomeBackend = connected
         if (distribution?.kind === 'intranet') return
         analyticsEnabled = distribution === undefined && await welcomeBackend.analyticsEnabled().catch(() => false)
         if (!reportedLaunch) { reportedLaunch = true; void track('desktop_app_launch', {}) }
@@ -498,6 +545,10 @@ async function main(): Promise<void> {
           const attempt = state.attempt
           if (attempt?.phase === 'waiting-browser' && attempt.authorizeUrl !== undefined && openedAttempt !== attempt.id) {
             openedAttempt = attempt.id
+            if (portable) {
+              void accountBackend.cancel(attempt.id).catch((error: unknown) => { console.error(error) })
+              return
+            }
             // Platform's completion page uses dsh://open. Bind it to the actual sign-in owner.
             if (distribution?.kind === 'personal' && (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1')) {
               registerDesktopProtocol(app, 'dsh', distributionRoot, process.execPath, process.platform)
@@ -534,6 +585,11 @@ async function main(): Promise<void> {
         }, (enabled) => { analyticsEnabled = distribution === undefined && enabled })
       },
       stop: async () => {
+        ++hostRevision
+        hostUrl = undefined
+        hostCookie = undefined
+        injections = []
+        welcomeBackend = undefined
         analyticsEnabled = false
         stopAccount?.()
         try { await host.stop(requireCleanStop) }
@@ -723,31 +779,85 @@ async function main(): Promise<void> {
     process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux', () => { refreshApplicationMenu() }, window => updateOverlays.input(window))
   app.on('will-quit', () => { shortcuts.dispose() })
 
-  ipcMain.handle(DESKTOP_IPC.boot, async (event) => {
+  ipcMain.handle(DESKTOP_IPC.windowIdentity, (event) => {
     assertDesktopSender(event, ['app'])
+    if (event.senderFrame !== event.sender.mainFrame) throw Error('WINDOW_IDENTITY_REFUSED')
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (!window) throw Error('WINDOW_IDENTITY_UNAVAILABLE')
+    return window.id
+  })
+  ipcMain.handle(DESKTOP_IPC.boot, async (event) => {
+    const current = captureApplication(event)
     await startup
+    current()
     if (backend.host === undefined || hostUrl === undefined) throw new Error('Desktop Host is unavailable')
     return { injections, streamBaseUrl: new URL(hostUrl).origin }
   })
-  if (distribution !== undefined) ipcMain.handle('nidofy:open-panel', async (event, panel: unknown, workspace: unknown) => {
+  const companionNavigation = new CompanionNavigation(), observedCompanionDocuments = new WeakSet<Electron.WebContents>()
+  if (distribution !== undefined) ipcMain.on('nidofy:companion-scope', (event, scope: unknown, connected: unknown) => {
+    try {
+      assertDesktopSender(event, ['app'])
+      if (event.senderFrame !== event.sender.mainFrame) throw Error('COMPANION_SCOPE_INVALID')
+      const window = BrowserWindow.fromWebContents(event.sender)
+      if (!window) throw Error('WINDOW_IDENTITY_UNAVAILABLE')
+      if (!observedCompanionDocuments.has(event.sender)) {
+        observedCompanionDocuments.add(event.sender)
+        event.sender.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
+          if (mainFrame && !inPlace) companionNavigation.release(event.sender.id)
+        })
+        event.sender.once('destroyed', () => { companionNavigation.release(event.sender.id) })
+      }
+      companionNavigation.publish(event.sender.id, window.id, scope, connected)
+    } catch (error) {
+      companionNavigation.release(event.sender.id)
+      console.warn('Companion scope publication refused', error instanceof Error ? error.message : 'COMPANION_SCOPE_INVALID')
+    }
+  })
+  const panels = new DesktopPanels(() => createWindow(appPreload))
+  app.once('will-quit', () => { panels.dispose() })
+  if (distribution !== undefined) ipcMain.handle('nidofy:open-panel', async (event, panel: unknown, workspace: unknown, scope: unknown) => {
     assertDesktopSender(event, ['app'])
     if (typeof panel !== 'string' || !['environment', 'review', 'builds', 'artifacts', 'recovery', 'protection', 'pets', 'connections'].includes(panel)
       || (workspace !== undefined && (typeof workspace !== 'string' || workspace.length > 4096 || workspace.includes('\0')))) throw Error('PANEL_REQUEST_INVALID')
+    const source = BrowserWindow.fromWebContents(event.sender)
+    if (!source) throw Error('WINDOW_IDENTITY_UNAVAILABLE')
+    const signal = scope === undefined ? undefined : companionNavigation.capture(event.sender.id, source.id, scope)
+    signal?.throwIfAborted()
     const url = new URL(panel === 'pets' ? 'dsh-app://app/api/nidofy-extras/ui'
       : panel === 'connections' ? 'dsh-app://app/api/nidofy/ui' : 'dsh-app://app/api/nidofy/workbench/ui')
     url.searchParams.set('locale', currentDesktopLocale().id)
     url.searchParams.set('tab', panel)
     if (typeof workspace === 'string') url.searchParams.set('workspace', workspace)
-    await createWindow(appPreload, true).loadURL(url.toString())
+    await panels.open(url.toString(), signal)
   })
   if (distribution !== undefined) installPetDesktop(appPreload, () => {
     if (hostUrl === undefined || hostCookie === undefined) throw new Error('Desktop Host is unavailable')
     return { url: hostUrl, cookie: hostCookie }
-  }, () => { mainWindow?.show(); mainWindow?.focus() })
-  if (distribution !== undefined) installWorkbenchDesktop((event) =>{  assertDesktopSender(event, ['app']) }, () => {
-    if (hostUrl === undefined || hostCookie === undefined) throw new Error('Desktop Host is unavailable')
-    return { url:hostUrl,cookie:hostCookie }
+  }, (sessionId) => { mainWindow?.show(); mainWindow?.focus(); mainWindow?.webContents.send('nidofy:pet-navigate', sessionId) }, (event, scope) => {
+    assertDesktopSender(event, ['app'])
+    if (event.senderFrame !== event.sender.mainFrame) throw Error('PET_SENDER_REFUSED')
+    const source = BrowserWindow.fromWebContents(event.sender)
+    if (!source) throw Error('WINDOW_IDENTITY_UNAVAILABLE')
+    return companionNavigation.capture(event.sender.id, source.id, scope)
   })
+  if (distribution !== undefined) {
+    const closeWorkbench = installWorkbenchDesktop((event) =>{  assertDesktopSender(event, ['app']) }, () => {
+      if (hostUrl === undefined || hostCookie === undefined) throw new Error('Desktop Host is unavailable')
+      return { url:hostUrl,cookie:hostCookie }
+    }, () => currentDesktopLocale().messages, async (notice) => {
+      const url = new URL('dsh-app://app/api/nidofy/workbench/ui')
+      url.searchParams.set('locale', currentDesktopLocale().id)
+      url.searchParams.set('tab', notice.sourceType === 'receipt' ? 'builds' : 'recovery')
+      if (notice.scope.workspace !== null) url.searchParams.set('workspace', notice.scope.workspace)
+      if (notice.sourceType === 'receipt') url.searchParams.set('receipt', notice.sourceId)
+      else if (notice.scope.sessionId !== null) url.searchParams.set('session', notice.scope.sessionId)
+      await panels.open(url.toString())
+    }, (id) => {
+      if (!mainWindow || mainWindow.isDestroyed()) throw Error('MAIN_WINDOW_UNAVAILABLE')
+      mainWindow.show(); mainWindow.focus(); mainWindow.webContents.send('nidofy:pet-navigate', id)
+    })
+    app.once('will-quit', () => { void closeWorkbench() })
+  }
 
   ipcMain.handle(DESKTOP_IPC.bootFailed, (event, message: unknown) => {
     assertDesktopSender(event, ['app'])
@@ -768,14 +878,16 @@ async function main(): Promise<void> {
   })
 
   session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['ws://127.0.0.1/*'] }, (details, callback) => {
-    if (hostUrl === undefined || hostCookie === undefined || details.webContentsId !== mainWindow?.webContents.id) {
-      callback({})
+    const headers = Object.fromEntries(Object.entries(details.requestHeaders).map(([name, value]) => [name.toLowerCase(), value]))
+    const applicationRequest = headers.origin === 'dsh-app://app'
+    if (backend.host === undefined || hostUrl === undefined || hostCookie === undefined) {
+      callback(applicationRequest ? { cancel: true } : {})
       return
     }
     const target = new URL(hostUrl)
     const requested = new URL(details.url)
-    if (requested.host !== target.host) { callback({}); return }
-    const headers = Object.fromEntries(Object.entries(details.requestHeaders).map(([name, value]) => [name.toLowerCase(), value]))
+    if (requested.host !== target.host) { callback(applicationRequest ? { cancel: true } : {}); return }
+    if (!ownsApplicationFrame(details.webContentsId, details.frame)) { callback({ cancel: true }); return }
     if (headers.origin !== 'dsh-app://app') { callback({ cancel: true }); return }
     callback({ requestHeaders: { ...headers, origin: target.origin, cookie: hostCookie, 'sec-fetch-site': 'same-origin' } })
   })
@@ -806,12 +918,12 @@ async function main(): Promise<void> {
     if (source === 'light' || source === 'dark' || source === 'system') nativeTheme.themeSource = source
   })
   ipcMain.handle(DESKTOP_IPC.localeBootstrap, async (event) => {
-    if (event.sender !== mainWindow?.webContents || event.senderFrame !== mainWindow.webContents.mainFrame
-      || new URL(event.senderFrame.url).origin !== new URL(applicationUrl).origin) {
-      throw new Error('desktop welcome: rejected locale request from an unowned frame')
-    }
+    const current = captureApplication(event), revision = hostRevision
     if (welcomeBackend === undefined) throw new Error('desktop welcome: backend unavailable')
-    return { languages: systemLanguages, preference: await welcomeBackend.readLocalePreference() }
+    const preference = await welcomeBackend.readLocalePreference()
+    current()
+    if (revision !== hostRevision || backend.host === undefined) throw Error('Desktop Host is unavailable')
+    return { languages: systemLanguages, preference }
   })
   ipcMain.on(DESKTOP_IPC.localeChanged, (event, next: unknown) => {
     const window = mainWindow
@@ -841,11 +953,10 @@ async function main(): Promise<void> {
     if (window === undefined || window.isDestroyed() || event.sender !== window.webContents
       || event.senderFrame !== window.webContents.mainFrame
       || !event.senderFrame.url.startsWith(`${SCHEME}://app/`) || typeof active !== 'boolean') return
-    window.setMinimumSize(active ? 960 : 520, 600)
-    if (active) {
-      const { width, height } = window.getBounds()
-      if (width < 960) window.setSize(960, height)
-    }
+    const bounds = window.getBounds(), area = screen.getDisplayMatching(bounds).workArea
+    const minimum = Math.min(active ? 960 : 520, area.width)
+    window.setMinimumSize(minimum, Math.min(600, area.height))
+    if (active) window.setBounds(fitWindowBounds({ ...bounds, width: Math.max(bounds.width, minimum) }, area))
   })
   ipcMain.handle(DESKTOP_IPC.updatesOpen, async (event) => {
     assertProductSender(event)
@@ -1010,14 +1121,11 @@ async function main(): Promise<void> {
     : []
   const applicationItems = (): MenuItemConstructorOptions[] => [
     ...distribution === undefined ? [] : [{ label: currentDesktopLocale().messages.extrasMenu, click: () => {
-      const window = createWindow(appPreload, true)
-      void window.loadURL(`dsh-app://app/api/nidofy-extras/ui?locale=${currentDesktopLocale().id}`)
+      void panels.open(`dsh-app://app/api/nidofy-extras/ui?locale=${currentDesktopLocale().id}`).catch((error: unknown) => { console.error('Management panel unavailable', error) })
     } }, { label: currentDesktopLocale().messages.workbenchMenu, click: () => {
-      const window = createWindow(appPreload, true)
-      void window.loadURL(`dsh-app://app/api/nidofy/workbench/ui?locale=${currentDesktopLocale().id}`)
+      void panels.open(`dsh-app://app/api/nidofy/workbench/ui?locale=${currentDesktopLocale().id}`).catch((error: unknown) => { console.error('Management panel unavailable', error) })
     } }, { label: currentDesktopLocale().messages.connectionsMenu, click: () => {
-      const window = createWindow(appPreload, true)
-      void window.loadURL(`dsh-app://app/api/nidofy/ui?locale=${currentDesktopLocale().id}`)
+      void panels.open(`dsh-app://app/api/nidofy/ui?locale=${currentDesktopLocale().id}`).catch((error: unknown) => { console.error('Management panel unavailable', error) })
     } }],
     // Windows has no system About panel; Electron's fallback is a plain
     // message box, so the shell shows its own dimmed dialog instead.
@@ -1027,7 +1135,7 @@ async function main(): Promise<void> {
       : { label: currentDesktopLocale().messages.aboutMenu, role: 'about' },
     { type: 'separator' },
     { label: currentDesktopLocale().messages.checkUpdatesMenu, click: () => { void openUpdatePrompt(true) } },
-    ...process.platform === 'darwin' || process.platform === 'win32'
+    ...!portable && (process.platform === 'darwin' || process.platform === 'win32')
       ? [{ label: currentDesktopLocale().messages.cliCommandMenu, click: () => { void commandManager.show() } }] : [],
     ...development ? [
       { type: 'separator' as const },
@@ -1139,6 +1247,11 @@ async function main(): Promise<void> {
   const createMainWindow = (): BrowserWindow => {
     const window = createWindow(appPreload, false, true)
     mainWindow = window
+    ++applicationRevision
+    window.webContents.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
+      if (mainFrame && !inPlace) ++applicationRevision
+    })
+    window.webContents.once('destroyed', () => { ++applicationRevision })
     browserGuests.bind(window, (guest, name) => shortcuts.attachGuest(window, guest, name))
     shortcuts.attach(window)
     window.on('focus', automaticCheck)
@@ -1299,7 +1412,7 @@ async function main(): Promise<void> {
     window.focus()
   }
 
-  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') {
+  if (!portable && (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1')) {
     registerDesktopProtocol(app, distribution?.protocol ?? 'dsh', distributionRoot, process.execPath, process.platform)
   }
   app.on('open-url', (event, url) => {

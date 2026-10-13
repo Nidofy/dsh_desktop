@@ -121,6 +121,8 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 -----
 
+可选应用 HTTP 策略与已准备连接一起捕获。Messages 和 Files 在上传、查询、清理及推理时使用其请求级 fetch。原 origin 与策略代次保持固定，每次实际发送复验授权。参见 [Desktop 策略参考](../../../apps/desktop-host/src/connections/README.zh.md)；未注入策略的直接库调用方保持既有行为。
+
 <a id="understand-the-implementation"></a>
 ## 理解实现
 

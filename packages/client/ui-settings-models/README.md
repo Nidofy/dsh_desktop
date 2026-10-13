@@ -107,6 +107,11 @@ These pages cover the settings base, the seams this page joins, and the design r
 The `settings.models.sign-in` slot lets account login offer a choice before the credential editor; without a contributor the editor renders directly. Closing the account choice completes the whole onboarding step. Explicit reopening from the account menu enters the same editor even when a provider is already configured.
 
 <a id="model-experience"></a>
+## Credential draft navigation
+
+Dirty credential editors register the Settings owner navigation guard. Escape, close and section changes offer Keep editing by default or explicit discard. Unmount settles a pending decision as cancellation. This guard does not silently block Electron window shutdown. Credential-read failures remain visible and retryable.
+
+
 ## Model Experience
 
 None, as the package is a browser-side UI plugin layer that registers nothing model-facing.

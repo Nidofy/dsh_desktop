@@ -11,7 +11,7 @@
  * session and workspace hover cards are suppressed while a menu is open.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import type { KeyboardEvent, RefObject } from 'react'
 import clsx from 'clsx'
 import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import {
@@ -29,6 +29,18 @@ import css from './Rows.module.css'
 
 /** The standard locale seat, prop-passed from the browser root. */
 type RowTranslate = WorkspaceBrowserProps['t']
+
+/** Activate only the focused row; nested buttons and composition retain their own keys. */
+function rowKey(event: KeyboardEvent<HTMLDivElement>, activate: () => void): void {
+  if (event.target !== event.currentTarget || event.nativeEvent.isComposing || Reflect.get(event, 'keyCode') === 229
+      || event.altKey || event.ctrlKey || event.metaKey) return
+  if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(); return }
+  const rows = Array.from(event.currentTarget.closest('[role="tree"], [role="list"]')?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])
+  const at = rows.indexOf(event.currentTarget)
+  const next = event.key === 'ArrowDown' ? rows[at + 1] : event.key === 'ArrowUp' ? rows[at - 1]
+    : event.key === 'Home' ? rows[0] : event.key === 'End' ? rows.at(-1) : undefined
+  if (next) { event.preventDefault(); next.focus() }
+}
 
 /**
  * Child-seat renderer threaded from the browser root: the row's action lists,
@@ -245,6 +257,15 @@ export function ProjectRowItem({ group, containsCurrentDescendant = false, onTog
       data-row-key={`workspace:${group.key}`}
       role="treeitem"
       aria-expanded={row.expanded}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget && !event.nativeEvent.isComposing && Reflect.get(event, 'keyCode') !== 229
+          && !event.altKey && !event.ctrlKey && !event.metaKey
+          && ((event.key === 'ArrowRight' && !row.expanded) || (event.key === 'ArrowLeft' && row.expanded))) {
+          event.preventDefault(); onToggle(); return
+        }
+        rowKey(event, onToggle)
+      }}
       onClick={onToggle}
       draggable={drag !== undefined}
       onDragStart={drag === undefined
@@ -484,6 +505,8 @@ export function SearchResultItem({ result, currentId, onOpen, onUnarchive, t }: 
       role="treeitem"
       aria-selected={selected}
       aria-description={result.archived ? t('toast.archivedNotOpenable') : undefined}
+      tabIndex={0}
+      onKeyDown={(event) => { rowKey(event, () => { onOpen(result.id) }) }}
       onClick={() => { onOpen(result.id) }}
     >
       <span className={css.searchResultHeading}>
@@ -595,6 +618,8 @@ export function SessionNodeItem({
       role="treeitem"
       aria-selected={selected}
       aria-description={row.archived ? t('toast.archivedNotOpenable') : undefined}
+      tabIndex={0}
+      onKeyDown={(event) => { rowKey(event, () => { onOpen(node.id) }) }}
       onClick={() => { onOpen(node.id) }}
       onPointerEnter={marquee.enter}
       onPointerLeave={marquee.leave}

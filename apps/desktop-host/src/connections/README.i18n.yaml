@@ -1,0 +1,34 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write apps/desktop-host/src/connections/README.md
+/:
+  en: e61ba217f70f56bb
+  zh: d3185298dc0f3ef0
+/desktop-http-destinations:
+  en: 4e668d27316e85c0
+  zh: 2f08b6318cb1ce81
+/desktop-http-destinations/summary:
+  en: 82dd6767d0e52336
+  zh: eff6796f8e4a8a94
+/desktop-http-destinations/table-of-contents:
+  en: 3e7acf71a25c8781
+  zh: 89d22f3da38f0016
+/desktop-http-destinations/configure-destinations:
+  en: 0e011f883b9c0679
+  zh: 23343c8d52d8fc76
+/desktop-http-destinations/scope-and-revisions:
+  en: 0fc90cefe6684166
+  zh: 90a31e50df3edfd2
+/desktop-http-destinations/consumers-and-credentials:
+  en: a67e3957ba4e0837
+  zh: e03bddce9e6b2553
+/desktop-http-destinations/recovery:
+  en: e5a6bc16b222bfa4
+  zh: 7d908f0e753ee651
+/desktop-http-destinations/known-limitations:
+  en: 2f816a2e1359e660
+  zh: 4849c7620bb5c689
+/desktop-http-destinations/route-ownership-and-selection:
+  en: a22dfc42bddb1344
+  zh: 834853c6212d8404

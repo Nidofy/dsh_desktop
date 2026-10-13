@@ -177,12 +177,15 @@ fn checked(directory: &Path) -> Result<(PinnedDirs, Archive, Vec<Source>, Record
     // in memory and no later operation trusts a second on-disk manifest read.
     Ok((folder, archive, files, start))
 }
-fn receipt(folder: &Path, archive: &Archive, start: &Record) -> serde_json::Value {
-    serde_json::json!({"directory":folder,"snapshotId":archive.snapshot_id,"files":archive.files.len(),"bytes":archive.files.iter().map(|f|f.bytes as u64).sum::<u64>(),"workspace":start.root,"paths":start.entries.iter().map(|e|&e.path).collect::<Vec<_>>(),"verified":true})
+fn revision(folder: &PinnedDirs, archive: &Archive) -> Result<String> {
+    Ok(hash(&serde_json::to_vec(&(folder.identity.as_str(), &folder.path, archive)).map_err(|_| "归档预览编码失败")?))
+}
+fn receipt(folder: &PinnedDirs, archive: &Archive, start: &Record) -> Result<serde_json::Value> {
+    Ok(serde_json::json!({"directory":folder.path,"snapshotId":archive.snapshot_id,"files":archive.files.len(),"bytes":archive.files.iter().map(|f|f.bytes as u64).sum::<u64>(),"workspace":start.root,"paths":start.entries.iter().map(|e|&e.path).collect::<Vec<_>>(),"verified":true,"revision":revision(folder, archive)?}))
 }
 pub(super) fn verify(directory: &Path) -> Result<serde_json::Value> {
     let (folder, archive, _files, start) = checked(directory)?;
-    Ok(receipt(&folder.path, &archive, &start))
+    receipt(&folder, &archive, &start)
 }
 impl Store {
     pub(super) fn export_archive(&self, id: &str, destination: &Path) -> Result<serde_json::Value> {
@@ -217,8 +220,11 @@ impl Store {
         }
         Ok(verified)
     }
-    pub(super) fn import_archive(&self, directory: &Path) -> Result<serde_json::Value> {
-        let (_folder, archive, mut files, start) = checked(directory)?;
+    pub(super) fn import_archive(&self, directory: &Path, expected_revision: &str) -> Result<serde_json::Value> {
+        let (folder, archive, mut files, start) = checked(directory)?;
+        if !hex(expected_revision, 64) || revision(&folder, &archive)? != expected_revision {
+            return Err("PROTECTION_ARCHIVE_PREVIEW_CONFLICT".into());
+        }
         if self.pinned.path.starts_with(&start.root) || start.root.starts_with(&self.pinned.path) {
             return Err("归档工作区与当前快照存储不能互相包含".into());
         }

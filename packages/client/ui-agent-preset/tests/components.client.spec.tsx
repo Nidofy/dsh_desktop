@@ -52,7 +52,7 @@ function translate(key: keyof typeof en, params?: Record<string, unknown>): stri
 function renderSeat(
   state: Partial<AgentPresetSeatState> = {},
   select: () => Promise<string | undefined> = () => Promise.resolve(undefined),
-  session?: { id: string; retainInfo: SessionRetainInfo | undefined },
+  session?: { id: string; retainInfo: SessionRetainInfo | undefined; selected?: boolean },
   enabled = true,
 ) {
   const store = createSnapshotStore<AgentPresetSeatState>({ ...SEAT_READY, ...state })
@@ -61,6 +61,8 @@ function renderSeat(
   const props = {
     ...actions,
     sessionId: session === undefined ? undefined : SessionId(session.id),
+    useMainSelection: (selector: AgentPresetSeatProps['useMainSelection'] extends (selector: infer S) => unknown ? S : never) =>
+      selector({ sessionId: session?.selected ? SessionId(session.id) : null, revision: 0 }),
     useDeveloperTools: bindSnapshotSelector(developerTools),
     useAgentPresetSeat: bindSnapshotSelector(store),
     useSessionRetainInfo: session === undefined
@@ -99,14 +101,14 @@ describe('the new-session chip', () => {
     expect(screen.queryByRole('button')).toBeNull()
   })
 
-  it('renders only for a Session retained by the main view', () => {
+  it('renders only for the explicit main selection, independently of main-labelled retention', () => {
     renderSeat({}, undefined, {
-      id: 's1', retainInfo: { referenceCount: 1, retainedBy: { mainView: 1 } },
+      id: 's1', selected: true, retainInfo: { referenceCount: 1, retainedBy: {} },
     })
     expect(screen.getByRole('button')).toBeTruthy()
     cleanup()
 
-    renderSeat({}, undefined, { id: 's1', retainInfo: undefined })
+    renderSeat({}, undefined, { id: 's1', retainInfo: { referenceCount: 1, retainedBy: { mainView: 1 } } })
     expect(screen.queryByRole('button')).toBeNull()
   })
 

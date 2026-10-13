@@ -75,6 +75,13 @@
   display: contents;
 }
 
+/* Keep the complete selectable source and stable streaming nodes in a bounded
+   viewport. Standalone source editors retain their own viewport sizing. */
+.block:global(.dsh-markdown-code-fence) :where(pre) {
+  max-height: min(60vh, 36rem);
+  overflow-y: auto;
+}
+
 .block :where(pre) {
   font: var(--dsl-code-block-content-font);
   padding: 16px;

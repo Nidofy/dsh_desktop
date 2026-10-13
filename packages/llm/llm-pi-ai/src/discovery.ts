@@ -23,6 +23,7 @@
  */
 
 import { INVALID_CREDENTIAL_CODE, LlmError, normalizeApiKey } from '@deepseek-ai/dsh-llm'
+import type { HttpEgressLease } from '@deepseek-ai/dsh-http-proxy'
 import type { LlmDiscoveredModel, LlmModelDiscoveryOperation } from '@deepseek-ai/dsh-llm'
 import { attributionHeaders } from '@deepseek-ai/dsh-llm'
 import { catalogModels } from './catalog.ts'
@@ -262,6 +263,7 @@ export interface StoredModelDiscoveryProfile {
  * @param storedProfile - Host-owned headers and lazy credential resolution for
  *   the named route. It is read only on the path that reaches the network; the
  *   credential is resolved only when the draft carries none.
+ * @param prepareHttp - Optional application authorization captured before credentials resolve.
  * @returns the advertised models in endpoint order.
  * @throws LlmError when the protocol has no readable listing, the endpoint
  *   refuses or fails the request, or the reply is not a model listing.
@@ -269,6 +271,7 @@ export interface StoredModelDiscoveryProfile {
 export async function discoverModels(
   request: LlmModelDiscoveryOperation,
   storedProfile?: () => StoredModelDiscoveryProfile | undefined,
+  prepareHttp?: (url: string) => Promise<HttpEgressLease | undefined>,
 ): Promise<readonly LlmDiscoveredModel[]> {
   // A catalog route already has its answer, and a better one: the installed
   // entries carry context windows and output caps no listing endpoint reports.
@@ -305,6 +308,7 @@ export async function discoverModels(
     )
   }
   const url = listingUrl(request.baseURL, api)
+  const http = await prepareHttp?.(request.baseURL)
   // A key typed into the form wins: it may replace the stored key that is
   // failing. The stored profile is asked past the catalog and protocol checks,
   // and its credential resolver remains lazy so a typed key cannot fail over a
@@ -324,7 +328,7 @@ export async function discoverModels(
       headers.set('authorization', `Bearer ${apiKey}`)
     }
     for (const [name, value] of Object.entries(attributionHeaders())) headers.set(name, value)
-    response = await fetch(url, {
+    response = await (http?.fetchFor() ?? globalThis.fetch)(url, {
       method: 'GET',
       headers,
       ...request.signal === undefined ? {} : { signal: request.signal },

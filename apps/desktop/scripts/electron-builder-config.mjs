@@ -130,7 +130,7 @@ export function createElectronBuilderConfig(
       return true
     },
     files: [
-      ...(distribution === undefined ? [] : [`resources/${distribution.kind}.patch.yml`]),
+      ...(distribution === undefined ? [] : [`resources/${distribution.kind}.patch.yml`, `resources/${distribution.kind}.egress.json`]),
       'lib/main.js',
       'lib/welcome/**/*',
       'lib/preload-app.cjs',
@@ -242,7 +242,7 @@ export function createElectronBuilderConfig(
     nsis: {
       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
-      include: fileURLToPath(new URL('./installer.nsh', import.meta.url)),
+      include: fileURLToPath(new URL(distribution === undefined ? './installer.nsh' : './installer-private.nsh', import.meta.url)),
       oneClick: false,
       perMachine: false,
       allowElevation: false,

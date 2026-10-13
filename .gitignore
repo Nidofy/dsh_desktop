@@ -51,3 +51,11 @@ worktrees/
 .agents/worktrees/
 .typert-*/
 native/system/test/bin/
+# Local art authoring inputs and locally prepared Cubism SDK outputs.
+/migration/assets/live2d/
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/bluewhale-sdk.mjs
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/live2dcubismcore.min.js
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/SOURCE.txt
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/*-LICENSE.md
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/SDK-INFO.yml
+/packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d/SDK-NOTICE.md

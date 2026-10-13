@@ -6,6 +6,7 @@ import { execFile } from 'node:child_process'
 import { randomUUID, createHash } from 'node:crypto'
 import { relative, isAbsolute } from 'node:path'
 import { object } from './store.ts'
+import type {} from '@nidofy/dsh-desktop-extras/storage'
 
 type Binding = { sessionId: string; turn: number; engineId: string; requestId: string }
 type Capture = { id: string; binding: Binding; workspace: string }
@@ -49,9 +50,15 @@ export class ProtectionOwner {
   /** Native scope configuration is local-user-only and excluded while a protected turn runs. */
   configure(input: unknown): Promise<Record<string, unknown>> {
     const request = object(input)
-    if (!['scopes', 'arm', 'disarm', 'list', 'details', 'preview', 'restore'].includes(String(request.action))) throw new Error('PROTECTION_ACTION_UNAVAILABLE')
+    if (!['scopes', 'arm', 'disarm', 'list', 'details', 'preview', 'restore', 'capture', 'seal', 'export',
+      'verifyArchive', 'importArchive'].includes(String(request.action))) throw new Error('PROTECTION_ACTION_UNAVAILABLE')
     return this.serial(async () => {
-      if (['arm', 'disarm', 'restore'].includes(String(request.action)) && this.active.size > 0) throw new Error('PROTECTION_BUSY')
+      const managementWrite = ['capture', 'seal', 'export', 'importArchive'].includes(String(request.action))
+      if ((managementWrite || ['arm', 'disarm', 'restore'].includes(String(request.action)))
+        && this.active.size > 0) throw new Error('PROTECTION_BUSY')
+      if (managementWrite && this.failed) throw new Error('PROTECTION_RESTART_REQUIRED')
+      if (request.action === 'importArchive' && (typeof request.expectedRevision !== 'string'
+        || !/^[a-f0-9]{64}$/.test(request.expectedRevision))) throw Error('PROTECTION_ARCHIVE_PREVIEW_REQUIRED')
       if (request.action === 'preview') {
         const value = await this.call({ action: 'ui', request })
         return { ...value, revision: fingerprint(value) }
@@ -62,6 +69,14 @@ export class ProtectionOwner {
         if (request.expectedRevision !== fingerprint(value)) throw new Error('PROTECTION_PREVIEW_CONFLICT')
         try { return await this.call({ action: 'ui', request: { action: 'restore', id: request.id, paths: request.paths } }) }
         catch (error) { this.failed = true; throw error }
+      }
+      if (managementWrite) {
+        try { return await this.call({ action: 'ui', request }) }
+        catch (error) {
+          // A changed preview failed before import writes; other unknown results need restart before another mutation.
+          if (!(error instanceof Error) || error.message !== 'PROTECTION_ARCHIVE_PREVIEW_CONFLICT') this.failed = true
+          throw error
+        }
       }
       return this.call({ action: 'ui', request })
     })
@@ -133,7 +148,8 @@ export class ProtectionOwner {
  * @returns Local-user configuration owner.
  */
 export function installProtection(ctx: Context, home: string, executable: string): ProtectionOwner {
-  const owner = new ProtectionOwner(command => nativeProtection(executable, home, command))
+  const storage = ctx.get('nidofyStorage')
+  const owner = new ProtectionOwner(command => storage ? storage.native(object(command)) : nativeProtection(executable, home, command))
   ctx.on('agent/pre-step', async ({ agent, turn, signal }, next) => {
     signal.throwIfAborted()
     const parent = ctx.agents.list().find(candidate => ctx.agents.isOwnedBy(agent.session.id, candidate))

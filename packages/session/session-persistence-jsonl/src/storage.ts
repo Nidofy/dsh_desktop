@@ -353,6 +353,21 @@ export class JsonlSessionHandle implements SessionHandle {
     this.lease ??= await this.storage.acquireWriteLease(this.header)
   }
 
+  /** Serialize a derived publication with this writer while retaining its cross-process lease.
+   * @param operation - observation or publication which never appends to this session.
+   * @returns the protected operation's result.
+   */
+  protectGeneration<T>(operation: () => Promise<T>): Promise<T> {
+    this.assertOpen('protectGeneration')
+    const next = this.chain.then(async () => {
+      this.assertOpen('protectGeneration')
+      await this.ensureLease()
+      return operation()
+    })
+    this.chain = next.catch(() => { /* The protected caller receives the failure. */ })
+    return next
+  }
+
   /** Serialize one operation onto the chain without the closed-handle refusal (drain-from-close). */
   private enqueueChain(op: () => Promise<void>): Promise<void> {
     const next = this.chain.then(op)
@@ -398,6 +413,14 @@ export class JsonlBackendTracker {
 
   /** @param name - backend label used in in-memory revision tokens and teardown errors. */
   constructor(private readonly name: string) {}
+
+  /** Resolve the current writer for reuse of its mutation queue and kernel lease.
+   * @param id - owning session.
+   * @returns active writer, or undefined when no adopted writer exists.
+   */
+  writerOf(id: SessionId): JsonlSessionHandle | undefined {
+    return this.writers.get(id) ?? undefined
+  }
 
   /**
    * Claim write ownership and record the created session as pending, making

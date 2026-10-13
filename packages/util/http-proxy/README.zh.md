@@ -57,6 +57,8 @@ loopback 始终被绕过——`localhost`、整个 `127.0.0.0/8` 段、`::1`、`
 
 -----
 
+纯类型 [HTTP 授权接口](src/egress.ts) 允许应用在 profile 条目连接前提供 `HttpEgressPolicy`。模型、发现及 MCP 捕获租约并使用绑定 origin 的 fetch；应用拥有作用域、修订及卸载。Proxy 路由保持独立。[Desktop 策略参考](../../../apps/desktop-host/src/connections/README.zh.md) 定义其 provider 与排除范围。
+
 <a id="understand-the-implementation"></a>
 ## 理解实现
 

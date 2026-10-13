@@ -54,6 +54,7 @@ async function bench() {
     },
   } as never, () => null)
   const list = createSnapshotStore<SessionListState>({ ids: [], byId: {}, phase: 'ready', projectionsBySession: {} })
+  const selection = createSnapshotStore<{ sessionId: SessionId | null; revision: number }>({ sessionId: null, revision: 0 })
   const commands = new Map<string, ShortcutCommand>()
   const layoutStore = createLayoutStore().create()
   const layout = new LayoutController(layoutStore.actions, id => id === 'plugins', {
@@ -62,13 +63,14 @@ async function bench() {
   })
   ctx.provide('layout', layout)
   ctx.provide('sessions', { list })
+  ctx.provide('uiSession', { mainSelection: selection })
   ctx.provide('shortcuts', { register: (command: ShortcutCommand) => { commands.set(command.id, command); return () => { commands.delete(command.id) } }, catalog: createSnapshotStore([]) })
   ctx.provide('locale', new LocaleRuntime(ctx))
   ctx.provide('remote', remote as never)
   ctx.provide('remote.session', remote.session as never)
   const fiber = ctx.plugin({ inject: [...inject], apply })
   await fiber.await()
-  return { ctx, fiber, list, commands, layout }
+  return { ctx, fiber, list, selection, commands, layout }
 }
 
 function headerEntryIds(ctx: Context): (string | undefined)[] {
@@ -80,7 +82,7 @@ describe('open-in-app browser half', () => {
     vi.stubGlobal('fetch', vi.fn(async (input: string | URL) => String(input) === 'open-in-app/apps'
       ? new Response(JSON.stringify({ apps: ['finder'] })) : new Response('failed', { status: 500 })))
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { fiber, list, commands } = await bench()
+    const { fiber, list, selection, commands } = await bench()
     try {
       const command = commands.get('workspace.openLocal')!
       const context = { region: 'page', modal: null, target: null } as const
@@ -90,6 +92,8 @@ describe('open-in-app browser half', () => {
       list.set({ ...list.getSnapshot(), ids: [id], byId: { [id]: row } })
       expect(command.resolve(context).status).toBe('blocked')
       list.set({ ...list.getSnapshot(), byId: { [id]: { ...row, retainedBy: { mainView: 1 } } } })
+      expect(command.resolve(context).status).toBe('blocked')
+      selection.set({ sessionId: id, revision: 1 })
       await vi.waitFor(() => { expect(command.resolve(context).status).toBe('handled') })
       const result = command.resolve(context)
       if (result.status !== 'handled') throw new Error('Expected an available workspace')
@@ -103,11 +107,14 @@ describe('open-in-app browser half', () => {
       ? Promise.resolve(new Response(JSON.stringify({ apps: ['finder', 'cursor'] })))
       : new Promise<Response>((resolve) => { finish = resolve }))
     vi.stubGlobal('fetch', fetcher)
-    const { ctx, fiber, list, commands } = await bench()
+    const { ctx, fiber, list, selection, commands } = await bench()
     const id = 'main' as SessionId
-    const select = (cwd: string) => { list.set({ ...list.getSnapshot(), ids: [id], byId: {
-      [id]: { id, displayTitle: 'Main', cwd, running: false, blank: false, updatedAt: 0, retainedBy: { mainView: 1 } },
-    } }) }
+    const select = (cwd: string) => {
+      selection.set({ sessionId: id, revision: selection.getSnapshot().revision + 1 })
+      list.set({ ...list.getSnapshot(), ids: [id], byId: {
+        [id]: { id, displayTitle: 'Main', cwd, running: false, blank: false, updatedAt: 0, retainedBy: { mainView: 1 } },
+      } })
+    }
     const entry = ctx.slots.entries('conversation.session.header.utilities')[0]
     const face = (entry?.inject as unknown as () => OpenInAppActionInjected)()
     await vi.waitFor(() => { expect(face.hooks.openInAppApps.getSnapshot()).toEqual(['finder', 'cursor']) })
@@ -132,7 +139,7 @@ describe('open-in-app browser half', () => {
   })
 
   it('declares the services it binds', () => {
-    expect(inject).toEqual(['sessions', 'slots', 'locale', 'remote', 'remote.session', 'shortcuts', 'layout'])
+    expect(inject).toEqual(['sessions', 'uiSession', 'slots', 'locale', 'remote', 'remote.session', 'shortcuts', 'layout'])
   })
 
   it('does not open a retained workspace while a global panel hides the Session header', async () => {
@@ -140,12 +147,13 @@ describe('open-in-app browser half', () => {
       String(input) === 'open-in-app/apps' ? JSON.stringify({ apps: ['finder'] }) : '{}',
     ))
     vi.stubGlobal('fetch', fetcher)
-    const { ctx, fiber, list, commands, layout } = await bench()
+    const { ctx, fiber, list, selection, commands, layout } = await bench()
     try {
       const id = 'main' as SessionId
       list.set({ ...list.getSnapshot(), ids: [id], byId: {
         [id]: { id, displayTitle: 'Main', cwd: '/workspace', running: false, blank: false, updatedAt: 0, retainedBy: { mainView: 1 } },
       } })
+      selection.set({ sessionId: id, revision: 1 })
       const entry = ctx.slots.entries('conversation.session.header.utilities')[0]
       const face = (entry?.inject as unknown as () => OpenInAppActionInjected)()
       await vi.waitFor(() => { expect(face.hooks.openInAppApps.getSnapshot()).toEqual(['finder']) })

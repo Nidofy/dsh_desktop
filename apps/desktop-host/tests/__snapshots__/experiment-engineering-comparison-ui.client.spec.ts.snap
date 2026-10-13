@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`reads explicit original identities with their missing-side counts in Chinese=false 1`] = `"Compare retained engineering turnsSelect original engineering identities and a requested factor. Read complete inputs, differences, measured turn counters and current independent receipt acceptance. Unknown versions or quality do not establish efficiency.Engineering identity AEngineering identity BRequested factorNotebookCacheRead engineering comparison"`;
+
+exports[`reads explicit original identities with their missing-side counts in Chinese=true 1`] = `"比较保留工程 turn选择原工程任务身份及请求因素。读取完整输入、差异、已测量的 turn 计数和当前独立回执验收。版本或质量未知不能证明效率。工程任务身份 A工程任务身份 B请求因素Notebook缓存读取工程比较"`;

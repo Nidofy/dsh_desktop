@@ -35,7 +35,13 @@ The internal `$events` logical stream is the Connection generation source. Its o
 
 ## Client models
 
+Root Session selection is explicit. The Workspace navigation owner publishes its actual `SessionReference` through `uiSession.selectMain` before releasing the predecessor. `mainBinding`, `mainSelection` and `useMainSelection` carry that selection; background retain counts do not choose it. Other surfaces can bind an explicit reference through `bindingSource(reference)`. The Desktop [Companion](../../packages/nidofy/desktop-extras/README.md) combines that binding with actual Host/window, Workspace and Conversation view/turn observations, cancels stale operations and exposes bounded facts independently of pets and Notebook switches.
+
 Each API controller package owns a paired Host and Client face. The Host side owns authoritative mutation and stream production. The Client side owns an identity-stable, React-free model over the same generated wire types and exposes observable snapshots plus commands. UI packages consume these Client services and do not reproduce transport state in component stores.
+
+The Desktop history panel consumes `HistoryGroupView` for explicit Workspace selection and retains `HistoryAuthority` on project results. These [shared types](../../packages/nidofy/desktop-extras/src/shared/notebook-types.ts) bind a project identity, exact Workspace IDs/paths and an immutable association revision. The [working-notebook reference](../../packages/nidofy/working-notebook/README.md) owns persistence, source authorization and index limits.
+
+Desktop `CompanionFacts`, `CompanionNoticeFact`, `CompanionReceiptFact` and `HintPreferences` are [shared evidence types](../../packages/nidofy/desktop-extras/src/shared/companion-facts.ts); [Hint and return-card types](../../packages/nidofy/desktop-extras/src/client/hints.ts) retain source identity, scope revision and condition expiry. The [Host reference](../../apps/desktop-host/src/workbench/README.md#companion-evidence-and-hint-choices) owns revalidation and independent durable choices; the [Client reference](../../packages/nidofy/desktop-extras/README.md) owns evidence-only rules and viewing behavior. Renderer components consume the same framework-bound Companion source, never a second subscription or persistent binding.
 
 ### Sessions
 
@@ -98,3 +104,5 @@ Use the four detailed references according to the extension being added:
 - [API Gateway](../api-gateway.md) for Host methods, generated Remote contributions, streams, and forwarded events.
 - [Web Client Slots](slots.md) for components, hooks, stores, injection, and placement.
 - [Conversation](conversation.md) for durable event correlation, target snapshots, and Chat or Trajectory view contributions.
+
+The main conversation owner exposes `data-conversation-surface="main"` for optional appearance consumers. `data-chat-phase` retains its loading/empty/ready state meaning and is not the appearance selector. Settings sections may register asynchronous navigation guards; close and section changes wait for every live guard, and disposal cancels pending decisions.

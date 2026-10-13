@@ -6,6 +6,15 @@
 
 源码：[`packages/storage/storage/src/backend.ts`](../../packages/storage/storage/src/backend.ts) · [`packages/storage/storage-domain/src/spec.ts`](../../packages/storage/storage-domain/src/spec.ts) · [`packages/storage/storage-domain/src/events.ts`](../../packages/storage/storage-domain/src/events.ts)
 
+<a id="desktop-managed-quota"></a>
+## Desktop 受管配额
+
+独立的产品服务 `ctx.nidofyStorage` 为发行目录的受管文件授予容量。`StorageOperationId` 标识可查询的请求，`ManagedRootId` 标识物理目录，`QuotaLeaseId` 标识耐久授予。`QuotaLease` 携带已预留的普通字节与独立终态字节，运行有界工作，并只在 writer 排空后结算。`QuotaInspection` 区分 reserved、settled 和 unknown；unknown 绝不授予重放权限。[原生配额格式](../../native/nidofy-protection/README.zh.md)拥有锁、同步确认、进程身份、恢复、已覆盖 writer 和排除项。这些授予不改变官方 storage backend 或 Session 格式。
+
+`QuotaStatus` 区分可为 null 的本次 `measuredBytes`、缓存 `observedBytes`、保留的普通／终态授予、writer 排空与扫描状态，以及账本占用／上限。`status()` 观察账本，不回收授予；打开客户端仍可能登记 owner，并执行日志的同步／尾部恢复。`recover()` 显式尝试排空核算，返回相同的类型化观察。两种方法都不授权未知操作重放。
+
+`ImportLease` 为授予增加原生授权内容写入、发布与中断。`beginImport` 接收源指纹及显式累计字节上限；操作身份就是耐久授予身份。`importRoot` 为已接纳 home 解析原物理根，`importOperation` 提供查询、已提交报告复核、显式恢复与接纳，不返回私有能力。复核将当前回执绑定到持久操作；单独查询只观察账本。接纳不改变当前 Host 的选中目录。导入格式、排除项保留费用及禁止重放的恢复由原生 owner 定义。
+
 ## 枢纽：`ctx.storage`
 
 `Storage`（[签名](#ctxstorage--storage)）是汇合点，不是存储本体。`ctx.storage.backend` 是一张名称 → 后端的表：多个后端并排保持挂载，哪个后端服务哪个消费方由该消费方自己的配置决定（即领域层的路由表），绝不是枢纽全局的选择。`register(name, backend)` 返回 disposer；重复名称与查找未知名称都抛出 `StorageError`。dispose（资源释放）只注销名称——由拥有它的插件在注销之后自行关闭后端。每个后端插件还会发布一个仅用于生命周期的服务键（`storageBackendServiceKey(name)`），数据形式提供方注入它，使自身激活不会与后端注册发生竞态。
@@ -159,6 +168,92 @@ type DomainChanged = DomainChangedPut | DomainChangedDeleted
 ## Cordis API
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+
+<a id="ctxnidofystorage--storageservice"></a>
+
+### `ctx.nidofyStorage` — `StorageService`
+
+Host owner of the quota client and write contexts; no in-memory map grants global capacity.
+
+```ts cordis-catalog
+/** Query after a lost acknowledgement; unknown is never authorization to replay.
+ * @param operationId - Retained operation identity.
+ * @returns Persisted reserved/settled observation or explicit unknown.
+ */
+async inspect(operationId: StorageOperationId): Promise<QuotaInspection>
+
+/** Observe cached measurement and outstanding charges without reclaiming or rescanning.
+ * Journal opening retains its sync/partial-tail repair rules and may register this Host.
+ * @returns Ledger state without private authority; a current scan requires explicit recover.
+ */
+async status(): Promise<QuotaStatus>
+
+/** Change admission capacity without revoking any existing ordinary or terminal grant.
+ * @param limitBytes - New managed limit.
+ * @returns Sync-confirmed setting.
+ */
+async configure(limitBytes: number): Promise<Record<string, unknown>>
+
+/** Recover only when all recorded processes/writers are confirmed drained.
+ * @returns The new measured total, or a retained charge/refusal when identity or scan is unknown.
+ */
+async recover(): Promise<QuotaStatus>
+
+/** Reserve a write peak and a separate terminal allowance before starting side effects.
+ * @param scope - Trusted writer/command kind.
+ * @param maxWriteBytes - Upper bound including temporary copies.
+ * @param terminalBytes - Independent allowance for terminal records.
+ * @param operationId - Caller-retained identity, generated before sending the request.
+ * @returns A process-owned capability whose release rescans only after writers drain.
+ */
+async reserve(scope: string, maxWriteBytes: number, terminalBytes: number, operationId: StorageOperationId = brandString<StorageOperationId>(randomUUID())): Promise<QuotaLease>
+
+/** Resolve imports through the native physical root, including an explicitly adopted home.
+ * @returns Original distribution imports path; no import destination is created.
+ */
+async importRoot(): Promise<string>
+
+/** Inspect or explicitly reconcile/adopt a persisted import; never replays its content writer.
+ * @param action - Inspect reads ledger state; review verifies the committed directory and receipt. Recover/adopt are mutations.
+ * @param operationId - Caller-retained import and quota identity.
+ * @returns Persisted phase and original physical-root paths, without a capability.
+ */
+async importOperation(action: 'inspect' | 'review' | 'recover' | 'adopt', operationId: StorageOperationId): Promise<Record<string, unknown>>
+
+/** Admit one fresh isolated import with a cumulative physical-write ceiling.
+ * @param operationId - Durable import/quota identity; an existing identity refuses replay.
+ * @param fingerprint - Validated source preview fingerprint.
+ * @param maxWriteBytes - Explicit ceiling covering copies, successors and metadata temporaries.
+ * @returns Private writer/publication authority bound by native to the exact staging identity.
+ */
+async beginImport(operationId: StorageOperationId, fingerprint: string, maxWriteBytes: number): Promise<ImportLease>
+
+/** Run a bounded Node write inside an existing lease or acquire a new one.
+ * @param path - Owned path inside the home, never a project or runtime target.
+ * @param bytes - Complete additional write peak.
+ * @param work - Actual writer completion promise.
+ * @returns Writer result; a settlement failure retains charges and does not undo its commit.
+ */
+async write<T>(path: string, bytes: number, work: () => Promise<T>): Promise<T>
+
+/** Refuse unmeasured destinations and existing linked ancestors before admission.
+ * @param path - Managed home destination, including a not-yet-created file.
+ */
+async validatePath(path: string): Promise<void>
+
+/** Execute native commands using capabilities absent from UI/model JSON.
+ * @param command - Trusted protection dispatcher command.
+ * @returns Helper result after its actual process exits; unknown work retains the reservation.
+ */
+async native(command: Record<string, unknown>): Promise<Record<string, unknown>>
+
+/** Stop admission and await all acquired child/writer completions; unknown leases remain persisted. */
+async close(): Promise<void>
+```
+
+Types: [ImportLease](storage.zh.md#desktop-managed-quota) · [QuotaInspection](storage.zh.md#desktop-managed-quota) · [QuotaLease](storage.zh.md#desktop-managed-quota) · [QuotaStatus](storage.zh.md#desktop-managed-quota) · [StorageOperationId](storage.zh.md#desktop-managed-quota)
+
+Source: [`packages/nidofy/desktop-extras/src/storage.ts`](../../packages/nidofy/desktop-extras/src/storage.ts)
 
 <a id="ctxstorage--storage"></a>
 

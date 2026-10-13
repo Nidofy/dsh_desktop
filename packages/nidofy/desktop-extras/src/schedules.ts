@@ -50,7 +50,9 @@ export class ScheduleImport {
   }
   private async save(items: ImportedPlan[]): Promise<void> {
     await mkdir(this.home, { recursive: true })
-    await writeFileAtomic(join(this.home, 'paused-schedules.json'), JSON.stringify({ schemaVersion: 1, items }), { mode: 0o600 })
+    const path = join(this.home, 'paused-schedules.json'), bytes = JSON.stringify({ schemaVersion: 1, items }), storage = this.ctx.get('nidofyStorage')
+    const write = () => writeFileAtomic(path, bytes, { mode: 0o600 })
+    await (storage ? storage.write(path, Buffer.byteLength(bytes) * 2, write) : write())
   }
   async close(): Promise<void> { await this.queue.catch(() => {}) }
   request(method: string, input: Record<string, unknown>): Promise<unknown> {

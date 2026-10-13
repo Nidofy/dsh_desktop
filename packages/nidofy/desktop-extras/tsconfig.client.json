@@ -10,6 +10,16 @@
     "src/shared"
   ],
   "references": [
+    { "path": "../../client/ui-settings/tsconfig.client.json" },
+    { "path": "../../client/ui-settings-models" },
+    { "path": "../../util/crypto" },
+    { "path": "../../workspace/workspace" },
+    { "path": "../../client/ui-primitives" },
+    { "path": "../../client/store" },
+    { "path": "../../api/session-controller/tsconfig.client.json" },
+    { "path": "../../api/workspace-controller/tsconfig.client.json" },
+    { "path": "../../client/ui-conversation/tsconfig.client.json" },
+    { "path": "../../client/connection/tsconfig.client.json" },
     {
       "path": "../../../vendor/cordis"
     },

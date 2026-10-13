@@ -24,6 +24,8 @@ type WorkspaceViewState = {
   orderBy: SessionOrderBy
   /** Explicit group expansion keyed by Workspace identity, including descendants in tree mode. */
   groupExpansion: Record<string, boolean>
+  /** Optional per-group visible row counts; older view records retain the default count. */
+  sessionLimits?: Record<string, number>
   /** Saved manual order per Workspace group plus the browser-local flat-list account. */
   sessionOrderByAccount: Record<string, string[]>
   /** Archived-row visibility; omitted in pre-filter v5 snapshots and read as 'default'. */
@@ -48,6 +50,7 @@ type WorkspaceViewActions = {
     initialOrders: Readonly<Record<string, readonly string[]>>,
   ) => void
   setGroupExpanded: (draft: WorkspaceViewState, key: string, expanded: boolean) => void
+  setSessionLimit: (draft: WorkspaceViewState, key: string, limit: number) => void
   retainAccountKeys: (draft: WorkspaceViewState, workspaceKeys: readonly string[]) => void
   syncSessionOrders: (
     draft: WorkspaceViewState,
@@ -97,11 +100,13 @@ export function createWorkspaceViewStore(): EngineStoreHandle<WorkspaceViewState
         d.orderBy = mode
       },
       setGroupExpanded: (d, key: string, expanded: boolean) => { d.groupExpansion[key] = expanded },
+      setSessionLimit: (d, key, limit) => { (d.sessionLimits ??= {})[key] = limit },
       retainAccountKeys: (d, workspaceKeys: readonly string[]) => {
         const retained = new Set(workspaceKeys)
         d.groupExpansion = Object.fromEntries(
           Object.entries(d.groupExpansion).filter(([key]) => retained.has(key)),
         )
+        if (d.sessionLimits) d.sessionLimits = Object.fromEntries(Object.entries(d.sessionLimits).filter(([key]) => retained.has(key)))
         d.sessionOrderByAccount = Object.fromEntries(
           Object.entries(d.sessionOrderByAccount).filter(([key]) => retained.has(key)),
         )

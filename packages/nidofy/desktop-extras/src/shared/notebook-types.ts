@@ -1,3 +1,27 @@
+import type { SessionPersistenceGeneration } from '@deepseek-ai/dsh-session-persistence'
+import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { WorkspaceId } from '@deepseek-ai/dsh-workspace'
+
+/** User-created history project identity; repository names confer no authority. */
+export type HistoryProjectId = Branded<'nidofy.HistoryProjectId'>
+/** Exact Workspace identity and path approved for local history reads. */
+export interface HistoryMember { id: WorkspaceId; path: string }
+/** Explicit project membership; one Workspace belongs to at most one project. */
+export interface HistoryProject { id: HistoryProjectId; members: HistoryMember[] }
+/** Association metadata presented for an explicit local-user edit. */
+export interface HistoryGroupView {
+  revision: number
+  current: HistoryMember
+  project: HistoryProject | null
+  candidates: { id: WorkspaceId; path: string; title: string }[]
+}
+/** Every project preview and citation must retain this captured association revision. */
+export interface HistoryAuthority {
+  revision: number
+  projectId: HistoryProjectId
+  members: HistoryMember[]
+}
+
 /** Evidence is always in the notebook's own Session. */
 export interface Note {
   id: string
@@ -21,7 +45,7 @@ export interface Notebook {
 export interface NotebookLimits { maxEntries: number; maxBytes: number }
 
 /** Session log generation a v2 state was validated against; never a connection id or process id. */
-export interface NotebookScope { sessionId: string; generation: number }
+export interface NotebookScope { sessionId: string; generation: SessionPersistenceGeneration }
 
 /**
  * Continuous-prefix watermarks over one Session generation; `-1` means nothing checked.
@@ -60,6 +84,16 @@ export interface NotebookBudgets {
   maxHistoryBytes: number
 }
 
+/** Product read bounds; source windows contain at most recentScanEvents raw events. */
+export interface NotebookReadOptions { maxCachedSessions: number; recentEventLimit: number; recentScanEvents: number }
+
+/** Process-local organization progress; it never claims an uncommitted notebook revision. */
+export interface NotebookSynchronization {
+  phase: 'idle' | 'organizing' | 'ready' | 'failed'
+  synchronizedThrough: number
+  diagnostic?: string
+}
+
 /** Journal record of one legacy entry copied by migration; `note` is `null` for a watermark-only record. */
 export interface NotebookMigrateRecord {
   action: 'migrate'
@@ -75,7 +109,7 @@ export interface NotebookRetireRecord {
   action: 'retire'
   historyRevision: number
   atRevision: number
-  generation: number
+  generation: SessionPersistenceGeneration
   note: Note
 }
 
@@ -84,7 +118,7 @@ export interface NotebookRestoreRecord {
   action: 'restore'
   historyRevision: number
   atRevision: number
-  generation: number
+  generation: SessionPersistenceGeneration
   id: string
 }
 
@@ -119,10 +153,18 @@ export interface NotebookStorageWrite {
 
 /**
  * Single storage-admission adapter point reserved for the quota owner. The default
- * implementation enforces only the local history budget; the future quota service replaces
- * it without touching store internals.
+ * implementation enforces the local history budget; the product additionally returns
+ * a lease from its cross-Host quota owner.
  */
 export interface NotebookStorageAdmission {
   /** Approve one bounded write, or reject it before any disk mutation. */
-  admit(write: NotebookStorageWrite): void | Promise<void>
+  admit(write: NotebookStorageWrite): void | NotebookStorageLease | Promise<void | NotebookStorageLease>
+}
+
+/** Quota release follows writer drainage and remeasurement, including failed-write residue. */
+export interface NotebookStorageLease {
+  /** Register the actual writer promise so owner shutdown waits for its filesystem work. */
+  run<T>(work: () => Promise<T>): Promise<T>
+  /** Settle after the writer stops; failure retains the reservation, never reverses a commit. */
+  settle(): Promise<void>
 }

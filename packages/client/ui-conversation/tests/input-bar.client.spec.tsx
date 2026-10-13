@@ -171,6 +171,7 @@ function bench(over?: BenchOptions) {
     return null
   }) as never
   const props: InputBarProps = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: selector => selector({ activePanelId: null }),
     sessionId: SID,
     SessionProvider: ({ children }) => children,

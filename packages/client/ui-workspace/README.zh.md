@@ -11,6 +11,8 @@ kind: "package-reference"
 
 ## 概述
 
+导航先把实际拥有的引用发布给 `uiSession.selectMain`，再释放前任。工作区行、搜索、快捷键和暂存空白行成员关系消费 `mainSelection`；无关 retained 引用不会成为当前会话。
+
 本包让用户浏览分组或扁平的 Session 列表、为新 Session 选择 Workspace，并通过添加、重命名、重排序、搜索、fork、归档和删除 Workspace 来管理 Workspace 与 Session；Session 行菜单及其悬停按钮是可由客户端插件扩展的 slot 列表。待处理交互显示为警告点，subagent 来源的 Session 则保持隐藏。处于空闲状态且未归档、其 Session 有活动定时任务的 Session 行会显示时钟标记，其悬浮卡片会列出这些任务。规范化后仍有差异的文件夹路径会保留为独立 Workspace。添加 Workspace 需要组合目录选择器；没有目录选择器时，添加操作不可用。
 
 ## 目录
@@ -195,6 +197,11 @@ Workspace 与 Session 悬浮卡片会复制对应行被截断的值：激活 Wor
 -----
 
 <a id="model-experience"></a>
+## 浏览器加载与视图偏好
+
+树视图区分基线加载、搜索失败与空结果。键盘导航保留 IME 与嵌套控件处理。v5 视图存储中的可选逐组 sessionLimits 在重新挂载后保留“展开更多”，缺失值沿用原初始批次。会话导航继续恢复已保存的未分组会话，包括空白会话。
+
+
 ## 模型体验
 
 无。该包是浏览器端 UI 插件层，不注册任何面向模型的内容。

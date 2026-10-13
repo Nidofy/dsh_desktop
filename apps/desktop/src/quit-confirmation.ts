@@ -85,7 +85,7 @@ export class DesktopQuitConfirmation {
       message: messages.quitTitle,
       detail: messages[prompt],
       buttons: [messages.quit, messages.cancel],
-      defaultId: 0,
+      defaultId: 1,
       cancelId: 1,
       noLink: true,
     })

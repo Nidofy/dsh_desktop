@@ -42,6 +42,8 @@ async function bench(runtime: 'web' | 'desktop' = 'desktop', platform: ShortcutP
     sessionId: sid(id), session: { ...history, loadOlder },
   }]))
   ctx.provide('sessions', { list, binding: (id: SessionId) => bindings.get(id) })
+  const selection = createSnapshotStore({ sessionId: sid('a') as SessionId | null, revision: 0 })
+  ctx.provide('uiSession', { mainSelection: selection })
   const panelInfo = createSnapshotStore<PanelInfo>({ activePanelId: null })
   ctx.provide('layout', { panelInfo })
   const directory = createSnapshotStore(true)
@@ -58,7 +60,7 @@ async function bench(runtime: 'web' | 'desktop' = 'desktop', platform: ShortcutP
     installWorkspaceShortcuts(scoped, navigation, controls, (id) => { void navigation.archiveSession(id) })
   })
   await fiber.await()
-  const select = (id: string) => { list.set({ ...list.getSnapshot(), byId: {
+  const select = (id: string) => { selection.set({ sessionId: ['a', 'b'].includes(id) ? sid(id) : null, revision: selection.getSnapshot().revision + 1 }); list.set({ ...list.getSnapshot(), byId: {
     [sid('a')]: row('a', id === 'a'), [sid('b')]: row('b', id === 'b'),
   } }) }
   return { ctx, fiber, registry, commands, navigation, controls, list, directory, select, history, loadOlder, panelInfo }

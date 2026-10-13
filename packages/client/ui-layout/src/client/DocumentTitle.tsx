@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 
 /** Props for the browser title projection. */
-export type DocumentTitleProps = Pick<PropsRuntime<'root'>, 'useSessions' | 'usePanelInfo'> & {
+export type DocumentTitleProps = Pick<PropsRuntime<'root'>, 'useSessions' | 'usePanelInfo' | 'useMainSelection'> & {
   /** Build-configured or localized product title. */
   productTitle: string
 }
@@ -14,13 +14,10 @@ export type DocumentTitleProps = Pick<PropsRuntime<'root'>, 'useSessions' | 'use
  * @param props - Selected session title projection.
  * @returns No rendered content.
  */
-export function DocumentTitle({ useSessions, usePanelInfo, productTitle }: DocumentTitleProps): null {
+export function DocumentTitle({ useSessions, usePanelInfo, useMainSelection, productTitle }: DocumentTitleProps): null {
   const showSessionTitle = usePanelInfo(info => info.activePanelId === null)
-  const title = useSessions((state) => {
-    const current = Object.values(state.byId)
-      .find(session => (session.retainedBy.mainView ?? 0) > 0)?.id
-    return !showSessionTitle || current === undefined ? undefined : state.byId[current]?.title
-  })
+  const current = useMainSelection(value => value.sessionId)
+  const title = useSessions(state => !showSessionTitle || current === null ? undefined : state.byId[current]?.title)
   useEffect(() => {
     document.title = title === undefined ? productTitle : `${title} — ${productTitle}`
     return () => { document.title = productTitle }

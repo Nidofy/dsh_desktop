@@ -54,11 +54,13 @@ it('preserves unlisted child status through metadata updates and main view ackno
 
   using reference = sessions.retain(childId, { source: 'mainView' })
   await reference.ready
+  ui.selectMain(reference)
   expect(sessions.list.getSnapshot().ids).not.toContain(childId)
   await vi.waitFor(() => {
     expect(ui.sessionStatus.getSnapshot().get(childId)).toMatchObject({ running: false, completionUnread: false })
   })
   reference.release()
+  ui.selectMain(undefined)
   await client.flush()
   expect(ui.sessionStatus.getSnapshot().get(childId)?.completionUnread).toBe(false)
 })

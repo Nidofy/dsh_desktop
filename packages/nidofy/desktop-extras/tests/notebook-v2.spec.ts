@@ -1,3 +1,4 @@
+import { SessionPersistenceGeneration } from '@deepseek-ai/dsh-session-persistence'
 /** v2 store behavior: separated active set, bounded history journal, dual cursors, v1 copy conversion, and partial-write recovery. */
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
@@ -7,6 +8,7 @@ import { createHash } from 'node:crypto'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionSeq, type SessionEvent } from '@deepseek-ai/dsh-session'
 import { NotebookStore, NotebookV2Store } from '../src/notebook.ts'
+import { notebookActiveInput } from '../src/notebook-input.ts'
 import type { NotebookBudgets, NotebookScope, NotebookStorageAdmission, NotebookStorageWrite } from '../src/notebook.ts'
 
 /** Fault injection for partial-write windows; disabled flags pass every call straight through. */
@@ -52,7 +54,7 @@ const measureDirectory = async (home: string): Promise<number> => {
 
 const budgets: NotebookBudgets = { maxActiveEntries: 8, maxActiveBytes: 4096, maxDeltaBytes: 4096,
   maxEvidenceBytes: 2048, maxHistoryBytes: 512 * 1024 }
-const scope: NotebookScope = { sessionId: 'session', generation: 3 }
+const scope: NotebookScope = { sessionId: 'session', generation: SessionPersistenceGeneration('test-file-3') }
 const directory = (home: string): string => join(home, createHash('sha256').update('session').digest('hex'))
 const v2Directory = (home: string): string => join(directory(home), 'v2')
 const event = (body: string, seq: number, kind: 'user' | 'system-prompt'): SessionEvent => ({ type: 'user/message', seq: SessionSeq(seq), time: seq + 1, data: createUserMessage({ content: [{ type: 'text', text: body }], source: kind === 'user' ? { kind: 'user' } : { kind: 'system-prompt' } }), surfaceOp: 'append' })
@@ -62,6 +64,57 @@ const events: SessionEvent[] = [
   event('injected prompt snapshot is not fresh evidence', 2, 'system-prompt'),
 ]
 const add = (id: string, seq = 0, quote = '官方引擎') => ({ action: 'ADD', id, kind: 'constraint', text: `note ${id}`, seq, quote, pinned: false })
+
+it('refuses an already committed numeric v2 generation without changing its files or cursors', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-legacy-generation-'))
+  const store = new NotebookV2Store(home, budgets)
+  onTestFinished(async () => { await store.close(); await rm(home, { recursive: true, force: true }) })
+  await mkdir(v2Directory(home), { recursive: true })
+  const bytes = JSON.stringify({ schemaVersion: 2, scope: { sessionId: scope.sessionId, generation: 17 }, revision: 4,
+    cursors: { evidenceThrough: 12, commitThrough: 19 }, active: [], historyRevision: 0, historyBytes: 0 }) + '\n'
+  const path = join(v2Directory(home), 'current.json')
+  await writeFile(path, bytes)
+  await expect(store.readCommitted(scope)).rejects.toThrow('NOTEBOOK_GENERATION_REBIND_REQUIRED')
+  await expect(store.publish(4, scope, { operations: [] }, events, 'model')).rejects.toThrow('NOTEBOOK_GENERATION_REBIND_REQUIRED')
+  expect(await readFile(path, 'utf8')).toBe(bytes)
+  expect(await readdir(v2Directory(home))).toEqual(['current.json'])
+})
+
+it('reads detached committed cursors on warm and cold stores and excludes failed publication residue', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-notes-v2-committed-'))
+  const store = new NotebookV2Store(home, budgets)
+  onTestFinished(async () => { await store.close(); await rm(home, { recursive: true, force: true }) })
+  expect(await store.readCommitted(scope)).toMatchObject({ revision: 0, active: [], cursors: { evidenceThrough: -1, commitThrough: -1 } })
+  await store.publish(0, scope, { operations: [add('committed')], cursors: { evidenceThrough: 0, commitThrough: 1 } }, events, 'model')
+  const selected = await store.readCommitted(scope)
+  expect(selected).toMatchObject({ revision: 1, cursors: { evidenceThrough: 0, commitThrough: 1 } })
+  expect(selected).not.toHaveProperty('historyBytes')
+  selected.scope.generation = SessionPersistenceGeneration('test-file-99'); selected.cursors.commitThrough = 99
+  selected.active[0]!.text = 'caller mutation'
+  expect(await store.readCommitted(scope)).toMatchObject({ scope, cursors: { commitThrough: 1 }, active: [{ text: 'note committed' }] })
+  injection.failCurrent = true
+  await expect(store.publish(1, scope, { operations: [{ action: 'REMOVE', id: 'committed' }],
+    cursors: { evidenceThrough: 1, commitThrough: 2 } }, events, 'user')).rejects.toThrow('CURRENT_WRITE_FAILED')
+  injection.failCurrent = false
+  const expected = await store.readCommitted(scope), cold = new NotebookV2Store(home, budgets)
+  try {
+    expect(expected).toMatchObject({ revision: 1, historyRevision: 0, cursors: { evidenceThrough: 0, commitThrough: 1 } })
+    expect(await cold.readCommitted(scope)).toEqual(expected)
+    await expect(cold.readCommitted({ ...scope, generation: SessionPersistenceGeneration('test-file-99') })).rejects.toThrow('NOTEBOOK_SCOPE_CONFLICT')
+  } finally { await cold.close() }
+})
+
+it('cancels a committed read before creating a lazy converted namespace', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-notes-v2-read-cancel-'))
+  const legacy = new NotebookStore(home, { maxEntries: 8, maxBytes: 4096 }), store = new NotebookV2Store(home, budgets)
+  onTestFinished(async () => { await legacy.close(); await store.close(); await rm(home, { recursive: true, force: true }) })
+  await legacy.update(scope.sessionId, { baseRevision: 0, sourceThrough: 0, operations: [add('legacy')] }, events, 'user')
+  const controller = new AbortController(); controller.abort()
+  await expect(store.readCommitted(scope, controller.signal)).rejects.toThrow()
+  await expect(stat(v2Directory(home))).rejects.toMatchObject({ code: 'ENOENT' })
+  expect(await store.readCommitted(scope)).toMatchObject({ revision: 1, active: [{ id: 'legacy' }],
+    cursors: { evidenceThrough: -1, commitThrough: -1 } })
+})
 
 it('keeps accepting notes after a thousand add-and-retire cycles while history stays queryable', async () => {
   const home = await mkdtemp(join(tmpdir(), 'nidofy-notes-v2-cycles-'))
@@ -81,7 +134,7 @@ it('keeps accepting notes after a thousand add-and-retire cycles while history s
   expect(projection.entries.every(row => row.active)).toBe(true)
   await expect(store.publish(final.revision, scope, { operations: [add('note-0')] }, events, 'model')).rejects.toThrow('NOTEBOOK_ID_REUSED')
   const page = await store.readHistory(scope, 0, 5)
-  expect(page.records[0]).toMatchObject({ action: 'retire', historyRevision: 1, atRevision: 2, generation: 3, note: { id: 'note-0', active: false } })
+  expect(page.records[0]).toMatchObject({ action: 'retire', historyRevision: 1, atRevision: 2, generation: SessionPersistenceGeneration('test-file-3'), note: { id: 'note-0', active: false } })
   expect(page.nextToken).toBe(5)
   const activeBeforeClose = JSON.stringify(projection)
   await store.close()
@@ -125,13 +178,13 @@ it('reports oversized pinned notes as a repairable budget error instead of dropp
   await repaired.close()
 })
 
-it('enforces UTF-8 byte limits exactly on the serialized active projection', async () => {
+it('enforces UTF-8 byte limits exactly on the complete active injection', async () => {
   const homes = await Promise.all([1, 2, 3].map(async () => mkdtemp(join(tmpdir(), 'nidofy-notes-v2-bytes-'))))
   onTestFinished(async () => { await Promise.all(homes.map(home => rm(home, { recursive: true, force: true }))) })
   const operation = [{ ...add('中文', 0), text: '汉'.repeat(50) }]
   const measured = new NotebookV2Store(homes[0]!, { ...budgets, maxActiveBytes: 1_000_000 })
   await measured.publish(0, scope, { operations: operation, cursors: { evidenceThrough: 0 } }, events, 'model')
-  const exact = Buffer.byteLength(JSON.stringify(await measured.readActive(scope)))
+  const exact = Buffer.byteLength(notebookActiveInput(await measured.readActive(scope), budgets))
   await measured.close()
   const atCap = new NotebookV2Store(homes[1]!, { ...budgets, maxActiveBytes: exact })
   await expect(atCap.publish(0, scope, { operations: operation, cursors: { evidenceThrough: 0 } }, events, 'model')).resolves.toMatchObject({ revision: 1 })
@@ -173,8 +226,8 @@ it('serializes concurrent publishes so exactly one compare-and-swap wins', async
   const remaining = after.entries[0]!.id
   await expect(store.publish(2, scope, { operations: [{ action: 'UPDATE', id: remaining, expectedRevision: 0, kind: 'next', text: 'stale update', seq: 0, quote: '官方引擎' }] }, events, 'user')).rejects.toThrow('NOTEBOOK_ENTRY_CONFLICT')
   await expect(store.publish(99, scope, { operations: [] }, events, 'user')).rejects.toThrow('NOTEBOOK_REVISION_CONFLICT')
-  await expect(store.publish(2, { sessionId: 'session', generation: 4 }, { operations: [] }, events, 'user')).rejects.toThrow('NOTEBOOK_SCOPE_CONFLICT')
-  await expect(store.readActive({ sessionId: 'session', generation: 4 })).rejects.toThrow('NOTEBOOK_SCOPE_CONFLICT')
+  await expect(store.publish(2, { sessionId: 'session', generation: SessionPersistenceGeneration('test-file-4') }, { operations: [] }, events, 'user')).rejects.toThrow('NOTEBOOK_SCOPE_CONFLICT')
+  await expect(store.readActive({ sessionId: 'session', generation: SessionPersistenceGeneration('test-file-4') })).rejects.toThrow('NOTEBOOK_SCOPE_CONFLICT')
   await store.close()
 })
 
@@ -286,6 +339,25 @@ it('fences crash residue beyond the committed journal prefix and truncates it on
 
   await writeFile(join(v2Directory(home), 'history.jsonl'), committed.slice(0, -8), 'utf8')
   await expect(new NotebookV2Store(home, budgets).readActive(scope)).rejects.toThrow('NOTEBOOK_CORRUPT_STATE')
+})
+
+it('preserves crash residue on admission refusal and preserves a selected commit on failed settlement', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-quota-tail-')), first = new NotebookV2Store(home, budgets)
+  onTestFinished(() => rm(home, { recursive: true, force: true }))
+  await first.publish(0, scope, { operations: [add('first')], cursors: { evidenceThrough: 0 } }, events, 'model'); await first.close()
+  const journal = join(v2Directory(home), 'history.jsonl'), residue = 'uncommitted and retained\n'
+  await writeFile(journal, residue)
+  const denied = new NotebookV2Store(home, budgets, { admit: () => { throw Error('QUOTA_DENIED') } })
+  await expect(denied.publish(1, scope, { operations: [] }, events, 'user')).rejects.toThrow('QUOTA_DENIED')
+  expect(await readFile(journal, 'utf8')).toBe(residue); await denied.close()
+  let settled = false
+  const accepted = new NotebookV2Store(home, budgets, { admit: () => ({ run: work => work(), settle: async () => {
+    settled = true; throw Error('SETTLEMENT_UNKNOWN')
+  } }) })
+  expect((await accepted.publish(1, scope, { operations: [] }, events, 'user')).revision).toBe(2)
+  expect(settled).toBe(true); expect(await readFile(journal, 'utf8')).toBe(''); await accepted.close()
+  const cold = new NotebookV2Store(home, budgets)
+  expect((await cold.readSelected(scope)).revision).toBe(2); await cold.close()
 })
 
 it('bounds local history disk without deleting evidence and exposes one admission seam', async () => {
@@ -443,8 +515,8 @@ it('measures journal growth and failure residue honestly against the real direct
   injection.failRevision = true
   await expect(store.publish(1, scope, { operations: [{ action: 'REMOVE', id: 'doomed' }] }, events, 'user')).rejects.toThrow('REVISION_WRITE_FAILED')
   injection.failRevision = false
-  // The retry truncates the uncommitted journal tail before its admission, so the post-retry
-  // steady state is what the next admission must match exactly.
+  // Admission includes the crash residue. Only an accepted retry truncates it; the following
+  // steady state must match the next admission's measured input exactly.
   await store.publish(1, scope, { operations: [{ action: 'REMOVE', id: 'doomed' }] }, events, 'user')
   const afterRetry = await measureDirectory(home)
   await store.publish(2, scope, { operations: [] }, events, 'user')

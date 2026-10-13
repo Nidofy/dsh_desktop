@@ -1,5 +1,5 @@
-export const bubbles={RUNNING:'正在处理任务',WAITING_PERMISSION:'需要你的确认',WAITING_INPUT:'等待你的输入',BLOCKED:'任务需要处理',LIMIT_REACHED:'任务需要处理',COMPLETED:'本轮任务已结束',FAILED:'本轮执行遇到问题',UNKNOWN:'状态待确认',INTERRUPTED:'状态待确认'};
-export function priority(row,now,duration=5000){return /^WAITING_/.test(row.status)?5:['BLOCKED','LIMIT_REACHED'].includes(row.status)?4:row.status==='RUNNING'?3:['FAILED','COMPLETED'].includes(row.status)&&row.notify===true&&now-row.at<duration?2:0;}
+export const bubbles={RUNNING:'正在处理任务',WAITING_PERMISSION:'需要你的确认',WAITING_INPUT:'等待你的输入',BLOCKED:'任务需要处理',LIMIT_REACHED:'任务需要处理',COMPLETED:'本轮任务已结束',FAILED:'本轮执行遇到问题',CANCELLED:'本轮任务已取消',UNKNOWN:'状态待确认',INTERRUPTED:'状态待确认'};
+export function priority(row,now,duration=5000){return /^WAITING_/.test(row.status)?5:['BLOCKED','LIMIT_REACHED'].includes(row.status)?4:row.status==='RUNNING'?3:['FAILED','COMPLETED','CANCELLED'].includes(row.status)&&row.notify===true&&now-row.at<duration?2:0;}
 export class Presentation {
  constructor(now=Date.now){this.now=now;this.frame=null;this.row=null;this.reaction=null;this.heldUntil=0;this.settings={};this.watermark=0;}
  settingsChanged(s){if(s.pinned!==this.settings.pinned||s.profile!==this.settings.profile){this.heldUntil=0;this.reaction=null;}this.settings=s;this.select();}
@@ -24,6 +24,6 @@ export class Presentation {
  }
  interact(id='waving'){if(this.reaction?.kind==='task'||this.now()-(this.lastInteraction??-Infinity)<500)return;this.lastInteraction=this.now();this.reaction={id,at:this.now(),kind:'interaction'};}
  animation(){this.select();return this.drag??this.reaction?.id??(/^WAITING_/.test(this.row?.status)||['BLOCKED','LIMIT_REACHED'].includes(this.row?.status)?'waiting':this.row?.status==='RUNNING'?'running':'idle');}
-  bubble(){const row=this.row;if(!row||row.suppressNotice)return '';return ['COMPLETED','FAILED'].includes(row.status)&&(!row.notify||this.now()-row.at>=(this.settings.bubble?.durationMs??5000))?'':bubbles[row.status]??'';}
+  bubble(){const row=this.row;if(!row||row.suppressNotice)return '';return ['COMPLETED','FAILED','CANCELLED'].includes(row.status)&&(!row.notify||this.now()-row.at>=(this.settings.bubble?.durationMs??5000))?'':bubbles[row.status]??'';}
  target(){return this.row?{sessionId:this.row.sessionId,profile:this.frame.profile,generation:this.frame.generation,port:this.frame.port}:null;}
 }

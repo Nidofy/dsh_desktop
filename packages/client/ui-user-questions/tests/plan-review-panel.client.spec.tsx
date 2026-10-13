@@ -118,6 +118,7 @@ const kit: Omit<QuestionComposerProps, 'matched'> = {
   pendingInteraction: undefined,
   useSession: selector => selector(sessionState),
   useSessions: selector => selector(sessionList),
+  useMainSelection: () => { throw new Error('Fixture does not read main selection') },
   usePanelInfo, useResource,
   useSessionStatus: selector => selector(attentionState),
   useSessionRetainInfo: () => undefined,

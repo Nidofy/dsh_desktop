@@ -40,6 +40,7 @@ function mount() {
   const policy = new ComposerSubmissionPolicy()
   const setBusyEnter = vi.fn((behavior: 'queue' | 'steer') => { policy.setBusyEnter(behavior) })
   const props: EnterBehaviorRowProps = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: selector => selector({ activePanelId: null }),
     useSessions: emptySessions(),
     useSessionStatus: noPendingInteraction(),

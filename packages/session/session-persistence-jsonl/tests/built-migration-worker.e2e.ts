@@ -24,13 +24,25 @@ describe.skipIf(!built)('built migration verifier (plain node)', () => {
       const id = 'built-migration-worker'
       const directory = join(root, '_no-cwd', id)
       const ctx = new Context()
+      const controller = new AbortController()
+      let measuredBytes = 0
+      class BoundedPersistence extends JsonlSessionPersistence {
+        constructor(ctx, config) {
+          super(ctx, config, async (path, bytes, publish) => {
+            measuredBytes = bytes
+            const identity = await publish()
+            controller.abort(new Error('cancelled after commit'))
+            return identity
+          })
+        }
+      }
       try {
         await mkdir(directory, { recursive: true })
         await writeFile(join(directory, 'session.jsonl'), JSON.stringify({
           type: 'session', version: 0, id, createdAt: 1, delegationDepth: 0,
         }) + '\\n')
-        await ctx.plugin(JsonlSessionPersistence, { root, compression: 'none' })
-        const handle = await ctx.sessionPersistence.open(id, 'write')
+        await ctx.plugin(BoundedPersistence, { root, compression: 'none' })
+        const handle = await ctx.sessionPersistence.open(id, 'write', { signal: controller.signal })
         await handle.close()
         await ctx.sessionPersistence.flush()
         const currentPath = join(directory, 'session.v' + SESSION_FORMAT_VERSION + '.jsonl')
@@ -56,7 +68,9 @@ describe.skipIf(!built)('built migration verifier (plain node)', () => {
         const verified = await verify(0)
         const refused = await verify(1)
         console.log(JSON.stringify({ id: header.id, version: header.version,
-          verified: verified.ok, refused: refused.ok, refusal: refused.message }))
+          verified: verified.ok, refused: refused.ok, refusal: refused.message,
+          bounded: measuredBytes === (await readFile(currentPath)).length && measuredBytes > 0,
+          cancelledAfterCommit: controller.signal.aborted }))
       } finally {
         await ctx.fiber.dispose()
         await rm(root, { recursive: true, force: true })
@@ -75,6 +89,7 @@ describe.skipIf(!built)('built migration verifier (plain node)', () => {
     expect(JSON.parse(stdout.trim())).toEqual({
       id: 'built-migration-worker', version: SESSION_FORMAT_VERSION, verified: true, refused: false,
       refusal: 'current session generation contains 0 events, expected 1',
+      bounded: true, cancelledAfterCommit: true,
     })
   })
 })

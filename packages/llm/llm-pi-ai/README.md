@@ -107,6 +107,8 @@ A profile's `models` list replaces the route's installed catalog rather than ext
 
 For self-hosted Chat Completions endpoints, `thinkingTokenBudgetField` selects the reasoning-budget parameter, and `vllmPriority` sets an integer scheduler priority when the server enables priority scheduling. Template arguments accept `$var: thinking.budget`. `openai-responses` gateways can set `supportsMaxOutputTokens: false` to omit `max_output_tokens`; Azure and Codex transports ignore this shared compatibility field. These controls are opt-in; catalog-owned Anthropic effort and fallback capabilities are not configurable switches.
 
+For an Anthropic-compatible model whose provider explicitly accepts unsigned thinking history, set that model's `compat.allowEmptySignature: true` to preserve unsigned reasoning as a thinking block across tool turns. With this option absent or false, the SDK replays unsigned reasoning as text; signed thinking remains signed. Scope the option to a verified route/model. It neither changes reasoning effort nor enables adaptive thinking, and it does not establish that a provider accepts the request or that it will run faster. `forceAdaptiveThinking` changes the thinking protocol and is not a substitute for an independent effort field.
+
 <a id="control-transport-routing-metadata"></a>
 
 ### Control transport routing metadata
@@ -134,6 +136,8 @@ Config updates strictly validate changed providers. Initial loading retains stor
 Changing `displayName`, `apiKeyEnv`, or `baseURL` without resolving the provider's model errors still rejects the save. For example, renaming an OpenRouter route whose model `111` needs an `api` cannot be saved on its own: repair or remove that model in the same editor draft, then save the complete provider configuration. Intermediate repairs remain in the draft until the whole provider validates; other providers can be saved independently.
 
 -----
+
+An installed application HTTP policy is captured by `prepareCall` and rechecked before credentials and each SDK fetch. With this provider, requests require an explicit credential and one of the qualified SSE APIs, `openai-completions` or `anthropic-messages`; unsupported native authentication, APIs and WebSocket transports refuse. Discovery uses the same authorization before resolving a key. Ordinary launches without a policy provider retain their existing routes. See the [Desktop policy reference](../../../apps/desktop-host/src/connections/README.md).
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation

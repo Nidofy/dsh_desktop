@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/nidofy/secure-credentials/README.md
+/:
+  en: 142a52655ff8d08c
+  zh: 761e8a1b6074a101
+/secure-credentials:
+  en: f6beb379a0b4f931
+  zh: a264215cea3135df
+/secure-credentials/summary:
+  en: 75f11b1bdfff50ef
+  zh: 10253e7bc2dd17a0
+/secure-credentials/table-of-contents:
+  en: 855a907c4272b072
+  zh: 8c77a314576ff666
+/secure-credentials/use-this-provider:
+  en: 6d8c52c731fe9dd3
+  zh: 6e064096b798f7d1
+/secure-credentials/understand-the-implementation:
+  en: 421ff623de0dd2eb
+  zh: 0ec935b78a47f759
+/secure-credentials/further-exploration:
+  en: 40fae04fa70babc0
+  zh: 4e7be2d80ce9b256
+/secure-credentials/model-experience:
+  en: 08b8024656894e1b
+  zh: 4a01741986cb5287
+/secure-credentials/model-experience/kv-cache-effect:
+  en: 710d858592bc5c7b
+  zh: d476d7d30daf3236
+/secure-credentials/known-limitations-and-deferred-work:
+  en: abd6acc58bc2dfa1
+  zh: 7102356fe3e3b464
+/secure-credentials/known-limitations-and-deferred-work/dev-note:
+  en: 87b87e729015bd25
+  zh: 5f8d6dc4353f107e

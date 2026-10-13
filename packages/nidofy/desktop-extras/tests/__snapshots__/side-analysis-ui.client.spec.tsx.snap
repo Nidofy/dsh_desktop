@@ -1,0 +1,316 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`loads exact history on demand and previews retention without appending or dispatching > exact record and retention preview 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-analysis-history"
+    open=""
+  >
+    <summary>
+      Analysis history and retention
+    </summary>
+    <p>
+      Browse this conversation’s private records. Shared active and archive budgets apply across conversations. Logs are never automatically deleted.
+    </p>
+    <label
+      for=":r4:-filter"
+    >
+      Show analysis records
+    </label>
+    <select
+      id=":r4:-filter"
+    >
+      <option
+        value="all"
+      >
+        All records
+      </option>
+      <option
+        value="active"
+      >
+        Active
+      </option>
+      <option
+        value="archived"
+      >
+        Archived
+      </option>
+    </select>
+    <button>
+      Load or refresh history
+    </button>
+    <div>
+      <p>
+        Shared retention: 1/20 active, 0/80 archived. This conversation: 1 records.
+      </p>
+      <ul>
+        <li>
+          <p>
+            local / selected-model · COMPLETED · Active
+            <br />
+            <time
+              datetime="1970-01-01T00:00:00.001Z"
+            >
+              1/1/1970, 12:00:00 AM
+            </time>
+            <br />
+            11111111-1111-1111-1111-111111111111
+          </p>
+          <button>
+            Inspect original request and result
+          </button>
+          <button>
+            Preview local record export
+          </button>
+          <button>
+            Preview archive
+          </button>
+        </li>
+      </ul>
+      <p>
+        Page 1
+      </p>
+      <button
+        disabled=""
+      >
+        Previous analyses
+      </button>
+      <button
+        disabled=""
+      >
+        Next analyses
+      </button>
+      <label
+        for=":r4:-active"
+      >
+        Active record limit (1–20)
+      </label>
+      <input
+        id=":r4:-active"
+        max="20"
+        min="1"
+        type="number"
+        value="20"
+      />
+      <label
+        for=":r4:-archive"
+      >
+        Archive record limit (0–80)
+      </label>
+      <input
+        id=":r4:-archive"
+        max="80"
+        min="0"
+        type="number"
+        value="80"
+      />
+      <button>
+        Preview retention budget
+      </button>
+    </div>
+    <div>
+      <p>
+        11111111-1111-1111-1111-111111111111 · COMPLETED
+      </p>
+      <pre
+        style="white-space: pre-wrap;"
+      >
+        Private result
+      </pre>
+      <details>
+        <summary>
+          Inspect complete private request record
+        </summary>
+        <pre
+          style="white-space: pre-wrap;"
+        >
+          {
+  "exactInput": "Selected question",
+  "tools": false
+}
+        </pre>
+      </details>
+    </div>
+    <div>
+      <p>
+        Archive this settled record to free one active slot. The exact request, original result and official logs remain at their original location. No draft or model request is created.
+      </p>
+      <pre
+        style="white-space: pre-wrap;"
+      >
+        {
+  "active": 0,
+  "archived": 1
+}
+      </pre>
+      <details>
+        <summary>
+          Inspect complete private request record
+        </summary>
+        <pre
+          style="white-space: pre-wrap;"
+        >
+          {
+  "exactInput": "Selected question",
+  "tools": false
+}
+        </pre>
+      </details>
+      <button>
+        Confirm retention change
+      </button>
+      <button>
+        Dismiss retention preview
+      </button>
+    </div>
+  </details>
+</DocumentFragment>
+`;
+
+exports[`resets pages on filter changes and exports only the explicitly previewed original record > explicit exact local export preview 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-analysis-history"
+    open=""
+  >
+    <summary>
+      Analysis history and retention
+    </summary>
+    <p>
+      Browse this conversation’s private records. Shared active and archive budgets apply across conversations. Logs are never automatically deleted.
+    </p>
+    <label
+      for=":r6:-filter"
+    >
+      Show analysis records
+    </label>
+    <select
+      id=":r6:-filter"
+    >
+      <option
+        value="all"
+      >
+        All records
+      </option>
+      <option
+        value="active"
+      >
+        Active
+      </option>
+      <option
+        value="archived"
+      >
+        Archived
+      </option>
+    </select>
+    <button>
+      Load or refresh history
+    </button>
+    <div>
+      <p>
+        Shared retention: 0/20 active, 1/80 archived. This conversation: 1 records.
+      </p>
+      <ul>
+        <li>
+          <p>
+            local / selected-model · COMPLETED · Archived
+            <br />
+            <time
+              datetime="1970-01-01T00:00:00.001Z"
+            >
+              1/1/1970, 12:00:00 AM
+            </time>
+            <br />
+            11111111-1111-1111-1111-111111111111
+          </p>
+          <button>
+            Inspect original request and result
+          </button>
+          <button>
+            Preview local record export
+          </button>
+          <button
+            disabled=""
+          >
+            Preview archive
+          </button>
+        </li>
+      </ul>
+      <p>
+        Page 1
+      </p>
+      <button
+        disabled=""
+      >
+        Previous analyses
+      </button>
+      <button
+        disabled=""
+      >
+        Next analyses
+      </button>
+      <label
+        for=":r6:-active"
+      >
+        Active record limit (1–20)
+      </label>
+      <input
+        id=":r6:-active"
+        max="20"
+        min="1"
+        type="number"
+        value="20"
+      />
+      <label
+        for=":r6:-archive"
+      >
+        Archive record limit (0–80)
+      </label>
+      <input
+        id=":r6:-archive"
+        max="80"
+        min="0"
+        type="number"
+        value="80"
+      />
+      <button>
+        Preview retention budget
+      </button>
+    </div>
+    <div>
+      <p>
+        Save this selected record to the local path below. The JSON includes the full original request, result and exact local file bytes, which may contain private text. No model request or draft is added.
+      </p>
+      <pre
+        style="white-space: pre-wrap;"
+      >
+        {
+  "path": "D:/isolated-home/nidofy-extras/analysis-exports-v1/selected.json",
+  "bytes": 123,
+  "format": "side-analysis-export-v1",
+  "exactLocalFiles": true
+}
+      </pre>
+      <details>
+        <summary>
+          Inspect complete private request record
+        </summary>
+        <pre
+          style="white-space: pre-wrap;"
+        >
+          {
+  "exactInput": "Selected question",
+  "tools": false
+}
+        </pre>
+      </details>
+      <button>
+        Export this exact record
+      </button>
+      <button>
+        Dismiss export preview
+      </button>
+    </div>
+  </details>
+</DocumentFragment>
+`;

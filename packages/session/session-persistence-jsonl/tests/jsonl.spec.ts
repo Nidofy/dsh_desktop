@@ -1121,7 +1121,7 @@ describe('JsonlSessionPersistence: immutable format generations', () => {
     expect(await readFile(currentPath, 'utf8')).toContain(`"version":${SESSION_FORMAT_VERSION}`)
   })
 
-  it('finishes publication before rejecting a write open cancelled during publication', async () => {
+  it('drains a write open cancelled before publication and permits a later explicit open', async () => {
     const header = meta('released-v0-publication-cancellation', '/work')
     const sourcePath = historicalLogPath(root, header.cwd, header.id)
     const currentPath = rawLogPath(root, header.cwd, header.id)
@@ -1134,9 +1134,13 @@ describe('JsonlSessionPersistence: immutable format generations', () => {
 
     await expect(ctx.sessionPersistence.open(header.id, 'write', { signal: controller.signal }))
       .rejects.toBe(reason)
-    expect(await readFile(currentPath, 'utf8')).toContain(`"version":${SESSION_FORMAT_VERSION}`)
+    await expect(readFile(currentPath)).rejects.toMatchObject({ code: 'ENOENT' })
+    const retained = await readdir(dirname(sourcePath))
+    expect(retained).toContain('session.jsonl')
+    expect(retained.filter(name => name.startsWith('session.migration.'))).toEqual([])
     const writer = await ctx.sessionPersistence.open(header.id, 'write')
     await writer.close()
+    expect(await readFile(currentPath, 'utf8')).toContain(`"version":${SESSION_FORMAT_VERSION}`)
   })
 
   it('treats a historical generation as an existing id at create', async () => {

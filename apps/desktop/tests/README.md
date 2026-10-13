@@ -1,8 +1,10 @@
-# Desktop local update verification
+# Desktop local verification
 
 English | [中文](README.zh.md)
 
 ## Summary
+
+The Companion source fixture uses production Client Loader/Frame/Conversation/Workspace composition with isolated Remote and preload adapters. It covers independent window identities, a non-first retained reference, late results during navigation, permission changes, reconnect, attention release, narrow draft/actual attachments, shared Modal IME/focus and single character disposal. The Main transient navigation owner refuses other actual windows and old revisions. The complete built profile adds authenticated Host epoch, restart replacement, scoped notices and read-only Notebook checks without additional model calls or notice mutation. The current Windows development carrier separately covers production Main/preload, authenticated page requests, delayed hidden-window cancellation, primary/workbench cross-sender refusal, real Notebook Host/Client hot lifecycle, drafts/attachments/caret, synthetic composition guards, locales, themes and zoom. The supported native combination is the primary Conversation window and auxiliary workbench. A second complete root is refused before and after reload; same-origin child streams and auxiliary bootstrap are refused. Primary reload invalidates the old scope and restores its stream. Physical OS IME and installed qualification remain open.
 
 Local download and mandatory-dialog evidence is separate from production backend integration, visual acceptance, and installed-application upgrades. Run the command in the [Desktop README](../README.md) to produce a fresh isolated report.
 
@@ -10,10 +12,41 @@ Installed qualification can opt into `DSH_DESKTOP_UPDATE_JOURNAL_DIR`, an absolu
 
 ## Table of Contents
 
+- [Companion carrier](#verification-companion)
+- [Self-test carrier](#verification-selftest)
+- [Receipt comparison profile](#verification-experiments)
+- [Single task request profile](#verification-task-request)
+- [Isolated engineering profile](#verification-engineering-task)
 - [Native overlay visibility](#verification-overlay)
 - [Evidence](#verification-evidence)
 - [Manual walkthrough](#verification-interactive)
 - [Open verification](#verification-open)
+
+<a id="verification-companion"></a>
+
+## Companion carrier
+
+After building the current Desktop, desktop-extras Host and both Nidofy Client bundles, run the existing local Electron binary through the built e2e entry. The fixture creates private appData, Chromium state, Harness data and workspace directories and retains its result and stable PNGs under `.build/dispatch/evidence/relay-15/carrier-*`. It projects installed packages individually to preserve Windows module resolution, never invokes the Electron npm entry’s implicit downloader, and uses no billed provider. Test-only sources use the official Session writer and actual Workspace attachment. Project association, unlinked-source refusal, original preview, explicit draft insertion and association removal run through the assembled Panel and Host owners.
+
+The same carrier reads generation-bound facts and real committed notes, creates a user correction through the authenticated Notebook API, and exercises Hint ignore, explicit snooze, exact-project mute/unmute, renderer-reload recovery and visible return-offer deduplication. English and Chinese screenshots retain the actual source labels. Source tests separately cover stale/unknown real Shell receipts, independent acceptance, cold preference owners, corruption/future-version refusal, concurrent CAS, same-scope late reads and bilingual expected output. These are development-carrier and owner-local evidence; they do not qualify a Host process restart, OS notification delivery, top-level recorded-session replay or installation.
+
+```powershell
+node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/companion-carrier.built.e2e.ts --retry=0
+```
+
+<a id="verification-selftest"></a>
+
+## Self-test carrier
+
+Build the current Desktop Main/preload and Host, and retain built Web/Client assets, the native protection helper and the existing Windows Electron binary. The [self-test fixture](fixtures/selftest-carrier.mjs) launches production Main with private TEMP appData, Chromium storage, Harness data and copied standalone Node resources. It uses the official base/Web/Nidofy profile, disables model/title/rule plugins, selects the existing system PowerShell through its declared configuration and directs first-use Documents initialization to a synthetic file that the actual owner refuses. This prevents default Workspace/Agent creation without changing shipped defaults. No user credentials, user Skills or OS protocol registration are used. Results, PNGs, native downloads and private-root locators remain under `.build/dispatch/evidence/relay-20/`; temporary roots and inputs are retained.
+
+The local scenario follows Personal extensions into the real auxiliary self-test window, observes sandboxed preload isolation and refused Conversation bootstrap, reads capacity in both languages, explicitly starts one local run, reloads its report without replay and saves real JSON/Markdown downloads through Electron's `will-download`. The connection scenario previews exact route/publication and independent HTTP revisions with no sends, requires unchecked consent, discards it after a budget change, then sends five fixed 64-token requests to its own synthetic loopback SSE server. It cancels a sixth started stream and waits for drain, preserves CANCELLED and its independent warning, reloads without resending and cold-reconstructs all six complete private inputs through the official JSONL reader. Report bytes remain unchanged. Both scenarios observe zero Agents; only the connection scenario sends requests, with zero billed providers. Test teardown requests production quit and drains its private process subtree.
+
+```powershell
+node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/selftest-carrier.built.e2e.ts apps/desktop/tests/selftest-provider-carrier.built.e2e.ts --retry=0
+```
+
+This qualifies the current Windows development renderer and these authenticated interactions. It does not qualify an installed resource inventory, installer, physical multi-display/sleep/window recovery, real provider cache hits, top-level recorded-session replay or gateway. The runner's renderer/resource rows remain UNKNOWN because this external fixture result is not per-run product evidence. An observed ACL refusal or command exit without independent output remains a failure, never a sandbox-mode override.
 
 <a id="verification-overlay"></a>
 
@@ -39,6 +72,10 @@ With Host, client, and Desktop artifacts built, run `node --import tsx apps/desk
 <a id="verification-evidence"></a>
 
 ## Evidence
+
+On Windows, build the Host and locked native protection helper, then run `node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/connections-profile.built.e2e.ts`. The [full profile fixture](fixtures/connection-full-profile.mjs) starts the current built Desktop Host entry with official base/Web/Nidofy layers, a private TEMP data root/home, real Office resources, synthetic keys and local HTTP/HTTPS services. It records keyless and successful Agent sessions, repairs connections through the actual authenticated English/Chinese page script, verifies proxy edits across a Host restart, rejects an untrusted TLS issuer and completes a real Agent request after a child launch with `NODE_EXTRA_CA_CERTS`. The fixture also checks ready/fatal, graceful acknowledgement and listener closure. It retains evidence under `.build/dispatch/evidence/full-desktop-profile/`; fixture credentials and dependency projections are removed after child teardown. This qualifies the Node-mode Host, local TLS, resource registration and jsdom page replay; Electron renderer/preload and page network, Office conversion, corporate gateways and installation remain unqualified.
+
+The authenticated storage-page replay separates cached ledger totals from reconciled measurement, explicit recovery and unknown operation inspection. The full Node-mode fixture executes an authenticated bounded legacy import, reads its committed category report, adopts in place and cold-reads the actual old Session with a second Host sharing the original root ledger. It prepares later launch parameters without switching the first Host, and imports a separate synthetic plan manifest as paused with no official task creation. Source page regressions separately exercise current snapshot selection, default unchecked restoration, late preview discard, archive confirmation and unknown-result retention; real Windows native tests exercise capture/seal/export/verify/import and selected-file restoration. Source migration regressions check independent confirmations, safe category/namespace rendering and stale-preview rejection. Native tests keep an adopted Desktop runtime file exclusively open while managed reconciliation succeeds. The full profile also runs real Node tests with --test-isolation=none through the authenticated Workbench/Shell/native protection path and commits a retained verification receipt with explicit Node TAP parsing, changed-input STALE and independent acceptance. It checks authenticated durable notice identity, one system claim, unknown display settlement and raw-durable Session terminal references. Installed OS display is not exercised. This qualifies the Windows sandbox's reported partial enforcement for that command, not nested process spawning or full runtime preparation. The fixture records its isolated data root beside retained evidence. Cleanup only lists read-only candidates. The TLS PEM and server key under `fixtures/connection-test-*` are disposable test identities, valid to October 2036; they are never production credentials or trusted in the system certificate store.
 
 The local command builds Desktop and executes Electron 44 with the actual HTTP updater, policy client, sandboxed preload, and mandatory renderer. It records each scenario and preserves its report under `.desktop-build/qualification/local-updater-*`. The installer call, external browser, and clipboard are observation substitutes; downloaded bytes are not an executable installer.
 
@@ -70,6 +107,38 @@ The [Windows signature runner](../scripts/test-windows-update-signature.mjs) use
 The [signed-download runner](../scripts/test-signed-updates.mjs) connects real Electron HTTP, `NsisUpdater`, Windows Authenticode, and the built coordinator. Four scenarios pass: valid-hash wrong-publisher rejection, valid-hash unsigned rejection, corrupt-transfer rejection before signature verification, and explicit retry to signed readiness with separate installation handoff. Rejected executable caches are empty, automatic checks issue no retry request, prepared downloads are retained, and original inputs keep their SHA-512. The synthetic feed and test application adapter do not establish installed-version compatibility; no installer or Host starts.
 
 With an old installer and both original blockmaps, the same runner additionally verifies single-range and multipart-range reconstruction, missing-old-blockmap fallback, and rejected-range fallback. Reconstructed executables pass SHA-512 and Authenticode checks. Request records distinguish differential payload bytes from full downloads; a full fallback cannot satisfy a differential-success assertion. These loopback results do not certify CDN Range support or an installed application's cache.
+
+<a id="verification-experiments"></a>
+
+## Receipt comparison profile
+
+The [built fixture](fixtures/experiments-full-profile.mjs) launches the existing supported Desktop Host with the complete base/Web/Nidofy profile and a fresh private TEMP home. It copies the current Node executable, selects existing system PowerShell and runs two locally trusted synthetic TAP actions in an independent project through production protection/Shell/T11/native quota. Authenticated bilingual page reads, cookie/origin refusals including the model-step endpoint, explicit experiment/case/run selections, missing model counts, independent acceptance, immutable archiving, changed-source import refusal and cold restart without replay are asserted. Desktop-origin model-step reads stay unknown and caller-supplied counters refuse. Both Host lifetimes observe zero model sends and zero Agents. Current roots, records, receipts and logs are retained under `.build/dispatch/evidence/relay-22/full-profile/`; earlier Relay21 evidence is preserved. Renderer interaction, task A/B sending/matrix, installed qualification and complete model-input association remain unverified. [Comparison semantics](../../desktop-host/src/experiments/README.md) belong to the owner.
+
+```sh
+node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/experiments-profile.built.e2e.ts --retry=0
+```
+
+<a id="verification-engineering-task"></a>
+
+## Isolated engineering profile
+
+The [engineering fixture](fixtures/experiments-engineering-profile.mjs) launches the complete supported Node-mode Host with actual Agent/protected Shell/T11/native quota and private copied inputs. It checks full official inputs, causal receipts, Notebook/cache captures, sequential matrices, cancellation, cold original bytes, report validation and no retries. Independent resource scenarios refuse before dispatch for logical/physical Session budgets, preserve an executed TAP receipt and oversized copied output, refuse aggregate capacity before allocating a copy, and read absent historical sidecars without granting new admission. Forged peak claims refuse. A [test-only persistence observer](fixtures/experiments-session-resource-observer.mjs) confirms one actual durable observation and generation guard per completed or interrupted journal read, zero decoding for excessive physical files, one official decode before compressed logical-size refusal, and resource validation without a request cut followed by rejection of an appended durable watermark. Original sidecar bytes remain unchanged. The current Relay27 invocation observes twenty local synthetic HTTP calls, twenty-three official stream entries, fifteen actual Agents, nine protected actions, seven completed engineering turns and one completed matrix, with zero billed calls. Its three resource-refusal scenarios are included; two extra oversized Sessions and one empty/append Session are isolated synthetic persistence inputs, not Agent or completed-task counts. Overlapping calls and the earlier compression-fixture failure remain separate. Evidence belongs to `.build/dispatch/evidence/relay-27/`; old roots remain retained. [Resource semantics](../../desktop-host/src/experiments/README.md#isolated-engineering-task) distinguish physical length, logical snapshots and unqualified peaks. The separate [deadline fixture](fixtures/experiments-engineering-timeout.mjs) retains its earlier real 180-second qualification; this work does not rerun or upgrade that clock or the original analysis clock.
+
+```sh
+node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/experiments-engineering-profile.built.e2e.ts --retry=0
+```
+
+The [engineering renderer fixture](fixtures/experiments-engineering-carrier.mjs) uses the retained physical Electron binary, production Main/sandboxed preload and complete isolated profile. Actual English/Chinese previews expose full resource limits and revoke edited previews with zero sends. Explicit confirmation completes one Agent/TAP task; the resource table separates drained lengths, null peaks and missing sides. Complete private input/log panes scroll without omitting bytes. Two explicitly confirmed rows then complete a sequential matrix, and selecting its original JSON file validates the retained report without replay. Future-version and altered-source report files refuse without replay. A synthetic lost response after a committed start retains its identity through renderer reload with no automatic read or restart; explicit cancellation drains it. Matrix cancellation retains its single drained round and never sends the next row. Reload reads of completed work require an explicit original identity; auxiliary closure preserves journals and creates no more work. This independent renderer invocation observes eight local synthetic HTTP/stream entries, five Agents, three protected TAP actions and one completed matrix, with zero billed calls. Its PNGs, requests and original results are retained under `.build/dispatch/evidence/relay-26/renderer/`. Installed qualification, hostile replacement, general model quality and complete disk/memory peaks remain unknown.
+
+<a id="verification-task-request"></a>
+
+## Single task request profile
+
+The [task-only fixture](fixtures/experiments-task-profile.mjs) uses the same complete supported profile, fresh private home and native quota. It checks bilingual controls and cookie/origin rejection for all four task operations, prepares without sending and confirms one no-tool request from a complete official input cut. Its local synthetic SSE server independently observes four requests: completed, cancelled, failed and interrupted by Host process loss. Cancellation drains; failures do not retry or fail over. A cold Host reads unchanged completed bytes and an interrupted prepared cut without claiming a dispatch count or resending. The fixture also uses the actual Notebook owner, product cache hook and official finish metadata to check complete note capture, the Session routing key and provider response identifier; cold restart preserves both independent sidecars byte-for-byte. Current roots and wire inputs remain under `.build/dispatch/evidence/relay-24/full-profile/`; original Relay23 evidence is unchanged. No Agent, project action or billed provider is used. This Node-mode Host evidence does not qualify the renderer, exact model version, factor matrix, T11 task association or installation.
+
+```sh
+node node_modules/vitest/vitest.mjs run --config vitest.e2e.config.ts apps/desktop/tests/experiments-task-profile.built.e2e.ts --retry=0
+```
 
 <a id="verification-open"></a>
 

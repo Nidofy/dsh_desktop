@@ -32,6 +32,8 @@ Mount this service in a profile application with Loader and `profileContext`. It
 
 Use [settings](../../settings/settings/README.md) for forms restricted to live fields. Callers that edit complete configuration can use `ctx.configEditor.edit()`; ordinary fields retain Loader’s normal lifecycle.
 
+`registerValidator` lets an application prepare authorization for a detached complete candidate and return a final check before atomic publication. Any preparation or final-check rejection leaves the patch unchanged. Entry replacement during the await also refuses. The registering application owns the returned disposer through its effects.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 

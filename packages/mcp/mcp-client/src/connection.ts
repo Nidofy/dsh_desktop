@@ -17,6 +17,7 @@
 
 import { Client, type Transport } from '@modelcontextprotocol/client'
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-http-proxy'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ServerContext } from './server-context.ts'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
@@ -125,6 +126,7 @@ export interface ConnectionHandle extends ServerContext {
  * @returns Handle with a `ready` promise for startup-await and a `dispose` for teardown.
  */
 export function startConnection(ctx: Context, config: Config, policy: ResolvedReconnectPolicy): ConnectionHandle {
+  const outboundHttp = ctx.get('outboundHttp')
   const label = `mcp-client(${config.serverName})`
   const incompleteDisposalMessage = `${label}: transport closure could not be confirmed during disposal — server shutdown may be incomplete`
   const opts: ToolBridgeOptions = {
@@ -304,7 +306,9 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     }
     let instructions: string
     try {
-      transport = createTransport(config)
+      const http = config.transport === 'streamable-http' ? await outboundHttp?.prepare(config.url) : undefined
+      if (!isCurrent(generation)) return
+      transport = createTransport(config, http?.fetchFor())
       await generation.connect(transport)
       if (hasClosed()) {
         attemptSettled = true

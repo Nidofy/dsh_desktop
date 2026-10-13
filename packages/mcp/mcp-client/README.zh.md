@@ -94,6 +94,8 @@ kind: "package-reference"
 
 -----
 
+可选 `outboundHttp` 应用 provider 在首次连接和每次重连前授权 Streamable HTTP。协商及后续 POST、GET、DELETE 请求共用其绑定 origin 的 fetch，每次发送复验捕获的策略。无作用域连接流量不能绕过更窄的 Workspace 限制。Stdio 仍是需要独立网络管控的子进程。参见 [Desktop 策略参考](../../../apps/desktop-host/src/connections/README.zh.md)。
+
 <a id="understand-the-implementation"></a>
 ## 理解实现
 

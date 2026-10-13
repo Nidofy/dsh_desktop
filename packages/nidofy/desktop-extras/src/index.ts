@@ -10,17 +10,19 @@ import type {} from '@deepseek-ai/dsh-attachment'
 import type {} from '@deepseek-ai/dsh-fs'
 import type {} from '@deepseek-ai/dsh-schedule'
 import { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { Capture, observeStream } from './legacy/diagnostic-capture.mjs'
 import { compareReports, normalizeReport } from './legacy/diagnostic-comparison.mjs'
 import { MeasurementStore } from './legacy/diagnostic-store.mjs'
 import { ToolTelemetry } from './legacy/diagnostic-tools.mjs'
-import { desktopCacheKeyOptions } from './legacy/desktop-cache-key.mjs'
+import { prepareDesktopCachePayload, DesktopCacheInputService } from './cache.ts'
 import { packageCommand } from './legacy/pet-packages.mjs'
 import { PreferenceStore, object, text, readJson, migrateBudget } from './state.ts'
 import { Probe } from './probe.ts'
 import { installPetFeed } from './pets.ts'
+import { PetCoordination } from './pet-coordination.ts'
 import { extrasHtml } from './ui.ts'
 import { ScheduleImport } from './schedules.ts'
 export type {} from './connection-contract.ts'
@@ -45,14 +47,31 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   const assetSource = fileURLToPath(new URL('../assets/', import.meta.url))
   // Resource identity checks require real files: ASAR stat uses synthetic inode numbers.
   const assets = process.versions.electron === undefined ? assetSource : assetSource.replace(/([\\/])app\.asar([\\/])/, '$1app.asar.unpacked$2')
-  const preferences = new PreferenceStore(home)
+  const storage = ctx.get('nidofyStorage')
+  const preferences = new PreferenceStore(home, storage)
   await preferences.open()
+  const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
   const key = randomBytes(32), capture = new Capture({ key, maxRecords: config.maxRecords, maxBytes: config.maxBytes,
-    configuration: { dshVersion: '0.2.0-rc.2', nodeVersion: process.version, fingerprintKey: 'process-local' } })
-  const telemetry = new ToolTelemetry(capture), archive = new MeasurementStore(home)
+    configuration: { extensionVersion: manifest.version, nodeVersion: process.version, fingerprintKey: 'process-local' } })
+  const telemetry = new ToolTelemetry(capture), archive = new MeasurementStore(home, storage ? { storage } : {})
   const probe = new Probe(ctx, home), schedules = new ScheduleImport(ctx, home)
   const status: Record<string, string> = {}, running = new Map<string, Awaited<ReturnType<Context['plugin']>>>()
+  new DesktopCacheInputService(ctx, () => {
+    ctx.fiber.assertActive()
+    if (preferences.warning) throw Error('EXPERIMENT_CACHE_INPUT_UNAVAILABLE')
+    return { preferenceRevision: preferences.value.revision, enabled: preferences.value.cache,
+      mounted: running.has('cache'), policy: preferences.value.cachePolicy }
+  })
   let petFeed: ReturnType<typeof installPetFeed> | undefined
+  const coordination = new PetCoordination(() => ({ enabled: preferences.value.pets && petFeed !== undefined,
+    revision: preferences.value.revision, generation: petFeed?.snapshot().generation ?? 'disabled' }),
+  async (sessionId, signal) => { if (!petFeed) throw Error('PET_COMMAND_UNAVAILABLE'); await petFeed.ensure(sessionId, signal) },
+  (command) => {
+    if (![preferences.value.pet, ...preferences.value.companions].some(pet => pet.id === command.target && pet.enabled)) throw Error('PET_INSTANCE_MISSING')
+    return routes('pet/update', { id: command.target,
+      action: { bind: 'pin', unbind: 'unpin', mute: 'mute', unmute: 'unmute', interact: 'interact' }[command.action],
+      target: { sessionId: command.sessionId, generation: command.generation } })
+  })
   const lifetime = new AbortController()
   let visionLifetime = new AbortController()
   const visionJobs = new Set<Promise<{ text: string }>>()
@@ -76,10 +95,8 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
               child.on('session/event', (session, event) => { try { telemetry.event(session, event) } catch { capture.failures++ } })
             }
             if (feature === 'cache') child.on('llm-pi-ai/prepare-payload', (scope) => {
-              const policy = structuredClone(preferences.value.cachePolicy)
-              return desktopCacheKeyOptions({ ...scope, desktopCacheKey: policy }, { id: scope.model },
-                scope.sessionId === undefined ? {} : { sessionId: scope.sessionId },
-                { managedProvider: scope.provider, home, key }).onPayload
+              return prepareDesktopCachePayload(scope, preferences.value.cachePolicy,
+                { home, key, preferenceRevision: preferences.value.revision })
             })
             if (feature === 'pets') petFeed = installPetFeed(child)
             if (feature === 'vision') {
@@ -90,7 +107,8 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
                 parameters: { file_path: { type: 'string', required: true }, question: { type: 'string', required: true } },
                 output: { schema: { type: 'object', additionalProperties: true },
                   render: (_args, value) => [{ type: 'text', text: typeof value.text === 'string' ? value.text : '' }] },
-                execute: (args, exec) => vision(args.file_path, args.question, exec.signal, exec.agent?.session.header.cwd) })))
+                execute: (args, exec) => vision(args.file_path, args.question, exec.signal,
+                  exec.agent?.session.header.cwd, exec.agent?.session.id) })))
             }
           } })
           running.set(feature, child); status[feature] = 'ENABLED'
@@ -100,13 +118,14 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     reconcileQueue = work
     return work
   }
-  function vision(path: string, question: string, signal: AbortSignal, cwd?: string): Promise<{ text: string }> {
-    const work = runVision(path, question, signal, cwd)
+  function vision(path: string, question: string, signal: AbortSignal, cwd?: string, sessionId?: SessionId): Promise<{ text: string }> {
+    const work = runVision(path, question, signal, cwd, sessionId)
     visionJobs.add(work)
     void work.finally(() => { visionJobs.delete(work) }).catch(() => {})
     return work
   }
-  async function runVision(path: string, question: string, signal: AbortSignal, cwd?: string): Promise<{ text: string }> {
+  async function runVision(path: string, question: string, signal: AbortSignal,
+    cwd?: string, sessionId?: SessionId): Promise<{ text: string }> {
     if (!preferences.value.vision) throw Error('VISION_DISABLED')
     const route = structuredClone(preferences.value.visionRoute)
     if (!route.provider || !route.model) throw Error('VISION_ROUTE_REQUIRED')
@@ -125,8 +144,9 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       if (!mediaType) throw Error('IMAGE_FORMAT_UNSUPPORTED')
       const attachment = await ctx.attachments.saveImage({ data, mediaType, name: basename(path) })
       let result = '', completed = false
-      for await (const chunk of call.stream({ ...call.config, signal: combined, messages: [{ id: MessageId(`vision-${Date.now()}`), role: 'user',
-        source: { kind: 'user' }, content: [{ type: 'text', text: text(question, 8192) }, { type: 'image', attachment }] }] })) {
+      for await (const chunk of call.stream({ ...call.config, signal: combined,
+        ...sessionId === undefined ? {} : { sessionId }, messages: [{ id: MessageId(`vision-${Date.now()}`), role: 'user',
+          source: { kind: 'user' }, content: [{ type: 'text', text: text(question, 8192) }, { type: 'image', attachment }] }] })) {
         if (chunk.type === 'text-delta') result += chunk.text
         if (result.length > 100000) throw Error('VISION_RESULT_TOO_LARGE')
         if (chunk.type === 'finish') completed = chunk.reason.kind === 'stop'
@@ -145,7 +165,8 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     }) : []
     return { ...value, records: safe(value.records), tools: safe(value.tools) }
   }
-  async function routes(method: string, input: Record<string, unknown>): Promise<unknown> {
+  async function routes(method: string, input: Record<string, unknown>, signal = lifetime.signal): Promise<unknown> {
+    if (method === 'pet/coordinate') return coordination.execute(input, signal)
     if (method === 'status') return { preferences: preferences.value, warning: preferences.warning, features: status, upstream: '0.2.0-rc.2', probe: probe.current ?? null,
       capabilities: { schedule: ctx.get('schedule') !== undefined, theme: 'official-ui-theme', fingerprintKey: 'process-local' } }
     if (method === 'preferences') { const saved = await preferences.save(input); await reconcile(); return saved }
@@ -167,14 +188,11 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     }
     if (method === 'cache/migrate') return migrateBudget(input)
     if (method === 'vision') { if (input.accepted !== true) throw Error('VISION_CONFIRMATION_REQUIRED'); return vision(text(input.path, 4096), text(input.question, 8192), lifetime.signal) }
-    if (method === 'selftest') return { kind: 'local-only', networkRequests: 0, checks: [
-      { name: 'official-llm', status: ctx.get('llm') ? 'PASS' : 'FAIL' }, { name: 'image-storage', status: ctx.get('attachments') ? 'PASS' : 'FAIL' },
-      { name: 'preferences', status: preferences.warning ? 'FAIL' : 'PASS' }, { name: 'optional-features', status: Object.values(status).includes('UNAVAILABLE') ? 'FAIL' : 'PASS' },
-      { name: 'provider-and-cache', status: 'NOT_RUN', action: 'cache/start requires explicit request budget' },
-      { name: 'vision-provider', status: 'NOT_RUN', action: 'vision requires selected image and confirmation' }] }
+    if (method === 'selftest') throw Error('SELFTEST_USE_FORMAL_RUNNER')
     if (method === 'pet/snapshot' || method === 'pet/update') {
       const selected = [preferences.value.pet, ...preferences.value.companions].find(p => p.id === (input.id ?? '1'))
       if (!selected) throw Error('PET_INSTANCE_MISSING')
+      if (method === 'pet/snapshot' && selected.pinned && petFeed) await petFeed.ensure(selected.pinned, signal)
       if (method === 'pet/update') {
         const next = structuredClone(preferences.value), target = [next.pet, ...next.companions].find(p => p.id === selected.id)
         if (!target) throw Error('PET_INSTANCE_MISSING')
@@ -182,6 +200,8 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         else if (input.action === 'interact') { if (target.moodEnabled && Date.now() - target.lastInteractionMs >= 60000) { target.lastInteractionMs = Date.now(); target.affinity = Math.min(100, target.affinity + 1) } }
         else if (input.action === 'hide') target.enabled = false
         else if (input.action === 'unpin') target.pinned = null
+        else if (input.action === 'mute') target.quiet = true
+        else if (input.action === 'unmute') target.quiet = false
         else if (input.action === 'pin') {
           const current = petFeed?.snapshot(), requested = object(input.target)
           if (requested.generation !== current?.generation || !current?.items.some(row => row.sessionId === requested.sessionId)) throw Error('PET_TARGET_CHANGED')
@@ -196,6 +216,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       const action = method === 'pet/resource' ? 'asset' : text(input.action)
       if (!['list', 'preview', 'import', 'delete', 'asset', 'export'].includes(action)) throw Error('RESOURCE_ACTION_INVALID')
       const operation = resourceQueue.catch(() => {}).then(() => packageCommand({ home, resources: assets, action,
+        ...(storage ? { storage } : {}),
         resourceId: method === 'pet/resource' ? ([preferences.value.pet, ...preferences.value.companions].find(p => p.id === (input.id ?? '1'))?.resource ?? 'xiaojing') : text(input.resourceId ?? 'xiaojing'),
         ...(input.source === undefined ? {} : { source: text(input.source, 4096) }),
         ...(input.expected === undefined ? {} : { expected: text(input.expected) }),
@@ -222,7 +243,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         if (isAbsolute(rel) || rel.startsWith('..')) throw Error('ASSET_PATH_REFUSED')
         const stat = await lstat(path)
         if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 32 * 1024 * 1024) throw Error('ASSET_REFUSED')
-        response.setHeader('content-type', ({ '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.json': 'application/json' } as Record<string, string>)[extname(path)] ?? 'application/octet-stream')
+        response.setHeader('content-type', ({ '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.json': 'application/json' } as Record<string, string>)[extname(path)] ?? 'application/octet-stream')
         response.end(await readFile(path)); return
       }
       if (request.method !== 'POST') { response.writeHead(405); response.end('{}'); return }
@@ -235,7 +256,12 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
         if (bytes > 2 * 1024 * 1024) throw Error('REQUEST_TOO_LARGE')
         chunks.push(buffer)
       }
-      const result = await routes(url.pathname.slice('/api/nidofy-extras/'.length), object(JSON.parse(Buffer.concat(chunks).toString()) as unknown))
+      const requestLifetime = new AbortController(), disconnect = (): void => { requestLifetime.abort() }
+      response.once('close', disconnect)
+      let result: unknown
+      try { result = await routes(url.pathname.slice('/api/nidofy-extras/'.length), object(JSON.parse(Buffer.concat(chunks).toString()) as unknown),
+        AbortSignal.any([requestLifetime.signal, lifetime.signal])) }
+      finally { response.removeListener('close', disconnect) }
       response.setHeader('content-type', 'application/json'); response.end(JSON.stringify(result))
     } catch (e) {
       const message = e instanceof Error ? e.message : ''
@@ -245,6 +271,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   })
   ctx.effect(() => async () => {
     lifetime.abort()
+    await coordination.close()
     await probe.close()
     await reconcileQueue.catch(() => {})
     await schedules.close()

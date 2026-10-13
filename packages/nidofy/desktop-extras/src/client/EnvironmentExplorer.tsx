@@ -1,27 +1,33 @@
+import { IconEllipsisOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconCloseOutlineRegular, IconRightUpOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 /** Inline environment inspection and explicit preview/apply actions using the existing workbench owner. */
 import { useEffect, useRef, useState } from 'react'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import { Icon } from './EnvironmentIcon.tsx'
 import type { EnvironmentInfo } from './Environment.tsx'
+import type { CompanionAction, CompanionScope } from './companion.ts'
+import type { EnvironmentInjected } from './index.ts'
 
 type View = 'changes' | 'local' | 'branch' | 'connections'
 type Action = 'commit' | 'push' | 'create' | 'switch'
 interface Change { path: string; status: string }
-interface Preview { token: string; description: string; workspace: string; branch: string | null; expires: number }
-/** Authenticated same-origin calls retain the Host's repository validation and preview tickets. */
-async function request<T>(method: string, input: object, signal?: AbortSignal): Promise<T> {
-  const response = await fetch('/api/nidofy/workbench/' + method, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input), signal: signal ?? AbortSignal.timeout(60000) })
-  const value = await response.json() as T & { error?: string }
-  if (!response.ok) throw Error(value.error ?? 'WORKBENCH_UNAVAILABLE')
-  return value
-}
+interface Preview { token: string; description: string; workspace: string; branch: string | null; permission: 'deployment-default' | 'danger-full-access'; expires: number }
 /** Card details never launch another window until the user selects the explicit full-workbench link. */
-export function EnvironmentExplorer({ info, t, launch, refresh }: PropsLocale<'nidofy.environment'> & {
+export function EnvironmentExplorer({ info, scope, workbench, t, launch, refresh }: PropsLocale<'nidofy.environment'> & {
   info: EnvironmentInfo
-  launch: (target: string) => void
+  scope: CompanionScope
+  workbench: EnvironmentInjected['workbench']
+  launch: (target: CompanionAction) => void
   refresh: () => void
 }) {
   const root = useRef<HTMLDivElement>(null), more = useRef<HTMLButtonElement>(null)
+  const lifetime = useRef(new AbortController())
+  useEffect(() => {
+    const controller = new AbortController()
+    lifetime.current = controller
+    return () => { controller.abort() }
+  }, [])
+  const request = async <T,>(method: Parameters<EnvironmentInjected['workbench']>[1], input: object, signal?: AbortSignal): Promise<T> =>
+    await workbench(scope, method, input, AbortSignal.any([lifetime.current.signal, ...signal ? [signal] : []])) as T
   const [view, setView] = useState<View | null>(null), [menu, setMenu] = useState(false)
   const [action, setAction] = useState<Action | null>(null), [branch, setBranch] = useState(''), [message, setMessage] = useState('')
   const [remote, setRemote] = useState(''), [preview, setPreview] = useState<Preview | null>(null)
@@ -81,15 +87,15 @@ export function EnvironmentExplorer({ info, t, launch, refresh }: PropsLocale<'n
   }
   const canGit = info.vcs === 'git' && info.canWrite === true
   return <div className="nidofy-explorer" ref={root} onKeyDown={(event) => {
-    if (event.key === 'Escape' && !busy) { setMenu(false); setView(null); setAction(null); setPreview(null); more.current?.focus() }
+    if (event.key === 'Escape' && !event.nativeEvent.isComposing && !busy) { setMenu(false); setView(null); setAction(null); setPreview(null); more.current?.focus() }
   }}>
-    <div className="nidofy-change-row"><button className="nidofy-row" aria-expanded={view === 'changes'} disabled={busy} onClick={() => { select('changes') }}><Icon kind="changes" /><span>{t('changes')}</span>{info.diff && <small><b className="nidofy-added">+{info.diff.added}</b> <b className="nidofy-deleted">−{info.diff.deleted}</b></small>}</button><button ref={more} className="nidofy-more" aria-label={t('repositoryActions')} aria-expanded={menu} disabled={busy} onClick={() => { setMenu(!menu) }}>•••</button></div>
+    <div className="nidofy-change-row"><button className="nidofy-row" aria-expanded={view === 'changes'} disabled={busy} onClick={() => { select('changes') }}><Icon kind="changes" /><span>{t('changes')}</span>{info.diff && <small><b className="nidofy-added">+{info.diff.added}</b> <b className="nidofy-deleted">−{info.diff.deleted}</b></small>}</button><button ref={more} className="nidofy-more" aria-label={t('repositoryActions')} aria-expanded={menu} disabled={busy} onClick={() => { setMenu(!menu) }}><IconEllipsisOutlineRegular size={16} /></button></div>
     {menu && <nav className="nidofy-action-menu" aria-label={t('repositoryActions')}>{(['commit', 'push', 'create', 'switch'] as const).map(item => <button key={item} disabled={!canGit} onClick={() => { operate(item) }}>{t(item)}</button>)}</nav>}
     <button className="nidofy-row" aria-expanded={view === 'local'} disabled={busy} onClick={() => { select('local') }}><Icon kind="local" /><span>{t('local')}</span><small>{info.vcs && info.vcs !== 'none' ? info.vcs : ''}</small></button>
-    <button className="nidofy-row" aria-expanded={view === 'branch'} disabled={busy} onClick={() => { select('branch') }}><Icon kind="branch" /><span>{info.vcs === 'none' ? t('noRepository') : info.branch ?? t('branch')}</span><span aria-hidden="true">{view === 'branch' ? '⌄' : '›'}</span></button>
+    <button className="nidofy-row" aria-expanded={view === 'branch'} disabled={busy} onClick={() => { select('branch') }}><Icon kind="branch" /><span>{info.vcs === 'none' ? t('noRepository') : info.branch ?? t('branch')}</span><span aria-hidden="true">{view === 'branch' ? <IconChevronDownOutlineRegular size={16} /> : <IconChevronRightOutlineRegular size={16} />}</span></button>
     {info.workspace && <p className="nidofy-path">{info.workspace}</p>}
     {view && <section className="nidofy-detail" aria-label={t(view)}>
-      <header><strong>{t(view)}</strong><button aria-label={t('closeDetails')} disabled={busy} onClick={() => { setView(null); setAction(null); setPreview(null) }}>×</button></header>
+      <header><strong>{t(view)}</strong><button aria-label={t('closeDetails')} disabled={busy} onClick={() => { setView(null); setAction(null); setPreview(null) }}><IconCloseOutlineRegular size={16} /></button></header>
       {!info.workspace ? <p>{t('empty')}</p> : <>
         {view === 'local' && <dl><dt>{t('workspacePath')}</dt><dd>{info.workspace}</dd><dt>{t('repositoryRoot')}</dt><dd>{info.root ?? t('noRepository')}</dd><dt>{t('branch')}</dt><dd>{info.branch ?? '—'}</dd><dt>{t('revision')}</dt><dd>{info.head ?? '—'}</dd><dt>{t('upstream')}</dt><dd>{info.upstream ?? '—'}</dd><dt>{t('remote')}</dt><dd>{info.remotes?.join(', ') || '—'}</dd></dl>}
         {view === 'changes' && !action && <><p>{t('repositoryChanges')}</p>{!reading && !error && rows.length === 0 && <p>{t(info.vcs === 'none' ? 'noRepository' : 'clean')}</p>}<div className="nidofy-change-list">{rows.slice(0, 100).map(row => <button key={row.path} aria-pressed={file === row.path} onClick={() => { setFile(row.path) }}><code>{row.status}</code><span>{row.path}</span></button>)}</div>{rows.length > 100 && <p>{t('moreInWorkbench')}</p>}{file && <><strong>{file}</strong>{patch !== null ? <pre tabIndex={0}>{patch.slice(0, 20000)}</pre> : !reading && <p>{t('patchUnavailable')}</p>}{patch && patch.length > 20000 && <p>{t('moreInWorkbench')}</p>}</>}</>}
@@ -102,13 +108,13 @@ export function EnvironmentExplorer({ info, t, launch, refresh }: PropsLocale<'n
           {action === 'switch' && <label>{t('branch')}<select required value={branch} disabled={busy || !!preview} onChange={(event) => { setBranch(event.target.value) }}>{(info.branches ?? []).filter(value => value !== info.branch).map(value => <option key={value}>{value}</option>)}</select></label>}
           {action === 'push' && <label>{t('remote')}<select required value={remote} disabled={busy || !!preview} onChange={(event) => { setRemote(event.target.value) }}>{!info.remotes?.length && <option value="">{t('noRemotes')}</option>}{info.remotes?.map(value => <option key={value}>{value}</option>)}</select></label>}
           {!preview && <button type="submit" disabled={busy || !canGit}>{t('previewAction')}</button>}
-          {preview && <div className="nidofy-operation-preview"><p>{preview.description}</p><p>{preview.workspace}</p><small>{t('defaultPermission')}</small><button type="button" disabled={busy} onClick={() => { void apply() }}>{t('confirmAction')}</button><button type="button" disabled={busy} onClick={() => { setPreview(null) }}>{t('cancel')}</button></div>}
+          {preview && <div className="nidofy-operation-preview"><p>{preview.description}</p><p>{preview.workspace}</p><small>{t(preview.permission === 'danger-full-access' ? 'unrestrictedPermission' : 'defaultPermission')}</small><button type="button" disabled={busy} onClick={() => { void apply() }}>{t('confirmAction')}</button><button type="button" disabled={busy} onClick={() => { setPreview(null) }}>{t('cancel')}</button></div>}
         </form>}
         {reading && <p role="status">{t('loading')}</p>}
-        <button className="nidofy-full-workbench" disabled={busy} onClick={() => { launch(view === 'connections' ? 'connections' : view === 'changes' ? 'review' : 'environment') }}>{t(view === 'connections' ? 'openConnections' : 'openWorkbench')} ↗</button>
+        <button className="nidofy-full-workbench" disabled={busy} onClick={() => { launch(view === 'connections' ? 'connections' : 'environment') }}>{t(view === 'connections' ? 'openConnections' : 'openWorkbench')} <IconRightUpOutlineRegular size={16} /></button>
       </>}
     </section>}
-    {error && <p className="nidofy-error" role="alert">{error}</p>}{done && <p role="status">{t('actionCompleted')}</p>}
+    {error && <div className="nidofy-error" role="alert"><p>{t('repositoryFailed')}</p><details><summary>{t('technicalDetails')}</summary><pre>{error}</pre></details></div>}{done && <p role="status">{t('actionCompleted')}</p>}
     <div className="nidofy-environment-footer"><button aria-expanded={view === 'connections'} disabled={busy} onClick={() => { select('connections') }}><Icon kind="connections" />{t('connections')}</button><button aria-label={t('refresh')} disabled={busy} onClick={() => { setRevision(value => value + 1); setPreview(null); refresh() }}><Icon kind="refresh" /></button></div>
   </div>
 }

@@ -100,7 +100,7 @@ function mount(
       useSessions={hook(sessions)}
       useSessionStatus={hook(noPendingInteraction)}
       useSessionRetainInfo={() => undefined}
-      usePanelInfo={usePanelInfo} useResource={useResource}
+      useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={usePanelInfo} useResource={useResource}
       useWorkspaces={hook(workspaceState(nextItems))}
       onPick={onPick}
       onClose={onClose}
@@ -223,7 +223,7 @@ describe('WorkspacePicker', () => {
         open useSessions={hook(sessions)} useWorkspaces={hook(workspaceState([workspace('alpha', 'Alpha')]))}
         useSessionStatus={hook(noPendingInteraction)}
         useSessionRetainInfo={() => undefined}
-        usePanelInfo={usePanelInfo} useResource={useResource}
+        useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={usePanelInfo} useResource={useResource}
         onPick={vi.fn()} onClose={vi.fn()} createWorkspace={vi.fn()}
         useDirectoryFlow={occupancySource().useDirectoryFlow} renderSlot={renderSlot} t={t}
       />,
@@ -241,7 +241,7 @@ describe('WorkspacePicker', () => {
         open anchorRef={anchor()} useSessions={hook(sessions)} useWorkspaces={hook(state)}
         useSessionStatus={hook(noPendingInteraction)}
         useSessionRetainInfo={() => undefined}
-        usePanelInfo={usePanelInfo} useResource={useResource}
+        useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={usePanelInfo} useResource={useResource}
         onPick={vi.fn()} onClose={vi.fn()} createWorkspace={vi.fn()}
         useDirectoryFlow={occupancySource().useDirectoryFlow} renderSlot={renderSlot} t={t}
       />,

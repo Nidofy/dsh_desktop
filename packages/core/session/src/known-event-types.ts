@@ -45,6 +45,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'llm/retry',
   'llm/retry-started',
   'model/selection',
+  'nidofy/notebook-compaction',
   'permission/preset',
   'plan/mode',
   'request/context',

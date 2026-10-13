@@ -9,6 +9,8 @@ English | [中文](README.zh.md)
 
 ## Summary
 
+The onboarding empty-Hero observation consumes the explicit root useMainSelection hook. Retaining an unrelated blank Session does not replace the current conversation’s onboarding state.
+
 Use this package to give the dsh web client a Settings panel, connection-recovery control, feature-contributed navigation, and sequential first-run onboarding. Users can open it from the sidebar, retry a failed connection immediately, and access a local configuration file when the Host makes one available on a loopback browser. Feature packages supply their own settings rows, sections, and onboarding steps; this package supplies their shared presentation and the Coding Tools switch without adding onboarding copy.
 
 ## Table of Contents
@@ -128,3 +130,5 @@ None.
 </details>
 
 **Runtime invariant:** No companion is published. The settings seam validates and publishes the durable onboarding section, while slot conflicts fail loud in the slot core. The local document action is browser state over typed RPC responses and is covered by store/component tests rather than a Cordis runtime relationship.
+
+Settings close, overlay dismissal, Escape and section navigation honor live section guards. Credential editors can retain unsaved keys until an explicit discard decision. Expanded and collapsed shell controls both expose connection state and reconnect feedback.

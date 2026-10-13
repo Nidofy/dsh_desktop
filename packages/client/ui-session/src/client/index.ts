@@ -12,7 +12,7 @@ import type {
 } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import { notifySubscribers } from '@deepseek-ai/dsh-client-store'
+import { createSnapshotStore, notifySubscribers } from '@deepseek-ai/dsh-client-store'
 import { WeakMapWithValues } from '@deepseek-ai/dsh-util-values'
 import { standardHookPropName } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
@@ -31,6 +31,11 @@ import { renderSessionArea } from './session-provider.tsx'
 
 /** Selector hook over the Session Controller list and current selection. */
 export type UseSessions = SnapshotSelectorHook<SessionListState>
+/** Explicit navigation selection; reference counts never select a Session. */
+export interface MainSessionSelection {
+  readonly sessionId: SessionId | null
+  readonly revision: number
+}
 /** Selector hook over one Session's lifecycle and control state. */
 export type SessionSnapshotSelector = SnapshotSelectorHook<SessionSnapshot>
 /** Public name for the Session lifecycle selector hook. */
@@ -156,6 +161,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface GlobalStandardProps {
     /** Session list and current selection. */
     useSessions: UseSessions
+    /** Selection published by the owner of the main Conversation reference. */
+    useMainSelection: SnapshotSelectorHook<MainSessionSelection>
     useSessionStatus: UseSessionStatus
     useSessionRetainInfo: UseSessionRetainInfo
   }
@@ -285,8 +292,19 @@ export class UiSession extends Service {
   private readonly completionUnread = new Set<SessionId>()
   private statusSnapshot: SessionStatusSnapshot = new Map()
   private readonly statusListeners = new Set<() => void>()
-  private mainRetainId: SessionId | undefined
-  private disposeMainRetain = (): void => {}
+  private mainOwner: SessionBinding | undefined
+  private readonly mainListeners = new Set<() => void>()
+  private readonly selection = createSnapshotStore<MainSessionSelection>({ sessionId: null, revision: 0 })
+  /** JSON selection for root components, independent of retained reference counts. */
+  readonly mainSelection: HostObservable<MainSessionSelection> = this.selection
+  /** Borrowed exact binding selected by navigation; consumers do not release it. */
+  readonly mainBinding: HostObservable<SessionBinding | undefined> = {
+    getSnapshot: () => this.mainOwner,
+    subscribe: (listener) => {
+      this.mainListeners.add(listener)
+      return () => { this.mainListeners.delete(listener) }
+    },
+  }
   private active = true
   /** Root source combining running, pending-interaction, and completion-reminder facts. */
   readonly sessionStatus: HostObservable<SessionStatusSnapshot> = {
@@ -329,7 +347,7 @@ export class UiSession extends Service {
         disposeList()
         disposeStatus()
         disposeRemoteStatus()
-        this.disposeMainRetain()
+        this.selectMain(undefined)
         const records = [...this.bindings.values]
         this.bindings.clear()
         for (const record of records) record.release()
@@ -351,6 +369,24 @@ export class UiSession extends Service {
       throw new Error('ui-session: Session reference is not active in this Controller')
     }
     return this.sourceFor(owner)
+  }
+
+  /** Publish the exact reference owned by main navigation before releasing its predecessor.
+   * @param reference - Current owned reference, or absence before release/teardown.
+   * @throws when the reference belongs to another Controller generation.
+   */
+  selectMain(reference: SessionReference | undefined): void {
+    const owner = reference?.binding
+    if (owner !== undefined && this.sessions.binding(owner.sessionId) !== owner) {
+      throw new Error('ui-session: main reference is not active in this Controller')
+    }
+    if (owner === this.mainOwner) return
+    if (owner !== undefined) this.sourceFor(owner)
+    this.mainOwner = owner
+    this.selection.set({ sessionId: owner?.sessionId ?? null, revision: this.selection.getSnapshot().revision + 1 })
+    this.publishMain()
+    this.reconcileStatus()
+    notifySubscribers(this.mainListeners, '[ui-session] main selection')
   }
 
   /**
@@ -433,29 +469,11 @@ export class UiSession extends Service {
   }
 
   private publishMain(): void {
-    if (!this.active) return
-    const byId = this.sessions.list.getSnapshot().byId
-    const currentId = this.current.value.key as SessionId | undefined
-    const currentIsMain = currentId !== undefined
-      && (this.sessions.retainInfo(currentId).getSnapshot().retainedBy.mainView ?? 0) > 0
-    const nextId = currentIsMain
-      ? currentId
-      : Object.values(byId).find(candidate => (candidate.retainedBy.mainView ?? 0) > 0)?.id
-    this.watchMainRetention(nextId)
-    const owner = nextId === undefined ? undefined : this.sessions.binding(nextId)
+    const owner = this.active ? this.mainOwner : undefined
     const value = owner === undefined ? this.absent.value : this.sourceFor(owner).value
     if (this.current.value === value) return
     this.current.value = value
     notifySubscribers(this.current.listeners, '[ui-session] main binding')
-  }
-
-  private watchMainRetention(sessionId: SessionId | undefined): void {
-    if (sessionId === this.mainRetainId) return
-    this.disposeMainRetain()
-    this.mainRetainId = sessionId
-    this.disposeMainRetain = sessionId === undefined
-      ? () => {}
-      : this.sessions.retainInfo(sessionId).subscribe(() => { this.publishMain() })
   }
 
   private publishPendingInteractions(): void {
@@ -514,7 +532,7 @@ export class UiSession extends Service {
   }
 
   private isMain(sessionId: SessionId): boolean {
-    return (this.sessions.list.getSnapshot().byId[sessionId]?.retainedBy.mainView ?? 0) > 0
+    return this.mainOwner?.sessionId === sessionId
   }
 
   private publishStatus(): void {
@@ -545,6 +563,7 @@ export class UiSession extends Service {
       if (this.bindings.get(owner) === record) this.bindings.delete(owner)
       source.value = this.absent.value
       notifySubscribers(source.listeners, '[ui-session] Session binding')
+      if (this.mainOwner === owner) this.selectMain(undefined)
       this.publishMain()
     }, `ui-session: binding ${owner.sessionId}`)
     const record: MaterializedBinding = {
@@ -672,6 +691,7 @@ export function apply(ctx: Context): void {
   ctx.slots.provideRoot({
     hooks: {
       sessions: ctx.sessions.list,
+      mainSelection: service.mainSelection,
       sessionStatus: service.sessionStatus,
     },
     keyedHooks: {

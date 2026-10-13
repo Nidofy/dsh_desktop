@@ -1,0 +1,23 @@
+请使用 GPT-6.1-Sol 继续 DSH Electron 持续开发，接 Relay 17 Sol。这是同模型会话容量续做，没有新的 Astra 裁决；不要重开 Relay05/08、W04/T05、T10 adoption 或 Relay13 单 Conversation root 决定。
+
+工作目录 D:/Documents/FeiyangChen/devApps/dshWinUi/electron，沿用 codex/roadmap-integration 和主目录。保留全部未提交修改、来源 worktree、Live2D 素材、原日志和历史证据。不校验 SHA、不初始化、不重复接收 T02/T04、不重审完成单元。Relay17 仅改 registry 的 T19 对象和对应 ownership 行，tasks 原文未改；其他 registry 对象及顶层字段已断言保持。T17/T18/T19/T23 总资格仍 PARTIAL。
+
+完整读 AGENTS.md、适用下级规则、packages/AGENTS.md、packages/client/AGENTS.md、docs/AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、migration/roadmap/dispatch/CONTINUOUS.md、NEXT_HANDOFF.md、handoffs/relay-17-sol.md、contracts-v1.md。Client 工作先读 docs/subsystems/web-client.md、slots.md、conversation.md。Relay16/15及更旧记录只按实际需要补细节，以当前源码、配置、测试及未提交修改为准。
+
+第一项动作：继续 T19 连接模式，先读 dispatch/prompts/T19-selftest-center.txt、probes/T19-electron-map.md 和 apps/desktop-host/src/selftest/README.md、types.ts、catalogue.ts、store.ts、runner.ts、local.ts、ui.ts。正式隔离本机 runner/report/UI 已接入 WorkbenchOwner、认证 API 和 Personal extensions；旧六行 presence endpoint 改以 SELFTEST_USE_FORMAL_RUNNER 拒绝。不要重新照搬旧 Probe 或把 COMPLETED 当全部 PASS。连接模式现在明确 SELFTEST_MODE_UNAVAILABLE，不能登记已实现。
+
+连接模式必须由当前作者完成定义/provider/全部消费者及 UI：固定模型、真实 ConnectionStore 修订和 T23 策略修订、最多五次确认的合成请求及64-token输出预算，逐请求检查预算/权限，不自动重试/故障转移，失败或未知即停、不补发。所有实际 model-visible 输入必须消费官方可重建 Session 日志义务，不能只存摘要/哈希或直接复用未记输入的旧 cache Probe；不执行模型生成命令。只用本地合成 provider/Key 和隔离数据验证，不创建真实用户会话、不计费。普通缺接口/NOT_STARTED/缺 owner 不停工；只有新的具体公共持久语义或权限冲突才准备 Astra 问题。
+
+本机现有语义必须保持：原 native quota 普通检查点及独立终态额度；意图先于 provider 构造，逐项 RUNNING 先于执行，结果仅提交后可见；未知检查点停止后续副作用且不盲目写第二次。取消与卸载排空实际命令/输出/provider。冷读 RUNNING 为 INTERRUPTED，执行中 UNKNOWN、待执行 SKIPPED，只读不改原字节、不重放。每份报告/导出64KiB，保留20份，只裁剪已知终态；目录80项与22×64KiB+4KiB完整字节上限含锁/临时/残留，损坏/未来/链接拒绝并保留。导出白名单省略内部id，不含地址/路径/模型/账户/Key/正文/原异常。随机隔离root marker/canonical身份重验、只清本次安全root；十个崩溃残留拒绝新分配，不猜测删除。
+
+已测原子写与真实quota拒绝、固定Shell、仅显式目录的官方Skill provider、动作信任/变更/实际TAP与冷读、取消已启动命令、Git差异、产物失效、只读报告恢复、私有通知去重。Hg本机缺失为SKIPPED。prefix只实际观察raw JSONL追加/physical generation，Notebook/缓存改写与路由完整分类仍UNKNOWN；probe-failure只观察官方准备入口本地拒绝、后续准备停止、真实发送零，不当流式重试资格。node/dsh/modules/webview未取得真实安装/renderer载体证据保持UNKNOWN，现场两项始终UNKNOWN。
+
+准确新证据在 .build/dispatch/evidence/relay-17/commands.json、summary.json：最终 selftest-retention-source 同次3文件11项；consumers 另一次3文件14项，含相同两项UI，不相加。当前最后 Host bundle 的 retention-host/ 是完整Node-mode profile：认证、实际llm/stream=0与agent/created=0、完整本机报告、隔离Host强制退出后原字节不变且冷读INTERRUPTED、无重放。它不认证真实Electron renderer、安装包或现场；强制退出发生在初始意图后，不包装成命令中途崩溃资格。类型、窄lint、6新源码/17顶层导出JSDoc及unknown AST、4双语、升级指南、11文档链接/列入预算检查通过。静态UI两份owner-local期望已保存，不伪装顶层recorded-session或真实renderer资格。
+
+保留首次lint/修复lint、prefix未flush即observeDurable的NotFound、首次Host缺早期skill-filesystem依赖、指南相对链接失败及全部修复日志。Host把官方filesystem Skill provider从明确lib/types产物打入bundle，没有安装/下载或safe-export例外。沙箱setup refresh原始失败已留存，后续仅有依据的窄主机执行，无安全拒绝绕过。新fixture全部独立物理root/home；历史共享TEMP和旧mock残留保留，不删除或猜测回写。
+
+T23继续消费已发布 HttpEgressPolicy/HttpEgressLease 与 DesktopEgressPolicy、Loader前 outboundHttp。先读 connections/README.md、egress.ts、runtime.ts、store.ts、ConfigEditor.registerValidator、probes/T23-egress-coverage.md、docs/subsystems/boot.md，不猜API。checkConfiguration只准共享定义保存；check/fetchFor才准真实发送。固定distribution/profile修订，准确Workspace/attachment/provider与完整策略变化撤销，最后读取及fetch前同步重验，origin变化和所有redirect拒绝。无scope/合成Session标签/MCP应用所有更窄规则。旧ConnectionStore Revision.policyRevision是连接发布计数，不是T23lease修订。安装策略时PiAi仅显式credential的completions/messages SSE，其他native auth/API/WebSocket拒绝。HTTP保证不覆盖Shell/Git/任意socket/worker/web-search/fetch/其他插件/账号登录/包管理器/MCP stdio，网关UNKNOWN，不冒称全局零外联。
+
+T17/T18及T11/T12/T06/T10的既有义务保持：真实scope/mainBinding、准确Workspace关联CAS、physical generation/raw连续前缀及最后caller-stat撤销；Hint偏好/返回展示与通知identity/claim/游标/handled/验收独立；未知副作用或OS ACK不补发；唯一物理发行根、原位imports adoption、私密quota token/逐写消费/取消排空；新scope不重绑或删除旧Notebook。T02仍显式overlay，不改默认credentials provider。Relay16的15文件419项、另一组3文件17项及Relay15的4文件31项/另一次Electron1项仍仅原历史资格。全仓doc-sync/依赖政策/Summary/unknown未重跑，32/5/15及旧文档缺口保留。禁止改 scripts/package-dependency-policy.ts 增safe-export例外，不用--fix/pnpm exec，不下载Electron替代资格。
+
+承担实现、共享配置/构建、所有消费者、必要双语文档和有效验证。保留用户数据，只用隔离合成输入；不创建Codex聊天/代理/定时器、不push/合并/发布。每个单元验证后继续，仅CONTINUOUS真正交接条件或会话硬限制才结束，容量续做交同模型。结束前更新NEXT_HANDOFF.md、NEXT_PROMPT.txt，保存下一个未用relay-NN-sol.md，最终贴出同一完整prompt和具体原因。

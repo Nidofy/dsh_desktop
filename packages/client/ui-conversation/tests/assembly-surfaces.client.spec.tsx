@@ -57,6 +57,7 @@ function provideWorkspaceNavigation(runtime: SlotTestRuntime): (id: SessionId) =
   let mainReference: ReturnType<typeof runtime.sessions.retain> | undefined
   const openSession = (id: SessionId): void => {
     const next = runtime.sessions.retain(id, { source: 'mainView' })
+    runtime.ctx.uiSession.selectMain(next)
     mainReference?.release()
     mainReference = next
   }

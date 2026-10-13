@@ -10,6 +10,8 @@ const electron = vi.hoisted(() => ({
 }))
 vi.mock('electron', () => ({
   app: { getAppPath: () => electron.root },
+  nativeTheme: { shouldUseDarkColors: true, on: vi.fn(), removeListener: vi.fn() },
+  screen: { getPrimaryDisplay: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } }) },
   BrowserWindow: vi.fn(function (options: unknown) { return electron.create(options) }),
   ipcMain: {
     handle: (name: string, handler: (event: unknown, value?: unknown, attributes?: unknown) => Promise<unknown>) => {
@@ -33,6 +35,7 @@ function createWindow() {
     isDestroyed: vi.fn().mockReturnValue(false),
     destroy: vi.fn(),
     show: vi.fn(),
+    setTitleBarOverlay: vi.fn(),
     once: vi.fn<(name: string, callback: () => void) => void>(),
   }
 }
@@ -67,12 +70,17 @@ describe('desktop welcome window', () => {
       expect(options.trafficLightPosition).toEqual({ x: 21, y: 21 })
     } else if (platform === 'win32') {
       expect(options.backgroundMaterial).toBe('acrylic')
-      expect(options.titleBarOverlay).toMatchObject({ height: 42 })
+      expect(options.titleBarOverlay).toMatchObject({ height: 40 })
     } else {
       expect(options.backgroundColor).toBe('#FFFFFF')
       expect(options.vibrancy).toBeUndefined()
       expect(options.backgroundMaterial).toBeUndefined()
     }
+  })
+
+  it('uses contrasting captions for the effective native theme', () => {
+    expect(welcomeWindowOptions('win32', resolveDesktopLocale('en'), true).titleBarOverlay).toMatchObject({ symbolColor: '#f9fafb', height: 40 })
+    expect(welcomeWindowOptions('win32', resolveDesktopLocale('en'), false).titleBarOverlay).toMatchObject({ symbolColor: '#0f1115', height: 40 })
   })
 
   it('waits for its local document and blocks renderer navigation', async () => {

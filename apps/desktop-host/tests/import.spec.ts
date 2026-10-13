@@ -1,10 +1,11 @@
 import { afterEach, expect, it } from 'vitest'
-import { mkdtemp, mkdir, readFile, writeFile, rm, readdir, unlink } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, rm, readdir, unlink, stat } from 'node:fs/promises'
 import { zstdCompressSync } from 'node:zlib'
+import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { importLegacy } from '../src/connections/import.ts'
+import { importLegacy, type LegacyImportWriter } from '../src/connections/import.ts'
 const roots: string[] = []
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))) })
 async function fixture(version: number) {
@@ -58,7 +59,7 @@ it('preserves compressed Session data and points the published plugin to its cop
   const imported = await importLegacy(f.request, f.imports, () => {})
   expect(imported.sessions).toBe(1)
   expect(await readFile(f.file + '.zstd')).toEqual(compressed)
-  const patch: unknown = JSON.parse(await readFile(join(String(imported.dataRoot), 'harness', 'profiles', 'desktop', 'cordis.patch.yml'), 'utf8'))
+  const patch: unknown = JSON.parse(await readFile(join(String(imported.dataRoot), 'harness', 'cordis.patch.yml'), 'utf8'))
   expect(patch).toContainEqual({ id: 'session-persistence-jsonl', config: {
     root: join(String(imported.dataRoot), 'harness', 'sessions'), compression: 'zstd',
   } })
@@ -72,8 +73,62 @@ it('imports the legacy dsh-desktop settings with rebound credentials and preserv
   const scopes = JSON.stringify({ version: 1, revision: 0, items: [] })
   await writeFile(join(f.source, 'dsh', 'desktop-snapshot-scopes.json'), scopes)
   const imported = await importLegacy(f.request, f.imports, () => {})
-  const copied = await readFile(join(String(imported.dataRoot), 'harness', 'profiles', 'desktop', 'cordis.patch.yml'), 'utf8')
+  const copied = await readFile(join(String(imported.dataRoot), 'harness', 'cordis.patch.yml'), 'utf8')
   expect(copied).not.toContain('OLD_AMBIENT_KEY')
   expect(copied).toContain('NIDOFY_IMPORT_')
   expect(await readFile(join(String(imported.dataRoot), 'harness', 'desktop-snapshot-scopes.json'), 'utf8')).toBe(scopes)
+})
+
+it.each(['none', 'zstd'] as const)('routes copies, converted %s generations and JSON metadata through the awaited writer', async (compression) => {
+  const f = await fixture(0), writes: Array<{ path: string; bytes: number }> = []
+  if (compression === 'zstd') {
+    await writeFile(f.file + '.zstd', zstdCompressSync(Buffer.from(f.bytes))); await unlink(f.file)
+  }
+  const write: LegacyImportWriter = async (path, bytes, work) => {
+    const result = await work()
+    expect((await stat(path)).size).toBeLessThanOrEqual(bytes)
+    writes.push({ path, bytes })
+    return result
+  }
+  const imported = await importLegacy(f.request, f.imports, () => {}, undefined, { write })
+  const generations = writes.filter(item => /session\.v\d+\.jsonl/.test(item.path))
+  expect(generations).toHaveLength(1)
+  expect(writes.filter(item => item.path.endsWith('import.json'))).toHaveLength(2)
+  expect(writes.some(item => item.path.endsWith('cordis.patch.yml'))).toBe(true)
+  expect(writes.some(item => item.path.endsWith('nidofy-import-connections.json'))).toBe(true)
+  expect(imported.status).toBe('READY')
+})
+
+it('propagates denied migration admission without publishing a ready home or altering the source', async () => {
+  const f = await fixture(0)
+  const write: LegacyImportWriter = (path, _bytes, work) => {
+    if (/session\.v\d+\.jsonl/.test(path)) throw Error('ISOLATED_ADMISSION_DENIED')
+    return work()
+  }
+  await expect(importLegacy(f.request, f.imports, () => {}, undefined, { write })).rejects.toThrow('ISOLATED_ADMISSION_DENIED')
+  expect(await readFile(f.file, 'utf8')).toBe(f.bytes)
+  expect(await readdir(f.imports)).not.toContain(f.request.operationId)
+  const retained = await readdir(join(f.imports, f.request.operationId + '.pending', 'harness', 'sessions', '_no-cwd', 'fixture-session'))
+  expect(retained).toContain('session.jsonl')
+  expect(retained).not.toContain(`session.v${SESSION_FORMAT_VERSION}.jsonl`)
+  expect(retained.filter(name => name.startsWith('session.migration.'))).toEqual([])
+})
+
+it('refuses source growth before opening the copy file', async () => {
+  const f = await fixture(0)
+  const write: LegacyImportWriter = async (path, _bytes, work) => {
+    if (path.endsWith('session.jsonl')) await writeFile(f.file, f.bytes + 'grew')
+    return work()
+  }
+  await expect(importLegacy(f.request, f.imports, () => {}, undefined, { write })).rejects.toThrow('IMPORT_SOURCE_CHANGED')
+  const copied = join(f.imports, f.request.operationId + '.pending', 'harness', 'sessions', '_no-cwd', 'fixture-session', 'session.jsonl')
+  await expect(stat(copied)).rejects.toMatchObject({ code: 'ENOENT' })
+})
+
+it('honors cancellation arriving during admission before the first metadata write', async () => {
+  const f = await fixture(0), controller = new AbortController(), reason = Error('cancelled import')
+  const write: LegacyImportWriter = (_path, _bytes, work) => { controller.abort(reason); return work() }
+  await expect(importLegacy(f.request, f.imports, () => {}, undefined, { write, signal: controller.signal })).rejects.toBe(reason)
+  await expect(stat(join(f.imports, f.request.operationId + '.pending', 'import.json'))).rejects.toMatchObject({ code: 'ENOENT' })
+  expect(await readFile(f.file, 'utf8')).toBe(f.bytes)
 })

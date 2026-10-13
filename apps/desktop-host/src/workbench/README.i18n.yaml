@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write apps/desktop-host/src/workbench/README.md
+/:
+  en: 8b9af0c02210f488
+  zh: a2837e40fa539e21
+/project-verification-and-notifications:
+  en: 907c92fd91fc9084
+  zh: 50b02b88250844c5
+/project-verification-and-notifications/summary:
+  en: 93eadcbc9b8b0770
+  zh: 404e270a9cb92a1b
+/project-verification-and-notifications/table-of-contents:
+  en: a9951073db5f8de3
+  zh: 457d64eba65f0038
+/project-verification-and-notifications/verification-inputs:
+  en: d4c3caa7678d3033
+  zh: 562b4b4402fdcab1
+/project-verification-and-notifications/receipt-and-retention:
+  en: a7925d9283931e11
+  zh: e9c91e0d4a0dfade
+/project-verification-and-notifications/notification-delivery:
+  en: 7745942f76fcfe1d
+  zh: 4b8b6db8cb67ebea
+/project-verification-and-notifications/companion-evidence-and-hint-choices:
+  en: c5a8ab48f07b016b
+  zh: 6e8d8f6232e472e4
+/project-verification-and-notifications/known-limitations:
+  en: 41b9d09fe62cdba1
+  zh: 160884f8626e8c7a
+/project-verification-and-notifications/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269
+/project-verification-and-notifications/notification-and-recovery-visibility:
+  en: 277b81ee64b189ca
+  zh: b40373c5bd84f78a

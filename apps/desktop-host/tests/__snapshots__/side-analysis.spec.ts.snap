@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`commits optional tone once, logs it at the next turn and removes the section after disabling > logged optional tone 1`] = `"Use a warm, concise companion tone only in conversational explanations. Preserve precise technical meaning. Do not apply character jokes or mannerisms to code, commands, formal reports, quoted material or deliverables. Tone grants no additional permissions or tools."`;

@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-07-notebook-compaction.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-07-notebook-compaction.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-07-notebook-compaction:
+  en: d6e12d3d6618d9b9
+  zh: aafe45e11a62ec38
+/2026-10-07-notebook-compaction/summary:
+  en: f5ee3958a2532e70
+  zh: fc944e89c65630ed
+/2026-10-07-notebook-compaction/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-07-notebook-compaction/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-07-notebook-compaction/compatibility:
+  en: 4b5b7e7a3c6a93fd
+  zh: 785288c7277575cb
+/2026-10-07-notebook-compaction/verification:
+  en: cb08d803a9f46393
+  zh: 1cfd59603e6a53a1
+/2026-10-07-notebook-compaction/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

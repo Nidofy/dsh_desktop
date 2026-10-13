@@ -34,6 +34,7 @@ import {
 } from '@deepseek-ai/dsh-app-boot'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { installProxyFromEnvironment } from '@deepseek-ai/dsh-http-proxy'
+import type { HttpEgressPolicy } from '@deepseek-ai/dsh-http-proxy'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
@@ -218,6 +219,8 @@ export interface ResolvedProfileRuntime {
 
 /** Options for {@link runProfile}. */
 export interface RunProfileOptions {
+  /** Trusted application HTTP authorization, provided before any profile entry can connect. */
+  outboundHttp?: HttpEgressPolicy
   /** This run's frozen environment snapshot, provided before any entry mounts. */
   environment: LaunchEnvironmentSnapshot
   /** The profile name to boot. */
@@ -299,6 +302,10 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
       // Before any config-tree entry mounts, so plugins resolve all launch-time
       // environment values from the same immutable launch snapshot.
       hostCtx.provide(DSH_LAUNCH_ENVIRONMENT_KEY, options.environment)
+      if (options.outboundHttp) {
+        hostCtx.provide('outboundHttp', options.outboundHttp)
+        hostCtx.effect(() => () => options.outboundHttp?.close?.())
+      }
       await hostCtx.plugin(PluginPackages, {
         resolution: composed.resolution,
       })

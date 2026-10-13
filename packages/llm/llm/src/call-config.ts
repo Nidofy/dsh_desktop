@@ -16,12 +16,16 @@ const AGENT_LOOP_REQUESTS = new WeakSet<GenerateOptions>()
 // and where provider-specific request options belong.
 /**
  * Provider, model, reasoning effort, and sampling scalars of one conversation's
- * requests. Every field maps 1:1 onto the same-named `GenerateOptions` field;
+ * requests. Dispatch fields map onto the same-named `GenerateOptions` fields;
  * the loop builds requests from the logged header rather than accepting these
  * per call.
  */
 export interface LlmCallConfig {
   provider: string
+  /** Stable selection identity captured by a revisioned route owner. Display and
+   * selection replay use this value; dispatch always uses `provider`. Omission
+   * preserves the provider itself, including in older request headers. */
+  providerIdentity?: string
   model: string
   reasoningEffort?: ReasoningEffortId
   temperature?: number
@@ -49,6 +53,7 @@ export interface LlmCallConfigAdapterDefaults {
 export function callConfigEquals(a: LlmCallConfig, b: LlmCallConfig): boolean {
   if (
     a.provider !== b.provider
+    || a.providerIdentity !== b.providerIdentity
     || a.model !== b.model
     || a.reasoningEffort !== b.reasoningEffort
     || a.temperature !== b.temperature

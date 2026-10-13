@@ -230,6 +230,11 @@ interface ShellProcessRead {
 }
 ```
 
+<a id="verification-inputs"></a>
+## Verification inputs
+
+`ShellExecutor.verificationInputs(spec)` returns `ShellVerificationInputs` with provider-owned `executablePaths` and `configuration`, or null when the provider cannot enumerate its execution inputs without preparation. The call starts no process. Consumers hash the actual executable bytes and independently cover command sources, configuration and declared dependencies; null cannot establish complete coverage. Local PowerShell reports its resolved executable and collector settings. Sandboxed PowerShell explicitly returns null because its confinement provider has no complete read-only runner/runtime enumeration. An executor subclass that changes execution inputs must override this observation or return null.
+
 ## The service
 
 `ShellExecutor` owns `resolve`, foreground `run`, background-process `start`, and the `sandboxMode` capability fact. `dsh-bash-local` owns command defaulting, timeout/abort classification, the terminal environment, and the background read merge; managed-range termination, bounded collectors, spill files, credential scrubbing, and disposal quiescence are the [subprocess service](subprocess.md)'s. `dsh-tool-bash` owns model-facing rendering and adapts background handles into the [generic job runtime](jobs.md). `dsh-shell` owns the shell tools' shared exit-status contract: the exported `parseExitStatus`/`ParsedExitStatus` inverts the `[exit code: N]` / `[killed by signal: X]` markers `dsh-tool-bash`'s `renderResult` and `dsh-tool-pwsh`'s `renderPwshResult` append, and both tools' `presentResult` use it to split the rendered text into the terminal card's output body and its exit-status pill.
@@ -267,6 +272,12 @@ Implementations must honor these semantics:
  */
 abstract resolve(request: ShellExecRequest): ShellExecSpec
 
+/** Observe provider-owned executable paths and current settings without preparing or starting a process.
+ * @param _spec - Actual resolved execution settings selected for the run.
+ * @returns Null when the provider cannot enumerate its own execution inputs; verification coverage must then remain unknown.
+ */
+verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null>
+
 /**
  * Prepare and spawn the command under its resolved deadline.
  * @param spec - a resolved spec from {@link resolve}, never a raw request.
@@ -276,6 +287,8 @@ abstract resolve(request: ShellExecRequest): ShellExecSpec
  */
 abstract execute(spec: ShellExecSpec): Promise<ShellExecution>
 ```
+
+Types: [ShellVerificationInputs](shell.md#verification-inputs)
 
 Source: [`packages/shell/shell/src/index.ts`](../../packages/shell/shell/src/index.ts)
 

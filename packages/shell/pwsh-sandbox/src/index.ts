@@ -13,7 +13,7 @@
  */
 
 import { Context } from '@deepseek-ai/cordis'
-import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult } from '@deepseek-ai/dsh-shell'
+import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult, ShellVerificationInputs } from '@deepseek-ai/dsh-shell'
 import { SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
 import type {
   ConfinedArgv,
@@ -82,6 +82,10 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
   /** The configured default mode — the capability fact the tool layer reads. */
   override get sandboxMode(): SandboxMode {
     return this.mode
+  }
+  override verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null> {
+    // The confinement provider has no read-only enumeration of the runner and prepared runtime inputs.
+    return Promise.resolve(null)
   }
 
   /**

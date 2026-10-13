@@ -2,8 +2,8 @@
  * AclWriteGrant tests: the server-side grant materialization — SID parsing
  * fail-closed, ACE add/dispose round-trip against the REAL directory DACL
  * (observed through icacls, the operator's own tool), the recorded path
- * order, and the standing/revocable lifecycle split (workspace ACEs outlive
- * dispose as the reuse cache; temp ACEs revoke). Win32-only, like the other
+ * order, and workspace lease/private-temp lifecycle (final workspace release
+ * restores permissions; temp ACEs revoke). Win32-only, like the other
  * real-FFI suites.
  */
 
@@ -14,6 +14,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { AclWriteGrant } from '../src/index.ts'
+import { workspaceWriteSid } from '../src/workspace-sid.ts'
+import { isolatedRecovery } from './fixtures/isolated-recovery.ts'
+
+isolatedRecovery()
 
 const isWin32 = process.platform === 'win32'
 
@@ -40,24 +44,25 @@ describe.skipIf(!isWin32)('AclWriteGrant (server-side materialization)', () => {
     expect(() => AclWriteGrant.create('S-1-4-abc-1')).toThrow(/ConvertStringSidToSidW/u)
   })
 
-  it('add materializes the ACE (idempotently) and reports grant order; dispose revokes revocable paths and keeps standing paths standing', () => {
+  it('add reuses its live workspace lease and dispose revokes temp and restores workspace permissions', () => {
     const dir = scratch()
     const standingDir = scratch()
-    const grant = AclWriteGrant.create('S-1-4-9000-77')
+    const sid = workspaceWriteSid(standingDir)
+    const grant = AclWriteGrant.create(sid)
     grant.add(dir) // revocable: the session-temp lifecycle
     grant.add(standingDir, true) // standing: the workspace reuse cache
     expect(grant.paths).toEqual([standingDir, dir])
-    expect(icaclsText(dir)).toContain('S-1-4-9000-77')
-    expect(icaclsText(standingDir)).toContain('S-1-4-9000-77')
+    expect(icaclsText(dir)).toContain(sid)
+    expect(icaclsText(standingDir)).toContain(sid)
     // A second add over the standing exact ACE is a DACL-read no-op: the
     // grant stays exactly one ACE (the reuse across sessions/restarts).
     grant.add(dir)
     grant.add(standingDir, true)
-    expect(icaclsText(dir)).toContain('S-1-4-9000-77')
-    expect(icaclsText(standingDir)).toContain('S-1-4-9000-77')
+    expect(icaclsText(dir)).toContain(sid)
+    expect(icaclsText(standingDir)).toContain(sid)
     grant.dispose()
-    expect(icaclsText(dir)).not.toContain('S-1-4-9000-77')
-    expect(icaclsText(standingDir)).toContain('S-1-4-9000-77')
+    expect(icaclsText(dir)).not.toContain(sid)
+    expect(icaclsText(standingDir)).not.toContain(sid)
   })
 
   it('two grants with different SIDs coexist and revoke independently', () => {

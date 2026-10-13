@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/README.md
 /deepseek-harness-desktop:
-  en: 6433a3f852158f8c
-  zh: 566128457af44a25
+  en: fe4d4567009cb961
+  zh: 8f49b65639225538
 /deepseek-harness-desktop/terminal-command:
   en: bef92953c237363f
   zh: d21d6effd21b8c00
@@ -15,8 +15,8 @@
   en: 069fdfd72d2ea26a
   zh: 76ae549d43c99bb4
 /deepseek-harness-desktop/key-technical-decisions/bundled-workspace-dependencies:
-  en: 320733f93ede61a4
-  zh: 33206c3c4753c802
+  en: cd9fc5738bcc5c78
+  zh: ae3d4d0bb9dc6667
 /deepseek-harness-desktop/bundled-command-runtime:
   en: beecf076aa2f0796
   zh: c9001ce0f22d2379
@@ -54,8 +54,8 @@
   en: cfd5780dd26a8e46
   zh: f7a16b1ede793b7b
 /deepseek-harness-desktop/package/windows-installer-interface:
-  en: f176a8b1c7de3064
-  zh: 6ea2dbe6bb808c34
+  en: 0a2c40da19380667
+  zh: f6303638902efda4
 /deepseek-harness-desktop/package/windows-ev-signing:
   en: 8efe3498dbe8686d
   zh: a88c16f20a9430f3
@@ -75,5 +75,5 @@
   en: 5b77213c86bbcfb6
   zh: b34bf21773bb852b
 /deepseek-harness-desktop/dev-note:
-  en: 8e26b460ba31f21b
-  zh: fbcd0307b3867125
+  en: 36bd47ea67bbbfbe
+  zh: 3ea66187f7368bdc

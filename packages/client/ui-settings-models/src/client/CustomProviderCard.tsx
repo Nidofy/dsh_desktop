@@ -1,3 +1,4 @@
+import { useCredentialDraftGuard, type DraftGuardRegistration } from './credential-draft.tsx'
 /**
  * The card that declares a provider pi-ai does not ship — an OpenAI-compatible
  * gateway, a self-hosted server, or a provider newer than the installed
@@ -85,6 +86,8 @@ export interface CustomProviderCardProps {
    * interrogation is in flight, so the owner can hold its surface still.
    */
   onBusyChange?: (busy: boolean) => void
+  /** Settings surface discard registration; secrets remain local to this card. */
+  registerNavigationGuard?: DraftGuardRegistration
 }
 
 /**
@@ -105,6 +108,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
   const [busy, setBusy] = useState(false)
   const [listBusy, setListBusy] = useState(false)
   useEffect(() => { onBusyChange?.(busy || listBusy) }, [busy, listBusy, onBusyChange])
+  const guard = useCredentialDraftGuard(keyDraft.length > 0, busy, t, props.registerNavigationGuard)
   const [failure, setFailure] = useState<string | undefined>(undefined)
   /**
    * The profile write landed. Only the key write can still be outstanding, so
@@ -306,13 +310,16 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
       {/* Only the gates with something to say render; the route-id gate has its
           own field-level hint, so its blocked state would print an empty line. */}
       {hint === undefined ? null : <p className={styles['advancedHint']}>{hint}</p>}
+      {guard.confirmation}
       <EditorFooter
         t={t}
         busy={busy}
         submitDisabled={disabled || !ready}
         submitLabelKey="create"
         submitBusyLabelKey="creating"
-        onCancel={() => { props.onClose(committed) }}
+        onCancel={() => {
+          if (!keyDraft) props.onClose(committed); else void guard.ask().then((allowed) => { if (allowed) props.onClose(committed) })
+        }}
         onSubmit={() => { void create() }}
       />
     </div>

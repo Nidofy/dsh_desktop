@@ -62,10 +62,19 @@ export async function validatePackage(files,resources){
 }
 function publicView(p){return {id:p.id,displayName:p.displayName,version:p.version,digest:p.digest,warnings:p.warnings,preview:p.preview};}
 export function encodeZip(files){const locals=[],central=[];let offset=0;for(const [name,data]of files){const n=Buffer.from(safeName(name)),crc=crc32(data),head=Buffer.alloc(30);head.writeUInt32LE(0x04034b50);head.writeUInt16LE(20,4);head.writeUInt16LE(0x800,6);head.writeUInt32LE(crc,14);head.writeUInt32LE(data.length,18);head.writeUInt32LE(data.length,22);head.writeUInt16LE(n.length,26);locals.push(head,n,data);const c=Buffer.alloc(46);c.writeUInt32LE(0x02014b50);c.writeUInt16LE(20,4);c.writeUInt16LE(20,6);c.writeUInt16LE(0x800,8);c.writeUInt32LE(crc,16);c.writeUInt32LE(data.length,20);c.writeUInt32LE(data.length,24);c.writeUInt16LE(n.length,28);c.writeUInt32LE(offset,42);central.push(c,n);offset+=30+n.length+data.length;}const dir=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(files.size,8);end.writeUInt16LE(files.size,10);end.writeUInt32LE(dir.length,12);end.writeUInt32LE(offset,16);const result=Buffer.concat([...locals,dir,end]);if(result.length>LIMITS.archive)throw Error("导出 ZIP 超过 64 MiB");return result;}
-export async function packageCommand({home,resources,action,source,expected,replace=false,resourceId,destination}){
+export async function packageCommand(options){
+ const {storage,action,home,destination}=options;
+ if(storage&&['import','delete'].includes(action))return storage.write(join(home,'pet-resources'),(action==='import'?LIMITS.total:0)+2*LIMITS.json,()=>packageCommandInner(options));
+ if(storage&&action==='export'){
+  const rel=relative(await realpath(dirname(storage.home)),await realpath(destination));
+  if(rel===''||(!isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('..\\')&&!rel.startsWith('../')))throw Error('STORAGE_EXPORT_DESTINATION_REFUSED');
+ }
+ return packageCommandInner(options);
+}
+async function packageCommandInner({home,resources,action,source,expected,replace=false,resourceId,destination}){
  const root=resolve(home,'pet-resources');try{if((await lstat(root)).isSymbolicLink())throw Error('资源库不能是链接');}catch(e){if(e.code!=='ENOENT')throw e;}await mkdir(root,{recursive:true});const catalogPath=join(root,'catalog.json');let catalog={schemaVersion:1,items:[]},catalogWarning=null;try{catalog=JSON.parse(await regular(catalogPath,LIMITS.json));if(catalog.schemaVersion!==1||!Array.isArray(catalog.items)||catalog.items.length>100)throw Error('资源目录索引无效');for(const item of catalog.items){id(item.id);if(!/^[a-z0-9_-]+$/.test(item.folder))throw Error('资源目录索引无效');}}catch(e){if(e.code!=='ENOENT'){catalogWarning='资源索引不可读，已保留原文件；仍可使用和导出内置宠物';catalog={schemaVersion:1,items:[]};if(!['list'].includes(action)&&!(['asset','export'].includes(action)&&resourceId==='xiaojing'))throw Error(catalogWarning);}}
  const removeFolder=async folder=>{if(!folder)return;const target=resolve(root,folder);if(dirname(target)!==root||!/^[a-z0-9_-]+$/.test(folder))throw Error('资源删除路径无效');await rm(target,{recursive:true,force:true});};
- const commit=async()=>{const temp=catalogPath+'.'+randomUUID();await writeFile(temp,JSON.stringify(catalog),{flag:'wx'});await rename(temp,catalogPath);};
+ const commit=async()=>{const bytes=JSON.stringify(catalog);if(Buffer.byteLength(bytes)>LIMITS.json)throw Error('资源目录索引过大');const temp=catalogPath+'.'+randomUUID();await writeFile(temp,bytes,{flag:'wx'});await rename(temp,catalogPath);};
  const locate=rid=>rid==='xiaojing'?join(resources,'pets/xiaojing'):join(root,catalog.items.find(i=>i.id===id(rid))?.folder??'missing');
  if(action==='list')return {warning:catalogWarning,items:[{id:'xiaojing',displayName:'吃白饭的大肥鱼',builtin:true},...catalog.items.map(({id,displayName})=>({id,displayName,builtin:false}))]};
  if(action==='preview'||action==='import'){

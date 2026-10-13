@@ -13,6 +13,7 @@ export const DESKTOP_IPC = {
   shortcutsChanged: 'dsh-desktop:shortcuts-changed',
   shortcutsRecording: 'dsh-desktop:shortcuts-recording',
   boot: 'dsh-desktop:boot',
+  windowIdentity: 'dsh-desktop:window-identity',
   enterWorkspace: 'dsh-desktop:enter-workspace',
   onboardingActive: 'dsh-desktop:onboarding-active',
   onboardingApiKey: 'dsh-desktop:onboarding-api-key',
@@ -71,6 +72,10 @@ export interface DesktopUpdatePresentation {
 /** Product documents cannot supply update versions, package URLs, or installation authorization. */
 export interface DshDesktopProductApi {
   readonly protocolVersion: 1
+  /** Read the actual BrowserWindow identity of the admitted top-frame sender.
+   * @returns Electron's window id, without Host credentials or other windows.
+   */
+  windowIdentity(): Promise<number>
   readonly browser: DesktopBrowserBridge
   readonly keyboard: DesktopKeyboardApi
   readonly shortcuts: DesktopShortcutsApi

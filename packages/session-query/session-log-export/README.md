@@ -61,6 +61,12 @@ The dialog reports three phases: preparing, download started, or failed. Closing
 
 Attachment collection reads declared content fields of built-in Session events and completed assistant stream blocks, including flat V4 tool-role messages. Unknown event payloads and unrelated fields remain unchanged in the exported log but do not cause attachment reads.
 
+### Analyze exported performance offline
+
+From a repository checkout, extract the downloaded ZIP and run `pnpm exec tsx scripts/analyze-session-performance.ts "<extracted>/session.v4.jsonl"`. The script reads only the explicitly named current-generation log and prints metrics JSON to stdout; it makes no model requests, reads no credentials, and writes no files. Analyze descendant logs separately. It does not accept ZIP, zstd, Markdown transcripts, older formats, or snapshots that omit event timestamps or sequence numbers.
+
+The report includes per-step timings and usage coverage, retries, tool batches, and the sum and union of matched tool intervals. Tool names become encounter-order aliases; message content, arguments, identifiers, routes and paths are omitted. Text and reasoning lengths are UTF-16 code units, not token counts. TTFT starts at `step/start` and includes request-chain preparation and retries; pre-step work precedes that boundary. Tool intervals can overlap each other and model time, so their sum is not elapsed task time. Reversed clocks and incomplete steps remain explicit rather than becoming zero-duration successes. Event span includes idle and inherited history; settled-event usage may omit billed discarded attempts. The script validates the event envelope and measured fields, not every unrelated plugin payload.
+
 ### Failures
 
 The dialog shows a preparation error when the preflight fails before ZIP streaming starts — for example an unreachable or misconfigured host endpoint. A descendant or attachment read failure after the browser accepts the GET is reported by the browser download manager, not by the dialog.

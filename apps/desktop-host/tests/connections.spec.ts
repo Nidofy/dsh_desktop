@@ -50,6 +50,27 @@ it('serializes conflicting saves, rejects stale CAS, and reconciles a lost ACK b
   await store.close()
 })
 
+it('persists an opaque cache partition across keep edits and rotates it on explicit credential replacement', async () => {
+  const { store, save, root, secrets } = await fixture()
+  await save(0)
+  const first = store.state.revisions.find(row => row.id === store.state.current.one)!
+  await store.mutate({ action: 'save', operationId: randomUUID(), connection: 'one', expectedRevision: 1,
+    profile: { ...profile, displayName: 'Renamed' }, credential: { mode: 'keep' } })
+  const kept = store.state.revisions.find(row => row.id === store.state.current.one)!
+  expect(kept.id).not.toBe(first.id)
+  expect(kept.credentialPartition).toBe(first.credentialPartition)
+  await store.close()
+  const reopened = new ConnectionStore(root, secrets, () => {})
+  await reopened.open()
+  expect(reopened.state.revisions.find(row => row.id === kept.id)?.credentialPartition).toBe(first.credentialPartition)
+  await reopened.mutate({ action: 'save', operationId: randomUUID(), connection: 'one', expectedRevision: 2,
+    profile, credential: { mode: 'replace', value: 'synthetic-B' } })
+  expect(reopened.state.revisions.find(row => row.id === reopened.state.current.one)?.credentialPartition)
+    .not.toBe(first.credentialPartition)
+  expect(await readFile(join(root, 'state.json'), 'utf8')).not.toContain('synthetic-')
+  await reopened.close()
+})
+
 it.each(['prepared', 'credential-staged', 'committed', 'applied'])('recovers an interruption at %s without half-published credentials', async (point) => {
   let armed = true
   const { store, root, secrets, keys } = await fixture(async (at) => {

@@ -753,12 +753,16 @@ FIXME(call-config-shape)：重新审视其余哪些字段出于缓存目的确�
 ```ts type-equiv
 /**
  * Provider, model, reasoning effort, and sampling scalars of one conversation's
- * requests. Every field maps 1:1 onto the same-named `GenerateOptions` field;
+ * requests. Dispatch fields map onto the same-named `GenerateOptions` fields;
  * the loop builds requests from the logged header rather than accepting these
  * per call.
  */
 interface LlmCallConfig {
   provider: string
+  /** Stable selection identity captured by a revisioned route owner. Display and
+   * selection replay use this value; dispatch always uses `provider`. Omission
+   * preserves the provider itself, including in older request headers. */
+  providerIdentity?: string
   model: string
   reasoningEffort?: ReasoningEffortId
   temperature?: number
@@ -889,6 +893,18 @@ declare abstract class LlmAdapter {
 ```
 
 `ContentBlockType`（带 `index` 关联的块所携带的键集合）从上文的 [`ContentBlockMap`](#content-blocks-and-messages) 派生。
+
+<a id="desktop-cache-input"></a>
+## Desktop 缓存输入
+
+[`@nidofy/dsh-desktop-extras/cache`](../../packages/nidofy/desktop-extras/src/cache.ts) 的 `DesktopCacheInput` 是产品当前偏好的独立捕获。`ctx.nidofyCacheInput.input()` 不进行 I/O、不准备 payload，也不暴露密钥／凭据。服务身份在重载时改变。消费者必须另外核对实际已应用的 payload 观察；当前策略不认证历史请求或提供方缓存命中。
+
+| 字段 | 含义 |
+|---|---|
+| `preferenceRevision` | 实际已验证偏好 store 修订 |
+| `enabled` | 当前偏好已选择缓存功能 |
+| `mounted` | 缓存 hook 实际已挂载；过渡期可与 enabled 不同 |
+| `policy` | 独立完整的 native／off／session 模式及模型允许列表 |
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -1083,6 +1099,23 @@ stream(options: GenerateOptions): AsyncIterable<StreamChunk>
 Types: [FileAttachmentRef](attachment.zh.md)
 
 Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
+
+<a id="ctxnidofycacheinput--desktopcacheinputservice"></a>
+
+### `ctx.nidofyCacheInput` — `DesktopCacheInputService`
+
+Read-only product preference owner; a captured preference is distinct from a subsequently applied payload hint.
+
+```ts cordis-catalog
+/** Capture the current actual preference/mount state without preparing a payload, sending or reading credentials.
+ * @returns Detached complete policy and preference revision. Enabled/mounted disagreement is an unfinished feature transition.
+ */
+input(): DesktopCacheInput
+```
+
+Types: [DesktopCacheInput](llm-streaming.zh.md#desktop-cache-input)
+
+Source: [`packages/nidofy/desktop-extras/src/cache.ts`](../../packages/nidofy/desktop-extras/src/cache.ts)
 
 <a id="llm-events"></a>
 

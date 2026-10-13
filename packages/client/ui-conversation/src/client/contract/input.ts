@@ -174,6 +174,12 @@ export interface InputTarget {
 
 /** Per-session input facade owned by the conversation wiring layer. */
 export interface SessionInput extends InputTarget {
+  /** Append plain text as one undo operation, preserving selection, references and attachments.
+   * @param text - Explicitly chosen excerpt.
+   * @param revision - Current content revision; stale or locked drafts refuse.
+   * @returns Whether the append committed without sending.
+   */
+  appendText(text: string, revision: number): boolean
   /** Replace the whole draft (persisted-draft seed and programmatic writes). */
   setDraft(text: string): void
   /** Append ordered browser-owned attachment ids; busy admission phases refuse. */

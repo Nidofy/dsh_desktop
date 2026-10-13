@@ -13,6 +13,14 @@
   margin: 8px 0 10px;
 }
 
+.railConnection {
+  position: fixed;
+  inset-inline-start: 60px;
+  bottom: 16px;
+  z-index: 100;
+  max-width: calc(100vw - 76px);
+}
+
 .trigger {
   flex: 1;
   min-width: 0;

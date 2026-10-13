@@ -2,11 +2,33 @@
 
 [English](README.md) | 中文
 
+Desktop 支持一个由 Main 拥有的完整 Conversation 窗口，以及工作台和其他辅助窗口。只有该主窗口中位于 `dsh-app://app/` 或 `/index.html` 的当前顶层文档，才能取得启动注入、语言启动信息和认证 Host 流。第二个完整应用窗口不受支持，重载后仍被拒绝；应用 origin 或原生窗口 id 本身不授予启动权限。导航和销毁使未完成的文档读取失效。Host 停止或替换使未完成的语言读取失效，并拒绝应用页面向旧地址发出的 WebSocket 请求，包括携带旧 cookie 的请求。辅助页面保留既有 HTTP 和作用域导航能力，不成为 Conversation root。参见[启动权限升级指南](../../docs/upgrade-guide/v0.2.0-rc.2/desktop-owned-document/guide.zh.md)。
+
 `intranet` 发行模式采用 [Nidofy 离线策略](../../migration/m1/README.zh.md)。构建 Windows x64 包前，将 `.env.windows.intranet.example` 复制到 `.env.windows`。该模式使用独立应用数据目录，无需账号或 Key 即可进入本地工作区，禁用分析、反馈、API Session 日志附带和在线插件安装，通过完整离线包更新。下文账号、分析和在线更新行为适用于上游发行模式。内网浏览器策略不限制 Node 或工具进程；部署必须使用企业出口网关。
 
 `personal` 发行模式使用 `.env.windows.personal.example`，详见[个人版验证参考](../../migration/personal/README.zh.md)。它保留网络访问及上游模型、插件接口，使用 `Nidofy DSH Desktop` 身份和独立数据，无需账号即可进入工作区。侧边栏账号菜单保留可选的官方登录，退出账号后仍可使用本地工作区。分析与反馈上传保持关闭；更新采用完整包替换。个人产物使用较短的 `personal` 或 `personal-unsigned` 目标目录，避免覆盖内网包及触发 Windows 运行时路径限制。同一目标的依赖准备目录仍共享，各发行模式应顺序构建。
 
+候选准备包含完整私有 Desktop bundle 依赖闭包，包括 Working Notebook 和安全凭据。打包凭据提供方不会启用其可选 patch，也不授予数据迁移权限。候选构建与安装资格分别验收。
+
+[应用 HTTP 策略](../desktop-host/src/connections/README.zh.md) 在准备和每次发送前独立限制模型、发现及 MCP HTTP 目标。它保持既有内网 Chromium 与外链限制，不限制其他 Node、Shell、Git 或任意 socket 流量。
+
+私有发行版在 Host 就绪前挂载连接修复编辑器。缺 Key 时连接目录仍可加载，不可用路由明确拒绝，不更换模型或账号。保存默认保留已有 Key，只有输入替换值才更换。高级区可编辑逐模型窗口／输出声明、超时、重试策略、协议 compat、目录模型覆盖及缓存保留策略，保存保留未编辑字段。期望与已应用修订分别显示；导入的网络、缓存和能力元数据继续待复核。缓存路由键实验仍在个人扩展中；保留策略及模型声明不代表缓存命中或已测量的 provider 容量。
+
+工作台分别显示命令退出、解析的测试、输入覆盖、当前新鲜度与独立用户验收。新动作发布运行前意图，并保留带独立日志的验证回执；旧日志仍只是执行事实。工作台关闭时，Main 消费持久回执和原始持久 Session 终态通知，使用持久偏好、独占展示 claim，并且重连不补弹历史。会话轮次完成不表示项目验证通过。范围、保留与交付限制见[验证 owner 参考](../desktop-host/src/workbench/README.zh.md)。
+
+个人扩展打开[认证自检页面](../desktop-host/src/selftest/README.zh.md)。固定合成命令在原 Shell／原生保护策略下使用既有 primary-runtime 独立 Node，Main 和 Host 保持 Electron。[开发载体检查](tests/README.zh.md#verification-selftest)验证真实 preload、本地协议、双语报告／下载及显式确认的合成连接取消，不创建用户 Session 或使用计费提供方。安装资源与现场资格另行验证。
+
+部署编辑器将 HTTP(S) 代理与绕过字段保存到当前 Harness home 的 `.env`，保留无关字节及未编辑的代理认证信息。它拒绝带认证信息的代理输入、不安全 URL 和过期文件修订，分别显示脱敏的已保存值与启动值，并标明继承环境的覆盖。清空字段会停用文件层的对应代理。保存不会改变活动请求和当前 dispatcher；排空工作后重启 Host 才应用。官方[启动环境策略](../../packages/util/http-proxy/README.zh.md)负责路由和强制回环绕过。自定义 CA 信任必须在启动 Desktop 前由 `NODE_EXTRA_CA_CERTS` 提供；更改后需重启整个 Desktop，编辑器不验证证书，也不将信任设置写入 `.env`。[完整 profile fixture](tests/fixtures/connection-full-profile.mjs) 使用合成 Key 验证当前构建的 Node-mode Host，覆盖认证后的英中 DOM 修复、Office 资源注册、keyless 会话记录、本地代理请求和 ready／fatal／unload IPC。Electron 壳、Office 转换及安装后产品资格仍需单独验收。
+
+认证后的存储状态端点只计量 Desktop 明确拥有的数据，不读取文件内容，也不遍历观察到的链接。共享 home 和物理普通文件只计一次；未知项或读取失败返回不完整总量。原生会话、工程、运行时和凭据内容排除在外。这项只读观察没有跨进程预留或清理权限；当前写入者继续使用既有局部准入检查。
+
 Windows 私有版注册协议时通过 `--nidofy-desktop-data-root=<absolute path>` 携带已解析的数据目录。该参数在获取单实例锁前优先于 `NIDOFY_DESKTOP_DATA_ROOT` 生效，因此浏览器返回即使没有继承启动器的环境变量，也会使用发起登录的配置目录。启动时注册私有协议；个人版在打开登录浏览器前注册平台完成页使用的 `dsh` 协议。Windows 每个协议只保留一个处理程序，因此不支持不同安装同时发起登录。
+
+私有便携目录使用 `--nidofy-desktop-portable` 与显式绝对数据根，禁止两种协议注册、浏览器登录回跳和系统命令安装菜单。渲染器与工具沙箱保持启用。[本地便携说明](portable/README.txt)介绍完整目录／ZIP 和 `Start DSH.exe`；`scripts/create-portable.ps1` 复制新构建的目录程序并编译启动器，不制作安装器。默认专用数据根为 `%LOCALAPPDATA%\NidofyDSHPortable\data-v1`；显式数据根必须是新目录或带有启动器自己的数据标记。替换程序目录继续使用这个稳定根。资格试验使用合成数据；更改 `HOME`、`USERPROFILE` 或数据根不隔离 HKCU。生产安装与注册资格独立于本地便携使用。
+
+模拟 Windows 用户目录必须在 `USERPROFILE` 下包含实际存在的 `AppData/Roaming` 和 `AppData/Local`，并设置匹配的 `APPDATA`、`LOCALAPPDATA`；仅修改环境字符串可能在 Main 获取 `appData` 前失败。资格试验的应用路径应保持简短：深层候选目录可能让包内 Python 原生导入超过 Windows 路径限制。保留失败路径，并在较短路径验证完整且字节不变的副本。
+
+文件复制保留 Session 字节，但改变其物理代次。绑定物理代次的 Notebook sidecar 会以 `NOTEBOOK_SCOPE_CONFLICT` 拒绝复制后的 Session；配上旧程序也不能恢复其权限。旧程序恢复应保留未改动的原物理文件。能够保留物理身份的完整快照恢复仍须单独验收；不得改写 sidecar 代次来让备份看似有效。
 
 桌面埋点遵循[产品采集策略](../../packages/client/product-analytics/README.zh.md)及其动态应用配置，不包含 Web 使用情况。安装更新会等待该操作的本地埋点接收请求结束，再锁定 API 准入并停止 Host。接收请求的时限为一秒，失败不会阻止安装，也不等待收集端完成发送。
 
@@ -91,6 +113,8 @@ Node 准备内置解释器和 Python 库，无需系统 Python 或 pip。[下载
 [薄壳决策](../../.agents/notes/implemented/architecture/2026-09-10-desktop-web-wrapper.zh.md)负责共享 Web 行为与 Desktop 适配。[Electron 打包与更新决策](../../.agents/notes/implemented/architecture/2026-08-25-electron-desktop-packaging-and-updates.zh.md)负责发布身份、签名及更新验收。
 
 Welcome 加载共享 Toast 的配色和阴影变量，挂载在 body 下的通知使用系统字体。
+
+<a id="bundled-command-runtime"></a>
 
 ## 内置命令运行时
 
@@ -339,7 +363,9 @@ Windows 打包使用 Visual C++ Build Tools 和 Windows SDK 编译 x86 Win32/GDI
 
 在有交互式桌面的 Windows x64 上，从仓库根目录运行 `pnpm --dir apps/desktop run test:installer`，可将小型原生测试载荷接入正式安装配置并执行验证。每次运行使用独立产品身份，依次验证仅英文和仅中文的安装器变体，并根据实际显示的欢迎页按钮选择测试文案。两个变体均安装到私有目录并在测试后卸载；截图和结果保留在 `.desktop-build/installer-tests/` 下。检查包含末尾带分隔符的已登记路径升级，以及磁盘根目录拒绝。可选的 `--signed` 标志使用下文的 Windows EV 配置，在嵌入前对测试程序和辅助库签名；它不会启用更新源。
 
-Windows 卸载程序会随应用一起删除 Electron 用户数据目录（`%APPDATA%` 下按包作用域嵌套的浏览器存储与缓存）、`%APPDATA%` 下的产品目录，以及 `%LOCALAPPDATA%` 下的更新下载缓存，随后移除 `%APPDATA%` 之下普通且已空的作用域目录。Harness 主目录（`~/.dsh` 或 `DSH_HOME`：会话、设置、凭据、插件）不会被触碰；以 Windows 环境变量发布的 `DSH_HOME` 还会保护所有与其重叠的目标。静默卸载删除相同的数据；以 `--updated` 或 `/KEEP_APP_DATA` 启动的卸载程序保留数据，electron-builder 在原地更新和从其他目录替换旧安装时正是这样启动它。删除通过原生辅助程序执行：它拒绝受保护的 Windows 目录以及与安装目录或主目录重叠的路径，要求固定的本地驱动器，链接的根目录或祖先目录原样保留，遇到重解析点只解除链接而不进入目标，清除只读属性，并在遇到被占用文件后继续删除其余兄弟项；残余不会中止卸载，也不会提示。安装时在 Windows 卸载注册项上记录 `InstallLocation` 作为标准的清单元数据；在 Windows 11 上，开始菜单右键菜单中的“卸载”对所有 Win32 应用都会打开已安装应用列表，只有 MSIX 包能从那里直接卸载。卸载程序声明 DPI 感知，中文使用微软雅黑 UI。此行为仅适用于 Windows。
+Personal 和 Intranet Windows 卸载程序保留全部私有数据根、Electron 包数据与更新缓存，包括嵌套在产品目录中的默认 Harness 主目录。它们移除安装及其自身注册。卸载不重置设置或清除会话。由操作系统启动的卸载程序不会继承 Main 内部设置的 `DSH_HOME`。替换旧私有安装前，请阅读[私有版卸载升级说明](../../docs/upgrade-guide/v0.2.0-rc.2/private-desktop-uninstall/guide.zh.md)。
+
+上游 Windows 卸载程序会随应用一起删除 Electron 用户数据目录（`%APPDATA%` 下按包作用域嵌套的浏览器存储与缓存）、`%APPDATA%` 下的产品目录，以及 `%LOCALAPPDATA%` 下的更新下载缓存，随后移除 `%APPDATA%` 之下普通且已空的作用域目录。Harness 主目录（`~/.dsh` 或 `DSH_HOME`：会话、设置、凭据、插件）不会被触碰；以 Windows 环境变量发布的 `DSH_HOME` 还会保护所有与其重叠的目标。静默卸载删除相同的数据；以 `--updated` 或 `/KEEP_APP_DATA` 启动的卸载程序保留数据，electron-builder 在原地更新和从其他目录替换旧安装时正是这样启动它。删除通过原生辅助程序执行：它拒绝受保护的 Windows 目录以及与安装目录或主目录重叠的路径，要求固定的本地驱动器，链接的根目录或祖先目录原样保留，遇到重解析点只解除链接而不进入目标，清除只读属性，并在遇到被占用文件后继续删除其余兄弟项；残余不会中止卸载，也不会提示。安装时在 Windows 卸载注册项上记录 `InstallLocation` 作为标准的清单元数据；在 Windows 11 上，开始菜单右键菜单中的“卸载”对所有 Win32 应用都会打开已安装应用列表，只有 MSIX 包能从那里直接卸载。卸载程序声明 DPI 感知，中文使用微软雅黑 UI。此行为仅适用于 Windows。
 
 使用 `node apps/desktop/scripts/test-windows-installer.mjs --uninstall-only --compile-only` 以每次运行唯一的带作用域包名编译独立的中英文夹具。省略 `--compile-only` 可对预置数据运行原生删除器回归，以及交互、静默、`--updated`、`/KEEP_APP_DATA` 和 `DSH_HOME` 位于 Electron 数据内的检查。编译本身不能证明已安装卸载行为。
 
@@ -493,3 +519,5 @@ node apps/desktop/node_modules/pnpm/bin/pnpm.mjs --dir apps/desktop run test:upd
 ## 开发备注
 
 上线前 CDN 与容量决策见[桌面更新提案](../../.agents/notes/proposed/feature/2026-09-08-desktop-update-policy-and-installation.zh.md#cdn-and-capacity-qualification)。
+
+管理窗口隐藏加载，按完整规范化URL共享并发请求并恢复受屏幕约束的几何位置。取消请求不能销毁另一个请求已持有的窗口。欢迎页标题色跟随系统主题，退出与后台关闭确认默认取消。主窗隐藏时独立桌宠继续工作。断线保留可见桌宠，但撤销陈旧导航、固定与互动权限，清理拖动状态并退避轮询。初始渲染失败显示可读降级状态，或销毁加载失败的隐藏窗口后受限重试。显式启用时第三方Live2D Core仍在文档同源执行，移除加载标签不能撤销已执行代码；渲染隔离与发行权利仍是独立未完成资格。

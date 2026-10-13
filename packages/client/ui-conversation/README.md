@@ -11,7 +11,9 @@ Desktop product events use the optional [product analytics service](../product-a
 
 ## Summary
 
-`ui-conversation` owns target-neutral Conversation assembly and the shared browser shell. It consumes Session Controller `SessionEventLikeEntry` feeds, exposes React-free registries and per-Session bindings through `ctx.uiConversation`, and contributes the `useConversation`, `useInput`, and `inputActions` standard props through `ctx.uiSession`. It also owns the per-session durable image URL cache: `ctx.uiConversation.imageUrl(sessionId, attachment)` resolves one session-authorized browser URL per attachment and revokes it with the Session binding, so every Conversation target shares one `session.attachment` read. Concrete targets such as Chat are separate packages that register their own Definitions, snapshot builders, Views, and renderers.
+`ConversationBinding.selectedView` observes the actual selected target. `select(target | null)` publishes presentation selection; `activate(target)` still materializes a background target without selecting it. Root-detach editor callbacks tolerate withdrawn services during disposal without reacquiring a Session.
+
+`ui-conversation` owns target-neutral assembly and the browser shell. It consumes Session Controller feeds, exposes React-free registries and bindings through `ctx.uiConversation`, and supplies standard props through `ctx.uiSession`. Its image URL cache shares one authorized attachment read across targets and revokes URLs with the Session binding. Concrete targets such as Chat register their own Definitions, snapshots, Views and renderers.
 
 ## Table of Contents
 
@@ -59,6 +61,8 @@ The composer registers the File command action and owns its label, availability,
 Claimed commands retain their identity and highlight when only their arguments and trailing separator are deleted; editing the command name releases the claim. The same rules apply to every command and locale, including `/goal`, `/目标`, `/plan`, and `/计划`. Command hints and ordinary placeholders remain hidden throughout IME composition and reappear only after the editor commits the final text and the corresponding input is empty.
 
 Workspace selection uses `uiWorkspace.openWorkspace` to prepare the target and commit navigation. Draft text and attachments move in its synchronous preparation callback only while that request is current; later navigation or owner disposal leaves the original draft intact.
+
+`SessionInput.appendText(text, revision)` explicitly appends external results only to a live plain composer with the matching draft revision. It preserves existing reference nodes, attachments and draft selection, adds one undo entry and never submits. Empty, stale, busy or disposed inputs refuse without altering the draft.
 
 The package occupies the root-scoped `main` key `conversation`. Its `main.conversation` shell keeps the resident `conversation.header` outside the optional-Session `conversation.content` Component Factory. The header hosts root-scoped navigation without a selected Session; titles, actions, and View tabs remain in its strict Session child. The Factory owns the shared body and Composer, reads the current Session through its standard Hook, and exposes strict-Session `views` plus root-scoped `widthControls` local positions. Its default adapter renders the existing `conversation.session` entry, while the main occurrence selects the width handles; an embedded occurrence can replace `views` and omit those handles without rendering the main Header. The shared body and Composer register the queue and Todo docks. The Todo dock uses the shared panel elevation above the composer; its rows use the shared idle, ongoing, and done markers for pending, in-progress, and completed items. `ctx.uiSession.provide()` materializes the Conversation and input sources from the same Session binding and supplies `inputActions` as a stable standard prop.
 

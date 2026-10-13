@@ -2,9 +2,9 @@
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
 import type { LexicalEditor, NodeKey } from 'lexical'
 import {
-  $addUpdateTag, $createParagraphNode, $createTextNode, $getRoot, $getSelection, $isRangeSelection,
+  $addUpdateTag, $createParagraphNode, $createTextNode, $getRoot, $getSelection, $isRangeSelection, $setSelection,
   BLUR_COMMAND, CLEAR_HISTORY_COMMAND, COMMAND_PRIORITY_CRITICAL, createEditor, HISTORY_MERGE_TAG, PASTE_TAG,
-  RootNode, SELECTION_CHANGE_COMMAND, SKIP_DOM_SELECTION_TAG,
+  RootNode, SELECTION_CHANGE_COMMAND, SKIP_DOM_SELECTION_TAG, HISTORY_PUSH_TAG,
 } from 'lexical'
 import { registerPlainText } from '@lexical/plain-text'
 import { createEmptyHistoryState, registerHistory } from '@lexical/history'
@@ -237,6 +237,21 @@ export class DraftEditorRuntime {
     const clean = text.replace(REFERENCE_PLACEHOLDER_RE, '')
     this.applyEdit(() => { applied = $replaceDetectSpanWithText(span, clean) }, PASTE_TAG)
     return applied
+  }
+
+  /** Append an explicit excerpt without moving the retained selection or replacing existing nodes.
+   * @param text - Plain text sanitized with the paste rules; new paragraphs form one undo operation.
+   */
+  appendAsyncText(text: string): void {
+    const clean = text.replace(REFERENCE_PLACEHOLDER_RE, '')
+    this.applyEdit(() => {
+      $addUpdateTag(HISTORY_PUSH_TAG)
+      const selection = $getSelection()?.clone() ?? null
+      const root = $getRoot()
+      for (const line of clean.split('\n')) root.append($createParagraphNode().append($createTextNode(line)))
+      $setSelection(selection)
+      $addUpdateTag(SKIP_DOM_SELECTION_TAG)
+    }, PASTE_TAG)
   }
 
   /**

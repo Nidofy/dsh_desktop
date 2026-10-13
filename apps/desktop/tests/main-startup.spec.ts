@@ -205,6 +205,7 @@ const harness = await vi.hoisted(async () => {
     menu, popup, socketHeaders: vi.fn(), loginShell, readLoginShell, updateCheck, updateDownload, updateInstall,
     platformDispose,
     platformCloseAndWait,
+    readLocalePreference: vi.fn(async (): Promise<string | null> => null),
 
     get analyticsEnabled() { return analyticsEnabled },
     set analyticsEnabled(value: boolean) { analyticsEnabled = value; analyticsEnabledListener?.(value) },
@@ -369,14 +370,15 @@ vi.mock('../src/platform-view.ts', async importOriginal => ({
     dispose(): Promise<void> { return harness.platformDispose() }
   },
 }))
+const cancelPortableAccount = vi.hoisted(() => vi.fn(async (_id: string) => {}))
 vi.mock('../src/welcome-backend.ts', () => ({
   connectDesktopWelcome: async () => ({
     analyticsEnabled: async () => harness.analyticsEnabled,
     report: harness.analytics,
-    readLocalePreference: async () => null,
+    readLocalePreference: harness.readLocalePreference,
     read: async (): Promise<unknown> => (await harness.hosts.at(-1)!.fetch()).json() as Promise<unknown>,
     save: async () => ({ ok: true }),
-    account: { watch: harness.watchAccount, state: async () => ({ status: 'signed-out', attempt: null }) },
+    account: { watch: harness.watchAccount, state: async () => ({ status: 'signed-out', attempt: null }), cancel: cancelPortableAccount },
   }),
 }))
 
@@ -402,6 +404,7 @@ beforeEach(() => {
   packagedManifest.value = '{}'
   vi.resetModules()
   vi.clearAllMocks()
+  harness.readLocalePreference.mockReset().mockResolvedValue(null)
   harness.dialog.showMessageBox.mockReset()
   harness.dialog.showMessageBox.mockResolvedValue({ response: 1 })
   testAuth.login.mockReset()
@@ -924,11 +927,12 @@ describe('desktop main startup', () => {
     harness.hosts[0]!.ready.resolve()
     await Promise.resolve(invoke(DESKTOP_IPC.boot))
     const handler = harness.socketHeaders.mock.calls[0]![1] as (
-      details: { url: string; webContentsId: number; requestHeaders: Record<string, string> },
+      details: { url: string; webContentsId: number; frame?: { url: string } | null; requestHeaders: Record<string, string> },
       callback: (result: unknown) => void,
     ) => void
     const callback = vi.fn()
-    const details = { url: 'ws://127.0.0.1:3080/api/remote.mux', webContentsId: 42, requestHeaders: { Origin: 'dsh-app://app' } }
+    const details = { url: 'ws://127.0.0.1:3080/api/remote.mux', webContentsId: 42,
+      frame: harness.windows[0]!.webContents.mainFrame, requestHeaders: { Origin: 'dsh-app://app' } }
     handler(details, callback)
     expect(callback).toHaveBeenLastCalledWith({ requestHeaders: {
       origin: 'http://127.0.0.1:3080', cookie: 'test-cookie', 'sec-fetch-site': 'same-origin',
@@ -936,9 +940,13 @@ describe('desktop main startup', () => {
     handler({ ...details, requestHeaders: { Origin: 'https://other.example' } }, callback)
     expect(callback).toHaveBeenLastCalledWith({ cancel: true })
     handler({ ...details, webContentsId: 43 }, callback)
-    expect(callback).toHaveBeenLastCalledWith({})
+    expect(callback).toHaveBeenLastCalledWith({ cancel: true })
+    for (const frame of [null, { url: 'dsh-app://app/' }]) {
+      handler({ ...details, frame }, callback)
+      expect(callback).toHaveBeenLastCalledWith({ cancel: true })
+    }
     handler({ ...details, url: 'ws://127.0.0.1:9999/api/remote.mux' }, callback)
-    expect(callback).toHaveBeenLastCalledWith({})
+    expect(callback).toHaveBeenLastCalledWith({ cancel: true })
   })
 
   it('shares login key discovery with onboarding and rejects foreign renderers', async () => {
@@ -950,6 +958,20 @@ describe('desktop main startup', () => {
     harness.hosts.at(-1)!.fetch.mockResolvedValueOnce(Response.json({ hasApiKey: false }))
     await expect(handler(event)).resolves.toBe(false)
     await expect(handler({ ...event, sender: {} })).rejects.toThrow()
+  })
+
+  it.each(['reload', 'destroy'])('refuses a locale read completed after application document %s', async (action) => {
+    await readyForUpdate()
+    await Promise.resolve(invoke(DESKTOP_IPC.boot))
+    const preference = Promise.withResolvers<string | null>()
+    harness.readLocalePreference.mockReturnValueOnce(preference.promise)
+    const pending = Promise.resolve(invoke(DESKTOP_IPC.localeBootstrap, 'app'))
+    const refused = expect(pending).rejects.toThrow('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
+    const contents = harness.windows[0]!.webContents
+    if (action === 'reload') contents.emit('did-start-navigation', {}, 'dsh-app://app/', false, true)
+    else contents.emit('destroyed')
+    preference.resolve('en')
+    await refused
   })
 
   it('enlarges only an active onboarding window and keeps its size after completion', async () => {
@@ -992,9 +1014,10 @@ describe('desktop main startup', () => {
     await import('../src/main.ts')
     await harness.preparing.promise
     const handler = harness.handlers.get(DESKTOP_IPC.boot)!
-    await expect(handler({ senderFrame: { url: 'https://other.example/' } })).rejects.toThrow('unowned renderer')
+    const sender = harness.windows[0]!.webContents
+    await expect(handler({ sender, senderFrame: { url: 'https://other.example/' } })).rejects.toThrow('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
     let settled = false
-    const boot = Promise.resolve(handler({ senderFrame: { url: 'dsh-app://app/' } })).then((value) => { settled = true; return value })
+    const boot = Promise.resolve(handler({ sender, senderFrame: sender.mainFrame })).then((value) => { settled = true; return value })
     await Promise.resolve()
     expect(settled).toBe(false)
     expect(harness.windows[0]!.urls).toEqual(['dsh-app://app/'])
@@ -1004,6 +1027,24 @@ describe('desktop main startup', () => {
     harness.hosts[0]!.ready.resolve()
     await expect(boot).resolves.toEqual({ injections: [], streamBaseUrl: 'http://127.0.0.1:3080' })
     expect(harness.windows[0]!.urls).toEqual(['dsh-app://app/'])
+  })
+
+  it('rejects a boot captured before root reload and rejects auxiliary paths on that same native window', async () => {
+    await import('../src/main.ts')
+    await harness.preparing.promise
+    const sender = harness.windows[0]!.webContents, event = { sender, senderFrame: sender.mainFrame }
+    const handler = harness.handlers.get(DESKTOP_IPC.boot)!
+    const boot = expect(handler(event)).rejects.toThrow('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
+    sender.emit('did-start-navigation', {}, 'dsh-app://app/', false, true)
+    harness.prepared.resolve(); await harness.hostStarted.promise; harness.hosts[0]!.ready.resolve()
+    await boot
+    await expect(handler(event)).resolves.toMatchObject({ streamBaseUrl: 'http://127.0.0.1:3080' })
+    for (const url of ['dsh-app://app/api/nidofy/workbench/ui', 'dsh-app://shell/', 'dsh-app://other/']) {
+      sender.mainFrame.url = url
+      await expect(handler(event)).rejects.toThrow('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
+      await expect(harness.handlers.get(DESKTOP_IPC.localeBootstrap)!(event)).rejects.toThrow('DESKTOP_APPLICATION_DOCUMENT_REFUSED')
+    }
+    sender.mainFrame.url = 'dsh-app://app/'
   })
 
   it('retains macOS native editing actions on right-click and only copy for selected read-only text', async () => {
@@ -1764,11 +1805,27 @@ describe('desktop main startup', () => {
       } })))
     }
     const host = await readyForUpdate()
+    const socketHandler = harness.socketHeaders.mock.calls[0]![1] as (
+      details: { url: string; webContentsId: number; frame: { url: string }; requestHeaders: Record<string, string> },
+      callback: (result: unknown) => void,
+    ) => void
+    const socketReply = vi.fn()
+    await Promise.resolve(invoke(DESKTOP_IPC.boot))
+    const preference = Promise.withResolvers<string | null>()
+    harness.readLocalePreference.mockReturnValueOnce(preference.promise)
+    const localeRead = Promise.resolve(invoke(DESKTOP_IPC.localeBootstrap, 'app'))
+    const refusedLocale = expect(localeRead).rejects.toThrow('Desktop Host is unavailable')
+    const socketRequest = { url: 'ws://127.0.0.1:3080/api/remote.mux', webContentsId: 42,
+      frame: harness.windows[0]!.webContents.mainFrame, requestHeaders: { Origin: 'dsh-app://app', Cookie: 'stale-cookie' } }
     if (mandatory) await harness.policyBlocked.promise
     harness.dialog.showMessageBox.mockResolvedValueOnce({ response: 0 })
     const preparing = harness.prepareUpdate()
     if (mandatory) await answerMandatory('install')
     await host.stopping.promise
+    preference.resolve('en')
+    await refusedLocale
+    socketHandler(socketRequest, socketReply)
+    expect(socketReply).toHaveBeenLastCalledWith({ cancel: true })
     host.exited.resolve()
     await expect(preparing).resolves.toBe(true)
     harness.dialog.showMessageBox.mockResolvedValue({ response: 1 })
@@ -1783,6 +1840,12 @@ describe('desktop main startup', () => {
     replacement.ready.resolve()
     await vi.waitFor(() => { expect(harness.windows[0]!.urls).toEqual(['dsh-app://app/', 'dsh-app://app/']) })
     await expect(Promise.resolve(invoke(DESKTOP_IPC.boot))).resolves.toEqual({ injections: [], streamBaseUrl: 'http://127.0.0.1:3099' })
+    socketHandler(socketRequest, socketReply)
+    expect(socketReply).toHaveBeenLastCalledWith({ cancel: true })
+    socketHandler({ ...socketRequest, url: 'ws://127.0.0.1:3099/api/remote.mux' }, socketReply)
+    expect(socketReply).toHaveBeenLastCalledWith({ requestHeaders: {
+      origin: 'http://127.0.0.1:3099', cookie: 'test-cookie', 'sec-fetch-site': 'same-origin',
+    } })
     if (mandatory) await answerMandatory('later')
     await expect(retry).resolves.toBe(false)
     expect(replacement.updateTasks.mock.calls).toEqual([['inspect']])
@@ -2273,6 +2336,30 @@ it('binds personal login completion to its current executable and trial profile 
   expect(harness.app.setAsDefaultProtocolClient.mock.calls.map(([scheme, executable, args]) => ({
     scheme, currentExecutable: executable === process.execPath, currentProfile: JSON.stringify(args) === JSON.stringify(prefix),
   }))).toEqual(expected)
+})
+
+it('starts a portable private profile without OS registration, command installation or a browser login return', async () => {
+  const { resolveDesktopDistribution } = await import('../scripts/desktop-distribution.mjs')
+  packagedManifest.value = JSON.stringify({ dshDistribution: resolveDesktopDistribution({
+    DSH_DESKTOP_DISTRIBUTION: 'personal', DSH_DESKTOP_APP_ID: 'io.github.nidofy.dsh.desktop',
+  }) })
+  const root = harness.app.getPath('userData')
+  vi.stubGlobal('process', { ...process, argv: [...process.argv, '--nidofy-desktop-portable', `--nidofy-desktop-data-root=${root}`] })
+  await import('../src/main.ts')
+  await harness.preparing.promise
+  harness.prepared.resolve()
+  await harness.hostStarted.promise
+  harness.hosts[0]!.ready.resolve()
+  await Promise.resolve(invoke(DESKTOP_IPC.boot))
+  harness.publishAccount({ status: 'signed-out', links: { usageUrl: '', topUpUrl: '' }, attempt: {
+    id: 'portable-login' as NonNullable<AccountView['attempt']>['id'], phase: 'waiting-browser',
+    authorizeUrl: 'https://platform.deepseek.com/dsh/authorize?state=portable',
+  } })
+  expect(harness.app.setPath).toHaveBeenCalledWith('userData', join(root, 'electron'))
+  expect(harness.app.setAsDefaultProtocolClient).not.toHaveBeenCalled()
+  expect(harness.openExternal).not.toHaveBeenCalled()
+  expect(cancelPortableAccount).toHaveBeenCalledWith('portable-login')
+  expect(applicationMenuItems().some(item => item.label === en.cliCommandMenu || item.label === zh.cliCommandMenu)).toBe(false)
 })
 
 it('disables native product events for a disabled Desktop launch', async () => {

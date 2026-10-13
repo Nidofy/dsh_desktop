@@ -6,6 +6,11 @@
 
 ## 管理记录
 
+<a id="http-authorization"></a>
+### 应用 HTTP 授权
+
+`HttpEgressPolicy` 是可选的 launcher 所属能力，在 profile 条目连接前可用。其 `prepare(url)` 捕获端点授权并返回 `HttpEgressLease`。租约包含发行／profile `revision`、`restricted`、仅用于配置的检查、感知 Session 的请求检查及绑定 origin 的 fetch 工厂。配置检查不授予请求权限。实际发送保持已准备修订、重验真实 Workspace 归属并拒绝重定向；消费者拥有响应 body 的消费。[Desktop 参考](../../apps/desktop-host/src/connections/README.zh.md) 定义 provider、持久策略及排除范围。未安装 provider 的上游启动保持原行为。
+
 `PluginEntryId` 标识一个 Loader 条目；调用方从 `listPlugins` 获取，不自行拼接 patch id。
 
 `PluginInfo` 包含模块标识、实际启停状态、fiber 阶段和可选的展示 `meta`，以及唯一的 `patchId` 或 `readOnlyReason`。
@@ -33,6 +38,12 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
 Persist complete raw configs and apply them through the normal Loader path.
 
 ```ts cordis-catalog
+/** Register application authorization for complete candidate configurations.
+ * @param prepare - Captures authorization before persistence and returns its final live check.
+ * @returns Disposer; the registering application owns its lifetime.
+ */
+registerValidator(prepare: (entry: Entry, config: Record<string, unknown>) => Promise<() => Promise<void>>): () => void
+
 /** Addressable profile rows; nested Includes have independent configuration ownership.
  * @returns Active entries with unique profile patch ids.
  */
@@ -81,6 +92,27 @@ async getLinked(url: string): Promise<string[]>
 ```
 
 Source: [`packages/boot/hmr/src/index.ts`](../../packages/boot/hmr/src/index.ts)
+
+<a id="ctxoutboundhttp--httpegresspolicy"></a>
+
+### `ctx.outboundHttp` — `HttpEgressPolicy`
+
+Application provider consumed by model adapters, discovery and MCP HTTP.
+
+```ts cordis-catalog
+/** Capture the allowed endpoint and immutable authorization revision.
+ * @param url - Provider's resolved HTTP endpoint without credentials, query or fragment.
+ * @returns Authorization captured before authentication or payload preparation.
+ */
+prepare(url: string): Promise<HttpEgressLease>
+
+/** Abort and drain owned transports when the supplying application closes. */
+close?(): Promise<void>
+```
+
+Types: [HttpEgressLease](boot.zh.md#http-authorization)
+
+Source: [`packages/util/http-proxy/src/egress.ts`](../../packages/util/http-proxy/src/egress.ts)
 
 <a id="ctxpluginmanager--pluginmanager"></a>
 

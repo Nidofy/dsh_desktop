@@ -71,11 +71,11 @@ const tokenFields = ['inputTokens','outputTokens','totalTokens','cacheReadTokens
 export function usageMetadata(usage) {
   const fields = Object.fromEntries(tokenFields.map(k => [k, Number.isSafeInteger(usage?.[k]) && usage[k] >= 0 ? usage[k] : null]));
   // Missing cache counters remain unknown; do not invent a zero cache hit rate.
-  const aggregateInput = fields.totalTokens !== null && fields.outputTokens !== null && fields.totalTokens >= fields.outputTokens
-    ? fields.totalTokens - fields.outputTokens : null;
+  const aggregateInput = [fields.inputTokens,fields.cacheReadTokens,fields.cacheWriteTokens].every(value=>value!==null)
+    ? fields.inputTokens+fields.cacheReadTokens+fields.cacheWriteTokens : null;
   return {...fields, aggregateInputTokens:aggregateInput, source:'dsh-adapter',
-    cacheReporting:fields.cacheReadTokens === null ? 'unavailable-at-logical-boundary' : 'reported',
-    aggregateInputSource:aggregateInput === null ? 'unavailable' : 'derived-from-total-minus-output'};
+    cacheReporting:fields.cacheReadTokens === null ? 'unavailable-at-logical-boundary' : 'adapter-count-not-server-presence',
+    aggregateInputSource:aggregateInput === null ? 'unavailable' : 'sum-of-input-cache-read-cache-write'};
 }
 export class Capture {
   constructor({key,configuration={},maxRecords=500,maxBytes=10*1024*1024}) {

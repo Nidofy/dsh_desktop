@@ -17,6 +17,9 @@
       "path": "../../client/ui-workspace"
     },
     {
+      "path": "../../client/ui-conversation/tsconfig.client.json"
+    },
+    {
       "path": "../../core/session"
     },
     {
@@ -42,6 +45,9 @@
     },
     {
       "path": "../../client/ui-settings/tsconfig.client.json"
+    },
+    {
+      "path": "../../client/store"
     }
   ]
 }

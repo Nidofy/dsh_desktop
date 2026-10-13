@@ -8,9 +8,11 @@ kind: "package-reference"
 
 ## 概述
 
+`UiSession.selectMain(reference)` 将导航 owner 借出的准确 binding 通过 `mainBinding`、`mainSelection` 和根 `useMainSelection` 钩子发布。先发布后继，再释放前任；owner 卸载前清空选择。retain 计数不选择根视图，也不确认完成提醒。其他展示面仍可使用显式 `bindingSource(reference)`。
+
 使用本包可通过标准 Slot 钩子公开 Session catalog、retain 信息与统一 UI 状态。它按 `SessionBinding` 物化钩子和 prop，而 `SessionProvider` 可以继承外围 binding 或绑定显式 `SessionReference`。它拥有进程本地的 pending-interaction 与完成提醒策略，但不拥有 Controller transport、历史或 reference。
 
-运行状态来自 Host 列表基线或状态事件。Subagent 目录行和已保留子会话的 fallback 行不会建立运行状态；主视图引用仍会确认完成提醒。
+运行状态来自 Host 列表基线或状态事件。Subagent 目录行和已保留子会话的 fallback 行不会建立运行状态；仅显式主视图选择确认完成提醒。
 
 ## 目录
 

@@ -42,7 +42,7 @@ export class DesktopBackgroundNotice {
     try {
       const { messages } = this.options.locale()
       const result = await this.options.show({ type: 'info', title: messages.aboutProduct,
-        message: messages.backgroundNoticeBody, buttons: [messages.backgroundNoticeConfirm], defaultId: 0, cancelId: -1 })
+        message: messages.backgroundNoticeBody, buttons: [messages.backgroundNoticeConfirm, messages.cancel], defaultId: 1, cancelId: 1 })
       if (this.disposed || result.response !== 0) return
       this.acknowledged = true
       try {

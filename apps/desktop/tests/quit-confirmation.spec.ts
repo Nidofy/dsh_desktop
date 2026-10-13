@@ -45,7 +45,7 @@ describe('DesktopQuitConfirmation', () => {
     expect(f.shown).toEqual([{
       type: 'warning', title: 'DeepSeek Harness', message: '退出 DeepSeek Harness？',
       detail: '当前正在运行的任务将会中断，且应用关闭期间，定时任务不会运行',
-      buttons: ['退出', '取消'], defaultId: 0, cancelId: 1, noLink: true,
+      buttons: ['退出', '取消'], defaultId: 1, cancelId: 1, noLink: true,
     }])
   })
 
@@ -56,7 +56,7 @@ describe('DesktopQuitConfirmation', () => {
     expect(f.shown).toEqual([{
       type: 'none', icon: f.icon, title: 'DeepSeek Harness', message: 'Quit DeepSeek Harness?',
       detail: 'Scheduled tasks will not run while the app is closed.',
-      buttons: ['Quit', 'Cancel'], defaultId: 0, cancelId: 1, noLink: true,
+      buttons: ['Quit', 'Cancel'], defaultId: 1, cancelId: 1, noLink: true,
     }])
   })
 

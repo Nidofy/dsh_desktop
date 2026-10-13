@@ -6,6 +6,11 @@ The [boot package group](../../packages/boot/README.md) owns launcher-provided p
 
 ## Management records
 
+<a id="http-authorization"></a>
+### Application HTTP authorization
+
+`HttpEgressPolicy` is an optional launcher-provided capability available before profile entries connect. Its `prepare(url)` captures endpoint authorization and returns `HttpEgressLease`. The lease carries distribution/profile `revision`, `restricted`, a configuration-only check, a Session-aware request check and an origin-bound fetch factory. Configuration checking grants no request permission. Actual sends retain the prepared revision, revalidate real Workspace membership and refuse redirects; consumers own response-body consumption. The [Desktop reference](../../apps/desktop-host/src/connections/README.md) defines the provider, durable policy and exclusions. Upstream launches without a provider retain their behavior.
+
 `PluginEntryId` identifies one Loader entry; callers obtain it from `listPlugins` rather than constructing a patch id.
 
 `PluginInfo` carries module identity, effective enablement, fiber phase and optional display `meta`, plus a unique `patchId` or a `readOnlyReason`.
@@ -33,6 +38,12 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
 Persist complete raw configs and apply them through the normal Loader path.
 
 ```ts cordis-catalog
+/** Register application authorization for complete candidate configurations.
+ * @param prepare - Captures authorization before persistence and returns its final live check.
+ * @returns Disposer; the registering application owns its lifetime.
+ */
+registerValidator(prepare: (entry: Entry, config: Record<string, unknown>) => Promise<() => Promise<void>>): () => void
+
 /** Addressable profile rows; nested Includes have independent configuration ownership.
  * @returns Active entries with unique profile patch ids.
  */
@@ -81,6 +92,27 @@ async getLinked(url: string): Promise<string[]>
 ```
 
 Source: [`packages/boot/hmr/src/index.ts`](../../packages/boot/hmr/src/index.ts)
+
+<a id="ctxoutboundhttp--httpegresspolicy"></a>
+
+### `ctx.outboundHttp` — `HttpEgressPolicy`
+
+Application provider consumed by model adapters, discovery and MCP HTTP.
+
+```ts cordis-catalog
+/** Capture the allowed endpoint and immutable authorization revision.
+ * @param url - Provider's resolved HTTP endpoint without credentials, query or fragment.
+ * @returns Authorization captured before authentication or payload preparation.
+ */
+prepare(url: string): Promise<HttpEgressLease>
+
+/** Abort and drain owned transports when the supplying application closes. */
+close?(): Promise<void>
+```
+
+Types: [HttpEgressLease](boot.md#http-authorization)
+
+Source: [`packages/util/http-proxy/src/egress.ts`](../../packages/util/http-proxy/src/egress.ts)
 
 <a id="ctxpluginmanager--pluginmanager"></a>
 

@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-13-provider-selection-identity.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-13-provider-selection-identity.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-13-provider-selection-identity:
+  en: 7ba6b0ebd6fe24e0
+  zh: 199e2de16e4f00b8
+/2026-10-13-provider-selection-identity/summary:
+  en: e538c567944f33cc
+  zh: 5ed6afccdd14c7d0
+/2026-10-13-provider-selection-identity/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-13-provider-selection-identity/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-13-provider-selection-identity/compatibility:
+  en: 51f73a72a715635f
+  zh: 33f955c1d4ce32f6
+/2026-10-13-provider-selection-identity/verification:
+  en: a9c719c1a3a177e2
+  zh: 9e0afeaf3bd04d17
+/2026-10-13-provider-selection-identity/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

@@ -4,11 +4,13 @@
 
 事件日志的**持久性 seam**。[session.md](session.zh.md) 描述了内存中的 `Session`：仅追加的 `SessionEvent` 日志即为真源。本页描述如何使该日志持久化：抽象的 `SessionPersistence` 服务、它的提供方模型与随产品交付的 JSONL 后端、flush 检查点、崩溃恢复，以及随日志一同存储的元数据头。日志承载的事件词汇在生成的[持久化日志事件目录](../persistence-catalog.zh.md)中逐项列举。
 
-该 seam 是一个[能力 seam](../../.agents/notes/implemented/architecture/2026-06-13-capability-seams.zh.md)：一个抽象服务（[dsh-session-persistence](../../packages/session/session-persistence)，`ctx.sessionPersistence`）在现有 `SessionEvent` 上暴露 `create`/`open`/`stat`/`list`——**没有平行的持久化事件类型**——其中 `create` 与 `open` 返回逐会话的 `SessionHandle`（`read`/`append`/`flush`/`close`），它承载全部日志访问与单写者所有权。仓库随产品交付 [dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl) 作为其 provider；仓库外 provider 可以实现同一服务约定。见[基于句柄的持久化 Agent Note](../../.agents/notes/implemented/architecture/2026-08-27-handle-based-session-persistence.zh.md)与 [session-persistence Agent Note](../../.agents/notes/implemented/architecture/2026-06-14-session-persistence.zh.md)。
+该 seam 是一个[能力 seam](../../.agents/notes/implemented/architecture/2026-06-13-capability-seams.zh.md)：一个抽象服务（[dsh-session-persistence](../../packages/session/session-persistence)，`ctx.sessionPersistence`）在现有 `SessionEvent` 上暴露 `create`/`open`/`stat`/`list`——**没有平行的持久化事件类型**——其中 `create` 与 `open` 返回逐会话的 `SessionHandle`（`read`/`append`/`flush`/`close`），它承载普通日志访问与单写者所有权。仓库随产品交付 [dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl) 作为其 provider；仓库外 provider 可以实现同一服务约定。见[基于句柄的持久化 Agent Note](../../.agents/notes/implemented/architecture/2026-08-27-handle-based-session-persistence.zh.md)与 [session-persistence Agent Note](../../.agents/notes/implemented/architecture/2026-06-14-session-persistence.zh.md)。
 
 ## `SessionHandle`——通向已存储会话的一条打开通道
 
-每一次日志读写都经由句柄流动，绝不经由按 id 寻址的服务方法：句柄是跨进程写租约把守的唯一入口。读取会返回调用方独占的外层 slice，以及由生产者建立的 event value 别名状态。一种句柄类型同时服务两种访问——在 `read` 句柄上执行修改是运行时的 `SessionReadOnlyError`，而非类型层面的拆分——而进程内单写者所有权使得在已有活跃持有者时第二次 `open(id, 'write')` 以 `SessionAlreadyOwnedError` 拒绝。
+JSONL provider 在写入历史后继前接受可选可信 `JsonlMigrationWriter`。[包参考](../../packages/session/session-persistence-jsonl/README.zh.md)负责字节测量和准入，[升级指南](../upgrade-guide/v0.2.0-rc.2/session-migration-cancellation/guide.zh.md)说明发布前后的取消行为。该能力不改变抽象服务或 Loader 配置，不新增 Session 格式，也不授予产品导入／接纳权限。
+
+句柄操作提供普通日志访问；耐久观察和派生状态发布也使用 provider 拥有的写排他机制。读取会返回调用方独占的外层 slice，以及由生产者建立的 event value 别名状态。一种句柄类型同时服务两种访问——在 `read` 句柄上执行修改是运行时的 `SessionReadOnlyError`，而非类型层面的拆分——而进程内单写者所有权使得在已有活跃持有者时第二次 `open(id, 'write')` 以 `SessionAlreadyOwnedError` 拒绝。
 
 ```ts type-equiv
 /** One persistence event slice returned by {@link SessionHandle.read}. */
@@ -328,6 +330,10 @@ interface SessionPersistenceSnapshot {
 
 - **[dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl)**——逐会话仅追加的逻辑 JSONL 日志，默认存储为带 checksum 的连续 Zstandard frame，也可配置为原始行；具备崩溃安全的原子实体化、逐批 `fsync` 的 append，以及在第一次新 append 之前截断撕裂尾部。`stat`/`list` 携带 `sizeBytes` 与尽力而为的、由 `fs.stat` 派生的修订号。
 
+## 耐久观察与物理代次
+
+`SessionDurableObservation` 在检查字段（`meta`、`inheritedEventCount`、`events`）之外增加 `generation` 与 `durableThrough`。原始逻辑事件恰好覆盖 seq 0 到确认位置；空数组对应 -1。`SessionPersistenceGeneration` 是标记过的不透明字符串，表示一个物理实例；追加与冷启动保留身份，它不是缓存 revision 或格式号。`observeDurable()` 确认该前缀，`withGeneration()` 在回调结束前排除代次替换。不支持的 provider 明确拒绝，不使用普通尽力写入读取代替。[JSONL provider](../../packages/session/session-persistence-jsonl/README.zh.md)负责文件身份、历史转换与租约语义。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -385,6 +391,26 @@ abstract open(id: SessionId, access: SessionAccess, options?: SessionPersistence
  *   remaining handles still flush.
  */
 abstract flush(): Promise<void>
+
+/** Observe a confirmed raw prefix without relying on best-effort read visibility.
+ * Providers without this capability refuse explicitly; ordinary read is never a fallback.
+ * @param _id - stored session to observe.
+ * @param _options - cancellation for observation work.
+ * @returns detached metadata and raw events paired with their physical generation and durable cut.
+ */
+observeDurable(_id: SessionId, _options?: SessionPersistenceOpenOptions): Promise<SessionDurableObservation>
+
+/** Execute a derived-state publication while excluding generation replacement and migration.
+ * The callback must not mutate this session or recursively acquire this protection. Providers
+ * refuse if the expected generation is no longer selected or exclusion cannot be obtained.
+ * The protection remains held across asynchronous admission and ends after callback settlement.
+ * @param _id - session whose physical generation must remain selected.
+ * @param _generation - identity captured by observeDurable.
+ * @param _publish - derived-state publication, including its admission and commit point.
+ * @param _options - cancellation before invoking the callback.
+ * @returns the callback result; an already committed result must not be undone by later logging.
+ */
+withGeneration<T>(_id: SessionId, _generation: SessionPersistenceGeneration, _publish: () => Promise<T>, _options?: SessionPersistenceOpenOptions): Promise<T>
 
 /**
  * Observe one stored session without reading its event log or taking

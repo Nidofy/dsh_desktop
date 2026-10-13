@@ -217,7 +217,7 @@ function mount(
           useChat={useChat}
           useTrajectory={useTrajectory}
           useSessions={props.useSessions}
-          usePanelInfo={props.usePanelInfo}
+          useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={props.usePanelInfo}
           useResource={useResource}
           useSessionStatus={useSessionStatus}
           useSessionRetainInfo={() => undefined}
@@ -246,7 +246,7 @@ function mount(
           useChat={useChat}
           useTrajectory={useTrajectory}
           useSessions={props.useSessions}
-          usePanelInfo={props.usePanelInfo}
+          useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={props.usePanelInfo}
           useResource={useResource}
           useSessionStatus={useSessionStatus}
           useSessionRetainInfo={() => undefined}
@@ -274,7 +274,7 @@ function mount(
           useSession={useSession}
           useConversation={useConversation}
           useSessions={props.useSessions}
-          usePanelInfo={props.usePanelInfo}
+          useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={props.usePanelInfo}
           useSessionStatus={useSessionStatus}
           useSessionRetainInfo={() => undefined}
           useWorkspaces={props.useWorkspaces}
@@ -331,6 +331,7 @@ function mount(
       useChat,
       useTrajectory,
       useSessions: bindSnapshotSelector(sessions),
+      useMainSelection: () => { throw new Error('Fixture does not read main selection') },
       usePanelInfo: selector => selector({ activePanelId: null }),
       useResource,
       useSessionStatus,
@@ -356,6 +357,7 @@ function mount(
     )
   }) as ConversationSlotProps['renderFactorySlot']
   const runtimeProps: PropsRuntime<'main.conversation'> & Pick<ConversationSlotProps, 'SessionProvider'> = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: selector => selector({ activePanelId: null }),
     sessionId,
     SessionProvider,

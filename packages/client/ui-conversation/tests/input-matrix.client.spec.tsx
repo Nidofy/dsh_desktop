@@ -49,6 +49,7 @@ function mountBar(shell: SessionInputShell, over?: { running?: boolean; disabled
     removed: over?.disabled ?? false,
   })
   const props: InputBarProps = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: selector => selector({ activePanelId: null }),
     sessionId: SID,
     SessionProvider: ({ children }) => children,

@@ -31,6 +31,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 // Type-only: pulls the Workspace UI navigation service merge (ctx.uiWorkspace).
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import { AgentPresetLabel } from './AgentPresetLabel.tsx'
 import type { AgentPresetLabelInjected } from './AgentPresetLabel.tsx'
@@ -60,7 +61,7 @@ export { AGENT_PRESET_SETTINGS_NS, writeDefaultPreset } from './settings-store.t
 
 /** Required services (cordis fiber inject). */
 export const inject = [
-  'slots', 'sessions', 'locale', 'remote', 'remote.agentPresets', 'remote.settings', 'configForms',
+  'slots', 'sessions', 'uiSession', 'locale', 'remote', 'remote.agentPresets', 'remote.settings', 'configForms',
 ]
 
 /**
@@ -82,16 +83,17 @@ export function apply(ctx: ClientContext): void {
     const seat = new AgentPresetSeatController(ctx, () => {
       if (ctx.sessions.binding(binding.sessionId) !== binding) return undefined
       const summary = ctx.sessions.list.getSnapshot().byId[binding.sessionId]
-      return summary !== undefined
-        && (ctx.sessions.retainInfo(binding.sessionId).getSnapshot().retainedBy.mainView ?? 0) > 0
+      return summary !== undefined && ctx.uiSession.mainBinding.getSnapshot() === binding
         ? summary
         : undefined
     }, staged)
     seats.set(binding, seat)
     const dispose = binding.ctx.effect(() => {
       const stop = ctx.sessions.list.subscribe(() => { void seat.apply() })
+      const stopSelection = ctx.uiSession.mainBinding.subscribe(() => { void seat.apply() })
       return () => {
         stop()
+        stopSelection()
         seats.delete(binding)
         boundSeatDisposers.delete(dispose)
       }
@@ -110,13 +112,9 @@ export function apply(ctx: ClientContext): void {
     for (const seat of seats.values) void seat.apply()
   }), 'ui-agent-preset: Developer tools gate')
   const mainBlankSeat = (): AgentPresetSeatController | undefined => {
-    const summary = Object.values(ctx.sessions.list.getSnapshot().byId)
-      .find((session) => {
-        /* v8 ignore next -- retained source counts omit zero-valued entries. */
-        return session.blank && (session.retainedBy.mainView ?? 0) > 0
-      })
-    const binding = summary === undefined ? undefined : ctx.sessions.binding(summary.id)
-    return binding === undefined ? undefined : seatFor(binding)
+    const binding = ctx.uiSession.mainBinding.getSnapshot()
+    if (!binding || !ctx.sessions.list.getSnapshot().byId[binding.sessionId]?.blank) return undefined
+    return seatFor(binding)
   }
 
   ctx.effect(() => ctx.locale.register('settings.agentPreset', { zh, en }), 'ui-agent-preset: settings row dictionaries')
@@ -197,9 +195,8 @@ export function apply(ctx: ClientContext): void {
 
   /** Capture the exact blank Session one Settings action may update. */
   const captureBlankSessionSync = (): ((id: string) => Promise<string | undefined>) => {
-    const summary = Object.values(ctx.sessions.list.getSnapshot().byId)
-      .find(session => session.blank && (session.retainedBy.mainView ?? 0) > 0)
-    const binding = summary === undefined ? undefined : ctx.sessions.binding(summary.id)
+    const selected = ctx.uiSession.mainBinding.getSnapshot()
+    const binding = selected && ctx.sessions.list.getSnapshot().byId[selected.sessionId]?.blank ? selected : undefined
     const seat = binding === undefined ? undefined : seatFor(binding)
     const sessionId = seat?.blankSessionId()
     return async (id: string) => {

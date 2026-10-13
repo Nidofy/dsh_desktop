@@ -1,0 +1,785 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cancels a pending preview, ignores late controls and permits a new explicit preview > cancelled waiting preserves owner uncertainty 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-control-fold"
+    open=""
+  >
+    <summary>
+      Settings in words
+    </summary>
+    <div
+      class="nidofy-detail nidofy-settings"
+    >
+      <p>
+        Choose one listed action or type one finite instruction. Selection only fills the instruction; preview and confirmation are separate. No model request is sent.
+      </p>
+      <label
+        for=":r0:"
+      >
+        Available actions
+      </label>
+      <select
+        id=":r0:"
+      >
+        <option
+          value=""
+        >
+          Choose an action
+        </option>
+        <option
+          value="follow"
+        >
+          Follow this conversation
+        </option>
+        <option
+          value="unfollow"
+        >
+          Stop following
+        </option>
+        <option
+          value="connections"
+        >
+          Open connections
+        </option>
+        <option
+          value="builds"
+        >
+          Open workbench
+        </option>
+        <option
+          value="pets"
+        >
+          Open pet settings
+        </option>
+        <option
+          value="bind"
+        >
+          Bind pet
+        </option>
+        <option
+          value="unbind"
+        >
+          Unbind pet
+        </option>
+        <option
+          value="mute"
+        >
+          Mute pet
+        </option>
+        <option
+          value="unmute"
+        >
+          Unmute pet
+        </option>
+        <option
+          value="interact"
+        >
+          Wave to pet
+        </option>
+        <option
+          value="toneOn"
+        >
+          Enable companion tone
+        </option>
+        <option
+          value="toneOff"
+        >
+          Disable companion tone
+        </option>
+      </select>
+      <label>
+        One instruction
+        <input
+          maxlength="512"
+          value="Please follow this conversation."
+        />
+      </label>
+      <dl
+        class="nidofy-settings-target"
+      >
+        <dt>
+          Foreground conversation
+        </dt>
+        <dd>
+          None
+        </dd>
+        <dt>
+          Foreground workspace
+        </dt>
+        <dd>
+          None
+        </dd>
+        <dt>
+          Selected pet
+        </dt>
+        <dd>
+          Not used by this action
+        </dd>
+      </dl>
+      <button>
+        Preview setting
+      </button>
+      <button>
+        Read current settings
+      </button>
+      <p
+        role="status"
+      >
+        Waiting cancelled. The owner may already have applied the action. Check the actual setting before a new preview.
+      </p>
+    </div>
+  </details>
+</DocumentFragment>
+`;
+
+exports[`reads only on explicit choice, shows original settings and withdraws failed refresh in en > explicit owner settings snapshot 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-control-fold"
+    open=""
+  >
+    <summary>
+      Settings in words
+    </summary>
+    <div
+      class="nidofy-detail nidofy-settings"
+    >
+      <p>
+        Choose one listed action or type one finite instruction. Selection only fills the instruction; preview and confirmation are separate. No model request is sent.
+      </p>
+      <label
+        for=":r6:"
+      >
+        Available actions
+      </label>
+      <select
+        id=":r6:"
+      >
+        <option
+          value=""
+        >
+          Choose an action
+        </option>
+        <option
+          value="follow"
+        >
+          Follow this conversation
+        </option>
+        <option
+          value="unfollow"
+        >
+          Stop following
+        </option>
+        <option
+          value="connections"
+        >
+          Open connections
+        </option>
+        <option
+          value="builds"
+        >
+          Open workbench
+        </option>
+        <option
+          value="pets"
+        >
+          Open pet settings
+        </option>
+        <option
+          value="bind"
+        >
+          Bind pet
+        </option>
+        <option
+          value="unbind"
+        >
+          Unbind pet
+        </option>
+        <option
+          value="mute"
+        >
+          Mute pet
+        </option>
+        <option
+          value="unmute"
+        >
+          Unmute pet
+        </option>
+        <option
+          value="interact"
+        >
+          Wave to pet
+        </option>
+        <option
+          value="toneOn"
+        >
+          Enable companion tone
+        </option>
+        <option
+          value="toneOff"
+        >
+          Disable companion tone
+        </option>
+      </select>
+      <label>
+        One instruction
+        <input
+          maxlength="512"
+          value=""
+        />
+      </label>
+      <dl
+        class="nidofy-settings-target"
+      >
+        <dt>
+          Foreground conversation
+        </dt>
+        <dd>
+          None
+        </dd>
+        <dt>
+          Foreground workspace
+        </dt>
+        <dd>
+          None
+        </dd>
+        <dt>
+          Selected pet
+        </dt>
+        <dd>
+          Not used by this action
+        </dd>
+      </dl>
+      <button
+        disabled=""
+      >
+        Preview setting
+      </button>
+      <button>
+        Read current settings
+      </button>
+      <section
+        aria-label="Last read settings"
+        class="nidofy-settings-observed"
+      >
+        <p>
+          Read-only snapshot of the current conversation, selected pet and attention. Refresh after changes elsewhere. This is not an action receipt; choose a new preview explicitly.
+        </p>
+        <p>
+          Read at (local time):\u0020
+          <time
+            datetime="2026-10-13T04:00:00.000Z"
+          >
+            10/13/2026, 4:00:00 AM
+          </time>
+        </p>
+        <dl
+          class="nidofy-settings-target"
+        >
+          <dt>
+            Companion tone for next turn
+          </dt>
+          <dd>
+            Enabled
+          </dd>
+          <dt>
+            Currently followed conversation
+          </dt>
+          <dd>
+            observed-session
+          </dd>
+          <dt>
+            Desktop pets master switch
+          </dt>
+          <dd>
+            Enabled
+          </dd>
+          <dt>
+            Selected pet
+          </dt>
+          <dd>
+            1
+          </dd>
+          <dt>
+            Instance state
+          </dt>
+          <dd>
+            Enabled
+          </dd>
+          <dt>
+            Bound conversation
+          </dt>
+          <dd>
+            observed-session
+          </dd>
+          <dt>
+            Pet bubbles
+          </dt>
+          <dd>
+            Muted
+          </dd>
+        </dl>
+        <p>
+          Optional tone applies from the next conversation turn. Code and formal reports keep their normal style. It does not change permissions.
+        </p>
+      </section>
+    </div>
+  </details>
+</DocumentFragment>
+`;
+
+exports[`reads only on explicit choice, shows original settings and withdraws failed refresh in zh > explicit owner settings snapshot 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-control-fold"
+    open=""
+  >
+    <summary>
+      用一句话设置
+    </summary>
+    <div
+      class="nidofy-detail nidofy-settings"
+    >
+      <p>
+        选择下列一项动作或输入一项有限指令。选择仅填入指令，仍需单独预览并确认；不会调用模型。
+      </p>
+      <label
+        for=":r7:"
+      >
+        可用动作
+      </label>
+      <select
+        id=":r7:"
+      >
+        <option
+          value=""
+        >
+          选择一项动作
+        </option>
+        <option
+          value="follow"
+        >
+          关注当前会话
+        </option>
+        <option
+          value="unfollow"
+        >
+          停止关注
+        </option>
+        <option
+          value="connections"
+        >
+          打开连接设置
+        </option>
+        <option
+          value="builds"
+        >
+          打开工程工作台
+        </option>
+        <option
+          value="pets"
+        >
+          打开桌宠设置
+        </option>
+        <option
+          value="bind"
+        >
+          绑定桌宠
+        </option>
+        <option
+          value="unbind"
+        >
+          解绑桌宠
+        </option>
+        <option
+          value="mute"
+        >
+          静音桌宠
+        </option>
+        <option
+          value="unmute"
+        >
+          取消桌宠静音
+        </option>
+        <option
+          value="interact"
+        >
+          向桌宠挥手
+        </option>
+        <option
+          value="toneOn"
+        >
+          启用伙伴口吻
+        </option>
+        <option
+          value="toneOff"
+        >
+          关闭伙伴口吻
+        </option>
+      </select>
+      <label>
+        输入一项设置
+        <input
+          maxlength="512"
+          value=""
+        />
+      </label>
+      <dl
+        class="nidofy-settings-target"
+      >
+        <dt>
+          当前会话
+        </dt>
+        <dd>
+          无
+        </dd>
+        <dt>
+          当前工作区
+        </dt>
+        <dd>
+          无
+        </dd>
+        <dt>
+          所选桌宠
+        </dt>
+        <dd>
+          此动作不使用桌宠
+        </dd>
+      </dl>
+      <button
+        disabled=""
+      >
+        预览设置
+      </button>
+      <button>
+        读取当前设置
+      </button>
+      <section
+        aria-label="上次读取的设置"
+        class="nidofy-settings-observed"
+      >
+        <p>
+          当前会话、所选桌宠和关注目标的只读快照；在其他地方更改后请重新读取。这不是操作回执，请明确选择新的预览。
+        </p>
+        <p>
+          读取时间（本地时间）：\u0020
+          <time
+            datetime="2026-10-13T04:00:00.000Z"
+          >
+            2026/10/13 04:00:00
+          </time>
+        </p>
+        <dl
+          class="nidofy-settings-target"
+        >
+          <dt>
+            下一回合的伙伴口吻
+          </dt>
+          <dd>
+            已启用
+          </dd>
+          <dt>
+            当前关注的会话
+          </dt>
+          <dd>
+            observed-session
+          </dd>
+          <dt>
+            桌宠总开关
+          </dt>
+          <dd>
+            已启用
+          </dd>
+          <dt>
+            所选桌宠
+          </dt>
+          <dd>
+            1
+          </dd>
+          <dt>
+            实例状态
+          </dt>
+          <dd>
+            已启用
+          </dd>
+          <dt>
+            绑定会话
+          </dt>
+          <dd>
+            observed-session
+          </dd>
+          <dt>
+            桌宠气泡
+          </dt>
+          <dd>
+            已静音
+          </dd>
+        </dl>
+        <p>
+          可选口吻从主会话下一回合生效，代码与正式报告保持正常风格，不改变权限。
+        </p>
+      </section>
+    </div>
+  </details>
+</DocumentFragment>
+`;
+
+exports[`shows selected targets and the bound deadline in en and refuses an expired confirmation without replay > explicit finite choice and selected targets 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-control-fold"
+    open=""
+  >
+    <summary>
+      Settings in words
+    </summary>
+    <div
+      class="nidofy-detail nidofy-settings"
+    >
+      <p>
+        Choose one listed action or type one finite instruction. Selection only fills the instruction; preview and confirmation are separate. No model request is sent.
+      </p>
+      <label
+        for=":r4:"
+      >
+        Available actions
+      </label>
+      <select
+        id=":r4:"
+      >
+        <option
+          value=""
+        >
+          Choose an action
+        </option>
+        <option
+          value="follow"
+        >
+          Follow this conversation
+        </option>
+        <option
+          value="unfollow"
+        >
+          Stop following
+        </option>
+        <option
+          value="connections"
+        >
+          Open connections
+        </option>
+        <option
+          value="builds"
+        >
+          Open workbench
+        </option>
+        <option
+          value="pets"
+        >
+          Open pet settings
+        </option>
+        <option
+          value="bind"
+        >
+          Bind pet
+        </option>
+        <option
+          value="unbind"
+        >
+          Unbind pet
+        </option>
+        <option
+          value="mute"
+        >
+          Mute pet
+        </option>
+        <option
+          value="unmute"
+        >
+          Unmute pet
+        </option>
+        <option
+          value="interact"
+        >
+          Wave to pet
+        </option>
+        <option
+          value="toneOn"
+        >
+          Enable companion tone
+        </option>
+        <option
+          value="toneOff"
+        >
+          Disable companion tone
+        </option>
+      </select>
+      <label>
+        One instruction
+        <input
+          maxlength="512"
+          value="Mute pet"
+        />
+      </label>
+      <dl
+        class="nidofy-settings-target"
+      >
+        <dt>
+          Foreground conversation
+        </dt>
+        <dd>
+          settings-session
+        </dd>
+        <dt>
+          Foreground workspace
+        </dt>
+        <dd>
+          settings-workspace
+        </dd>
+        <dt>
+          Selected pet
+        </dt>
+        <dd>
+          bluewhale-2
+        </dd>
+      </dl>
+      <button>
+        Preview setting
+      </button>
+      <button>
+        Read current settings
+      </button>
+    </div>
+  </details>
+</DocumentFragment>
+`;
+
+exports[`shows selected targets and the bound deadline in zh and refuses an expired confirmation without replay > explicit finite choice and selected targets 1`] = `
+<DocumentFragment>
+  <details
+    class="nidofy-control-fold"
+    open=""
+  >
+    <summary>
+      用一句话设置
+    </summary>
+    <div
+      class="nidofy-detail nidofy-settings"
+    >
+      <p>
+        选择下列一项动作或输入一项有限指令。选择仅填入指令，仍需单独预览并确认；不会调用模型。
+      </p>
+      <label
+        for=":r5:"
+      >
+        可用动作
+      </label>
+      <select
+        id=":r5:"
+      >
+        <option
+          value=""
+        >
+          选择一项动作
+        </option>
+        <option
+          value="follow"
+        >
+          关注当前会话
+        </option>
+        <option
+          value="unfollow"
+        >
+          停止关注
+        </option>
+        <option
+          value="connections"
+        >
+          打开连接设置
+        </option>
+        <option
+          value="builds"
+        >
+          打开工程工作台
+        </option>
+        <option
+          value="pets"
+        >
+          打开桌宠设置
+        </option>
+        <option
+          value="bind"
+        >
+          绑定桌宠
+        </option>
+        <option
+          value="unbind"
+        >
+          解绑桌宠
+        </option>
+        <option
+          value="mute"
+        >
+          静音桌宠
+        </option>
+        <option
+          value="unmute"
+        >
+          取消桌宠静音
+        </option>
+        <option
+          value="interact"
+        >
+          向桌宠挥手
+        </option>
+        <option
+          value="toneOn"
+        >
+          启用伙伴口吻
+        </option>
+        <option
+          value="toneOff"
+        >
+          关闭伙伴口吻
+        </option>
+      </select>
+      <label>
+        输入一项设置
+        <input
+          maxlength="512"
+          value="静音桌宠"
+        />
+      </label>
+      <dl
+        class="nidofy-settings-target"
+      >
+        <dt>
+          当前会话
+        </dt>
+        <dd>
+          settings-session
+        </dd>
+        <dt>
+          当前工作区
+        </dt>
+        <dd>
+          settings-workspace
+        </dd>
+        <dt>
+          所选桌宠
+        </dt>
+        <dd>
+          bluewhale-2
+        </dd>
+      </dl>
+      <button>
+        预览设置
+      </button>
+      <button>
+        读取当前设置
+      </button>
+    </div>
+  </details>
+</DocumentFragment>
+`;

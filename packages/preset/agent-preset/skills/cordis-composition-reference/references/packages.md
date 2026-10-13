@@ -307,6 +307,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@nidofy/dsh-desktop-extras` | yes | undefined |
+| `@nidofy/dsh-secure-credentials` | yes | Windows DPAPI credential references, records and explicit copy migration for the derived Desktop |
 | `@nidofy/dsh-working-notebook` | yes | Independent working notes with optional compaction organization |
 
 ## plan

@@ -21,7 +21,8 @@
  * post-apply reload.
  */
 
-import { useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import type { SettingsSectionOwnerProps } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { ReactNode } from 'react'
 import { Button, IconPlusOutlineRegular, Modal, SegmentedControl } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
@@ -72,7 +73,8 @@ type ModelsRenderSlot = PropsRenderSlots<ModelsChildSlots>['renderSlot']
  * call itself — unlike the inject face it is never absent at runtime — and a
  * direct render that forgets it fails to compile instead of mounting nothing.
  */
-export type ModelsSectionProps = Partial<InjectFace<ModelsSectionInjected>> & PropsRenderSlots<ModelsChildSlots>
+export type ModelsSectionProps = Partial<SettingsSectionOwnerProps>
+  & Partial<InjectFace<ModelsSectionInjected>> & PropsRenderSlots<ModelsChildSlots>
 
 type ModelsSectionFace = InjectFace<ModelsSectionInjected>
 
@@ -109,7 +111,7 @@ interface CatalogDraft {
 /** Values that vary around the shared provider-editor rendering. */
 interface ProviderEditorRenderProps extends Pick<
   ProviderEditorProps,
-  'namespace' | 'schema' | 'operations' | 't' | 'readOnly' | 'onClose'
+  'namespace' | 'schema' | 'operations' | 't' | 'readOnly' | 'onClose' | 'registerNavigationGuard'
 > {
   target: EditorTarget
 }
@@ -226,11 +228,21 @@ export function ModelsSection(props: ModelsSectionProps): ReactNode {
     controller === undefined || useSnapshot === undefined || operations === undefined
     || schema === undefined || t === undefined
   ) return null
-  return <Loaded injected={{ controller, useSnapshot, operations, schema, t }} renderSlot={renderSlot} />
+  return <Loaded injected={{ controller, useSnapshot, operations, schema, t }} renderSlot={renderSlot}
+    registerNavigationGuard={props.registerNavigationGuard} />
 }
 
-function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderSlot: ModelsRenderSlot }): ReactNode {
+function Loaded({ injected, renderSlot, registerNavigationGuard: registerOuter }: { injected: ModelsSectionFace; renderSlot: ModelsRenderSlot; registerNavigationGuard: SettingsSectionOwnerProps['registerNavigationGuard'] }): ReactNode {
   const { controller, operations, schema, t } = injected
+  const guards = useRef(new Set<() => Promise<boolean>>())
+  const registerNavigationGuard = useCallback((guard: () => Promise<boolean>) => {
+    guards.current.add(guard); return () => { guards.current.delete(guard) }
+  }, [])
+  const permit = useCallback(async () => { for (const guard of [...guards.current]) if (!await guard()) return false; return true }, [])
+  useEffect(() => registerOuter?.(permit), [registerOuter, permit])
+  const navigate = (action: () => void) => {
+    if (guards.current.size === 0) action(); else void permit().then((allowed) => { if (allowed) action() })
+  }
   const snapshot = injected.useSnapshot(value => value)
   const state = { ...snapshot, rows: snapshot.rows.map(row => row.entry.provider === 'deepseek-account'
     ? { ...row, entry: { ...row.entry, displayName: t('deepSeekAccount') } } : row) }
@@ -386,6 +398,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
     <div className={styles['section']}>
       <h2 className={styles['title']}>{t('title')}</h2>
       <p className={styles['intro']}>{t('intro')}</p>
+      {state.credentialError !== null && <div role="alert"><p className={styles['error']}>{t('credentialUnavailable')}</p><button type="button" className={styles['secondaryButton']} onClick={() => { void controller.load() }}>{t('retry')}</button></div>}
       {!state.writable && state.status === 'ready' ? <p className={styles['notice']}>{t('readOnly')}</p> : null}
       {savedIdentity === undefined
         ? null
@@ -416,6 +429,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                   operations,
                   t,
                   readOnly: !state.writable,
+                  registerNavigationGuard,
                   onClose: (changed) => { closeSetup(changed, target) },
                 })}
                 {renderSlot(
@@ -472,8 +486,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                       // One card at a time: the add card closes with whatever
                       // it held, since closing either card would otherwise
                       // discard the other's draft.
-                      setAddOpen(false)
-                      setEditing(open ? undefined : target)
+                      navigate(() => { setAddOpen(false); setEditing(open ? undefined : target) })
                     }}
                   >
                     {t('edit')}
@@ -511,6 +524,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                   operations,
                   t,
                   readOnly: !state.writable,
+                  registerNavigationGuard,
                   onClose: (changed) => { closeEditor(changed, target) },
                 })
                 : null}
@@ -580,7 +594,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                           const picked = addable.find(candidate => candidate.row.entry.provider === event.target.value)
                           /* v8 ignore next -- the select only lists addable rows */
                           if (picked === undefined) return
-                          setEditing(targetOf(picked.row))
+                          navigate(() => { setEditing(targetOf(picked.row)) })
                         }}
                       >
                         {addable.map(({ row }) => (
@@ -599,6 +613,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                       operations={operations}
                       t={t}
                       readOnly={!state.writable}
+                      registerNavigationGuard={registerNavigationGuard}
                       onClose={(changed) => { closeEditor(changed, draft.target) }}
                       onBusyChange={setCatalogBusy}
                     />
@@ -627,6 +642,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                       operations={operations}
                       t={t}
                       readOnly={!state.writable}
+                      registerNavigationGuard={registerNavigationGuard}
                       onClose={(changed) => {
                         closeAdd()
                         if (changed) void controller.load()
@@ -648,13 +664,15 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                   className={styles['addButton']}
                   disabled={!state.writable || (!catalogEnabled && !customEnabled)}
                   onClick={() => {
-                    const first = addable[0]
-                    const initial: AddMode = catalogEnabled ? 'catalog' : 'custom'
-                    setSavedTarget(undefined)
-                    setEditing(first === undefined ? undefined : targetOf(first.row))
-                    setAddMode(initial)
-                    setVisited(new Set([initial]))
-                    setAddOpen(true)
+                    navigate(() => {
+                      const first = addable[0]
+                      const initial: AddMode = catalogEnabled ? 'catalog' : 'custom'
+                      setSavedTarget(undefined)
+                      setEditing(first === undefined ? undefined : targetOf(first.row))
+                      setAddMode(initial)
+                      setVisited(new Set([initial]))
+                      setAddOpen(true)
+                    })
                   }}
                 >
                   <IconPlusOutlineRegular size={14} />

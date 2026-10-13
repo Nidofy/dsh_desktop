@@ -1,4 +1,8 @@
 /** Authenticated history UI and working notes over official Session services. */
+export { installContextV2, NotebookV2Service } from './context-v2.ts'
+/** Complete committed note rendering captured by the product input owner. */
+export type { NotebookInputCapture } from './context-v2.ts'
+export type { CompanionFacts, CompanionNoticeFact, CompanionReceiptFact, HintPreferences, HintId } from './shared/companion-facts.ts'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { randomUUID } from 'node:crypto'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -160,3 +164,4 @@ export function installContext(
     } finally { observation[Symbol.dispose]() }
   }
 }
+export type { CompanionScope, CompanionHostEpoch, CompanionWindowId, CompanionViewId } from './shared/companion-scope.ts'

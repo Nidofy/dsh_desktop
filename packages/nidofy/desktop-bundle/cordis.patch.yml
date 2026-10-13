@@ -1,15 +1,24 @@
 - insert:
+    - id: nidofy-storage
+      name: '@nidofy/dsh-desktop-extras/storage'
+      config:
+        executable: !!js process.env.DSH_DESKTOP_PROTECTION_HELPER
+        limitBytes: 536870912
+        safetyBytes: 67108864
     - id: nidofy-context-paths
       name: '@nidofy/dsh-desktop-extras/paths'
     - id: nidofy-working-notebook
       name: '@nidofy/dsh-working-notebook'
+      inject: [nidofyStorage]
     - id: nidofy-extras
       name: '@nidofy/dsh-desktop-extras'
+      inject: [nidofyStorage]
     - id: tool-session-query
       name: '@deepseek-ai/dsh-tool-session-query'
 
 - id: session-query-sqlite
-  inject: [nidofyContextPaths]
   config:
-    path: !!js ctx.nidofyContextPaths.index
+    # The official provider has no bounded persistent-write admission hook.
+    # Keep existing disk indexes untouched; this product builds its disposable index in memory.
+    path: ':memory:'
     openAt: first-search

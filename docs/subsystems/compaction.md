@@ -132,6 +132,16 @@ interface PruneResult {
 }
 ```
 
+## Working Notebook v2
+
+`NotebookV2` stores the physical Session scope, Notebook revision, active notes, `historyRevision`, and `cursors.evidenceThrough` / `cursors.commitThrough`. A scope consists of the Session id and the official opaque persistence generation. Recovery and commit consume provider-owned raw durable coordinates; publication also checks settings lifetime and holds generation protection through storage admission. The [working-notebook package](../../packages/nidofy/working-notebook/README.md) owns product configuration and compatibility.
+
+`NotebookV2Service.read` reads the selected v2 pointer under actual generation protection without recovery or conversion writes. Explicit `synchronize` reconciles durable candidates at startup and after successful compaction, optionally reusing one observation; candidate reconstruction begins after the committed cursor. `NotebookSynchronization` reports process-local `idle`, `organizing`, `ready` or `failed` progress and the last synchronized durable cut. `NotebookReadOptions` bounds idle metadata entries and recent original-event windows. History validation runs during recovery, history reads and publication. Full durable observation and cold decoding still scale with the complete log; the product has no range-based durable API.
+
+<a id="notebook-input-capture"></a>
+
+`NotebookInputCapture` is returned by `NotebookV2Service.input(sessionId, signal)`: `scope` holds the actual Session/generation, `revision` the committed note revision, `text` the complete active input used by prompt assembly (empty for an empty active set), `maxActiveEntries`/`maxActiveBytes` the actual rendering limits, and `policy` the captured `autoOrganize` choice and settings revision. Reads hold original generation protection without flushing, synchronization, conversion or source writes, and create no Agent or model request. A settings change during capture refuses. Cold reads may scan the complete source; warm reads reuse bounded physical-scope metadata. Capturing input grants no send, tool or engineering execution authority.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -224,6 +234,45 @@ read(sessionId: string): Promise<Notebook>
 ```
 
 Source: [`packages/nidofy/desktop-extras/src/context.ts`](../../packages/nidofy/desktop-extras/src/context.ts)
+
+<a id="ctxnidofynotebookv2--notebookv2service"></a>
+
+### `ctx.nidofyNotebookV2` — `NotebookV2Service`
+
+Committed v2 reader shared by product tools, prompts and authenticated UI.
+
+```ts cordis-catalog
+/** Read selected state against the actual persistence generation without notebook writes or recovery.
+ * @param sessionId - owning session.
+ * @param signal - caller cancellation.
+ * @returns the selected state with both committed cursors.
+ */
+read(sessionId: string, signal: AbortSignal): Promise<NotebookV2>
+
+/** Explicitly reconcile durable candidates, including startup conversion.
+ * @param sessionId - owning session.
+ * @param signal - caller cancellation.
+ * @returns the committed state after reconciliation; failures remain visible in synchronization status.
+ */
+synchronize(sessionId: string, signal: AbortSignal): Promise<NotebookV2>
+
+/** Read organization progress without scanning or modifying storage.
+ * @param sessionId - owning session.
+ * @returns detached process-local progress, idle before synchronization.
+ */
+synchronization(sessionId: string): NotebookSynchronization
+
+/** Capture the exact input used by prompt assembly without synchronization, compaction or note writes.
+ * @param sessionId - Explicit owning Session; unrelated Sessions are never selected by inference.
+ * @param signal - Caller lifetime; a settings change during capture refuses the result.
+ * @returns Complete note text, physical scope, committed revision and actual rendering bounds/settings.
+ */
+input(sessionId: string, signal: AbortSignal): Promise<NotebookInputCapture>
+```
+
+Types: [NotebookInputCapture](compaction.md#notebook-input-capture)
+
+Source: [`packages/nidofy/desktop-extras/src/context-v2.ts`](../../packages/nidofy/desktop-extras/src/context-v2.ts)
 
 <a id="ctxtoolresultpruner--toolresultpruner"></a>
 

@@ -13,6 +13,7 @@ import type {} from '@deepseek-ai/dsh-client-connection'
 import { installConnectionApi } from '../src/connections/api.ts'
 import { bootServices, credentialMemory } from './connection-backend.ts'
 import type { CredentialMemory } from './connection-backend.ts'
+import { resolveProfiles } from '@deepseek-ai/dsh-llm-pi-ai'
 
 const injection = vi.hoisted(() => ({ failLedger: false }))
 vi.mock('@deepseek-ai/dsh-atomic-write', async (original) => {
@@ -34,6 +35,57 @@ const toolsStandIn = (): ToolRuntime => {
 const profile = { api: 'openai-completions', baseURL: 'http://127.0.0.1:12345/v1', models: [{ id: 'same' }] }
 const roots: string[] = []
 const servers: Server[] = []
+
+it('refuses HTTP import writes without the native storage owner', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-import-owner-')); roots.push(home)
+  const { ctx, base } = await booted(credentialMemory(), home)
+  try {
+    for (const action of ['execute', 'recover', 'adopt']) {
+      const response = await post(base, '/api/nidofy/import', { action, operationId: randomUUID(), confirm: true })
+      expect(response).toEqual({ status: 400, body: { error: 'STORAGE_OWNER_UNAVAILABLE' } })
+    }
+  } finally { await ctx.fiber.dispose() }
+})
+
+it('persists an installed catalog override and refuses mixing it with explicit model declarations', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-advanced-')); roots.push(home)
+  const { ctx, base } = await booted(credentialMemory(), home)
+  const id = resolveProfiles({ deepseek: {} }).get('deepseek')!.piProvider!.getModels()[0]!.id
+  const catalog = { catalogProvider: 'deepseek', modelOverrides: { [id]: { contextWindow: 128000, maxTokens: 8192 } }, cacheRetention: 'short' }
+  try {
+    const saved = await post(base, '/api/nidofy/mutate', { action: 'save', operationId: randomUUID(),
+      connection: 'catalog', expectedRevision: 0, profile: catalog, credential: { mode: 'replace', value: 'synthetic-catalog' } })
+    expect(saved.status).toBe(200)
+    expect((saved.body.connections as Record<string, unknown>[])[0]).toMatchObject({ profile: catalog })
+    const rejected = await post(base, '/api/nidofy/mutate', { action: 'save', operationId: randomUUID(),
+      connection: 'catalog', expectedRevision: 1, profile: { ...catalog, models: [{ id }] }, credential: { mode: 'keep' } })
+    expect(rejected.status).toBe(400)
+    expect((await post(base, '/api/nidofy/status', {})).body.desiredRevision).toBe(1)
+  } finally { await ctx.fiber.dispose() }
+})
+
+it.each(['openai-completions', 'anthropic-messages'])('persists advanced %s fields through actual schema and keep-mode HTTP writes', async (api) => {
+  const home = await mkdtemp(join(tmpdir(), 'nidofy-advanced-')); roots.push(home)
+  const memory = credentialMemory(), { ctx, base } = await booted(memory, home)
+  const advanced = { api, baseURL: 'https://advanced.invalid',
+    models: [{ id: 'custom', contextWindow: 128000, maxTokens: 8192, input: ['text'], reasoningEfforts: { high: 'high' } }],
+    defaultInput: ['text'], defaultContextWindow: 32000, defaultMaxTokens: 2048, timeoutMs: 120000,
+    streamIdleTimeoutMs: 30000, cacheRetention: 'long', retryPolicy: { mode: 'normal', maxRetries: 2 },
+    compat: api === 'openai-completions' ? { supportsStore: false } : { supportsLongCacheRetention: false } }
+  try {
+    const saved = await post(base, '/api/nidofy/mutate', { action: 'save', operationId: randomUUID(),
+      connection: 'advanced', expectedRevision: 0, profile: advanced, credential: { mode: 'replace', value: 'synthetic-advanced' } })
+    expect(saved.status).toBe(200)
+    const kept = await post(base, '/api/nidofy/mutate', { action: 'save', operationId: randomUUID(),
+      connection: 'advanced', expectedRevision: 1, profile: { ...advanced, displayName: 'renamed' }, credential: { mode: 'keep' } })
+    expect(kept.status).toBe(200)
+    expect((kept.body.connections as Record<string, unknown>[])[0]).toMatchObject({ profile: advanced, availability: 'available' })
+    expect(JSON.stringify(kept.body)).not.toContain('synthetic-advanced')
+    const bytes = await readFile(join(home, 'nidofy-connections', 'state.json'), 'utf8')
+    expect(bytes).not.toContain('synthetic-advanced')
+    expect(JSON.parse(bytes)).toMatchObject({ revision: 2 })
+  } finally { await ctx.fiber.dispose() }
+})
 
 afterEach(async () => {
   injection.failLedger = false

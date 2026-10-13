@@ -3,7 +3,8 @@ import type { SignInAttemptId } from '@deepseek-ai/dsh-deepseek-account/types'
 
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, ipcMain, type BrowserWindowConstructorOptions, type IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, screen, type BrowserWindowConstructorOptions, type IpcMainInvokeEvent } from 'electron'
+import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
 import type { DesktopLocale } from './locale.ts'
 import { WELCOME_IPC, type WelcomeOperations } from './welcome-api.ts'
 
@@ -11,9 +12,10 @@ import { WELCOME_IPC, type WelcomeOperations } from './welcome-api.ts'
  * Resolve the fixed-size welcome window's native material and controls.
  * @param platform - operating system hosting Electron.
  * @param locale - shell-owned localized copy.
+ * @param dark - effective native theme used for caption contrast.
  * @returns sandboxed window options with a locale-only preload.
  */
-export function welcomeWindowOptions(platform: NodeJS.Platform, locale: DesktopLocale): BrowserWindowConstructorOptions {
+export function welcomeWindowOptions(platform: NodeJS.Platform, locale: DesktopLocale, dark = false): BrowserWindowConstructorOptions {
   return {
     width: 600,
     height: 700,
@@ -24,7 +26,7 @@ export function welcomeWindowOptions(platform: NodeJS.Platform, locale: DesktopL
     fullscreenable: false,
     show: false,
     title: locale.messages.welcomeTitle,
-    backgroundColor: platform === 'darwin' || platform === 'win32' ? '#00000000' : '#FFFFFF',
+    backgroundColor: platform === 'darwin' || platform === 'win32' ? '#00000000' : dark ? '#1b1b1c' : '#FFFFFF',
     ...(platform === 'darwin' ? {
       titleBarStyle: 'hidden',
       trafficLightPosition: { x: 21, y: 21 },
@@ -33,7 +35,7 @@ export function welcomeWindowOptions(platform: NodeJS.Platform, locale: DesktopL
     } as const : {}),
     ...(platform === 'win32' ? {
       titleBarStyle: 'hidden',
-      titleBarOverlay: { color: '#00000000', symbolColor: '#0F1115', height: 42 },
+      titleBarOverlay: { color: '#00000000', symbolColor: dark ? '#f9fafb' : '#0f1115', height: WINDOWS_TITLEBAR_HEIGHT },
       backgroundMaterial: 'acrylic',
     } as const : {}),
     webPreferences: {
@@ -57,13 +59,18 @@ let disposeActiveHandlers: (() => void) | undefined
  * @returns the visible window; a failed load destroys it before rejecting.
  */
 export async function openWelcomeWindow(locale: DesktopLocale, operations: WelcomeOperations): Promise<BrowserWindow> {
-  const options = welcomeWindowOptions(process.platform, locale)
+  const options = welcomeWindowOptions(process.platform, locale, nativeTheme.shouldUseDarkColors)
+  const area = screen.getPrimaryDisplay().workArea
+  options.width = Math.min(options.width ?? area.width, area.width); options.height = Math.min(options.height ?? area.height, area.height)
   const window = new BrowserWindow(options)
+  const theme = () => { if (!window.isDestroyed() && process.platform === 'win32') window.setTitleBarOverlay({ symbolColor: nativeTheme.shouldUseDarkColors ? '#f9fafb' : '#0f1115' }) }
+  nativeTheme.on('updated', theme)
   disposeActiveHandlers?.()
   let active = true
   const disposeHandlers = (): void => {
     if (!active) return
     active = false
+    nativeTheme.removeListener('updated', theme)
     for (const channel of [
       WELCOME_IPC.analyticsEnabled, WELCOME_IPC.analytics, WELCOME_IPC.takeNotice, WELCOME_IPC.saveApiKey,
       WELCOME_IPC.skip, WELCOME_IPC.start, WELCOME_IPC.cancel, WELCOME_IPC.copyLink,

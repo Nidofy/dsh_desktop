@@ -38,6 +38,8 @@ describe('bundled Windows ACL diagnosis skill', () => {
       // The body names the bundled script — the repair path the model must use
       // instead of editing ACLs by hand.
       expect(loaded?.content).toContain('scripts\\diagnose-windows-sandbox-acl.ps1')
+      expect(loaded?.content).toContain('Legacy Windows sandbox grant has no recovery record')
+      expect(loaded?.content).toContain('Do not run this repair script for that error')
       // Leave room for the tool wrapper below the default 8192-character prune threshold.
       expect(loaded?.content.length).toBeLessThan(7_000)
 

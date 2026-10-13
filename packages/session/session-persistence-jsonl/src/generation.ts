@@ -122,8 +122,30 @@ export class JsonlGenerationSourceChangedError extends Error {
 export interface PreparedJsonlMigration {
   readonly sourceIdentity: JsonlPhysicalIdentity
   readonly artifact: SessionFormatArtifact
-  /** Encode, verify, and exclusively publish once; every call shares the same success or failure. */
-  publish(): Promise<JsonlPhysicalIdentity>
+  /** Count actual encoded successor bytes without opening a stage or publishing a generation.
+   * @param signal - Cancellation for this measurement, independent of shared preparation.
+   * @returns New physical file bytes; excludes the retained source, caller metadata and decode memory.
+   */
+  measure(signal?: AbortSignal): Promise<number>
+  /** Encode, verify, and exclusively publish once; every call shares the same success or failure.
+   * @param options - First-call byte limit and precommit cancellation; later calls cannot replace them.
+   * @returns Published physical identity after verification and cleanup; postcommit cancellation is ignored.
+   */
+  publish(options?: JsonlMigrationPublicationOptions): Promise<JsonlPhysicalIdentity>
+}
+
+/** Publication controls owned by the write caller, independently of shared read preparation. */
+export interface JsonlMigrationPublicationOptions {
+  /** Maximum bytes in the new physical file, including its temporary representation. */
+  readonly maxWriteBytes?: number
+  /** Cancellation is honored until exclusive publication starts; later cancellation cannot undo it. */
+  readonly signal?: AbortSignal
+}
+
+/** A migration would exceed its physical write allowance; retained source data remains valid. */
+export class JsonlGenerationWriteLimitError extends Error {
+  override readonly name = 'JsonlGenerationWriteLimitError'
+  constructor() { super('SESSION_MIGRATION_WRITE_LIMIT') }
 }
 
 /** A historical artifact is intact, but the format edge refuses its contents. */
@@ -711,6 +733,44 @@ async function writeMigrationChunks(
   if (bytes > 0) await write(pending.length === 1 ? pending[0] as Buffer : Buffer.concat(pending, bytes))
 }
 
+/** Share physical framing between read-only measurement and bounded stage writing. */
+async function emitMigration(
+  compression: JsonlCompression,
+  artifact: SessionFormatArtifact,
+  format: JsonlGenerationFormatAdapter,
+  write: (chunk: Buffer) => Promise<void>,
+  signal?: AbortSignal,
+): Promise<void> {
+  signal?.throwIfAborted()
+  const headerValue = format.encodeHeader(artifact.header, artifact.inheritedEventCount)
+  const header = Buffer.from(`${stringifyJson(headerValue, 'migrated session header')}\n`)
+  await write(compression === 'zstd' ? await compressZstdFrame(header) : header)
+  if (artifact.events.length > 0) {
+    const rows = encodeMigrationRows(artifact, format, signal)
+    if (compression === 'none') {
+      await writeMigrationChunks(rows, write)
+    } else {
+      await new Promise<void>((resolve, reject) => {
+        pipeline(
+          Readable.from(rows, { objectMode: false, highWaterMark: MIGRATION_WORK_CHUNK_BYTES }),
+          createZstdCompress(ZSTD_CHECKSUM_OPTIONS),
+          async (source) => { await writeMigrationChunks(source as AsyncIterable<Buffer>, write) },
+          (error: Error | null | undefined) => {
+            if (error instanceof Error) reject(error)
+            else resolve()
+          },
+        )
+      })
+    }
+  }
+  signal?.throwIfAborted()
+}
+
+function addMigrationBytes(bytes: number, additional: number, maximum = Number.MAX_SAFE_INTEGER): number {
+  if (additional > maximum - bytes) throw new JsonlGenerationWriteLimitError()
+  return bytes + additional
+}
+
 /** Encode directly into one synced stage without a whole-artifact row or byte buffer. */
 async function writeSyncedTemp(
   currentPath: string,
@@ -720,6 +780,7 @@ async function writeSyncedTemp(
   format: JsonlGenerationFormatAdapter,
   signal: AbortSignal | undefined,
   internals: JsonlGenerationInternals,
+  maxWriteBytes?: number,
 ): Promise<StreamedMigrationStage> {
   signal?.throwIfAborted()
   let path: string
@@ -737,34 +798,15 @@ async function writeSyncedTemp(
   const hash = createHash('sha256')
   let bytes = 0
   const write = async (chunk: Buffer): Promise<void> => {
+    signal?.throwIfAborted()
+    const next = addMigrationBytes(bytes, chunk.length, maxWriteBytes)
     await handle.writeFile(chunk)
     hash.update(chunk)
-    bytes += chunk.length
+    bytes = next
   }
   let failure: unknown
   try {
-    const headerValue = format.encodeHeader(artifact.header, artifact.inheritedEventCount)
-    const header = Buffer.from(`${stringifyJson(headerValue, 'migrated session header')}\n`)
-    await write(compression === 'zstd' ? await compressZstdFrame(header) : header)
-    if (artifact.events.length > 0) {
-      const rows = encodeMigrationRows(artifact, format, signal)
-      if (compression === 'none') {
-        await writeMigrationChunks(rows, write)
-      } else {
-        await new Promise<void>((resolve, reject) => {
-          pipeline(
-            Readable.from(rows, { objectMode: false, highWaterMark: MIGRATION_WORK_CHUNK_BYTES }),
-            createZstdCompress(ZSTD_CHECKSUM_OPTIONS),
-            async (source) => { await writeMigrationChunks(source as AsyncIterable<Buffer>, write) },
-            (error: Error | null | undefined) => {
-              if (error instanceof Error) reject(error)
-              else resolve()
-            },
-          )
-        })
-      }
-    }
-    signal?.throwIfAborted()
+    await emitMigration(compression, artifact, format, write, signal)
     await handle.sync()
   } catch (error: unknown) {
     failure = error
@@ -887,17 +929,25 @@ async function publishPreparedMigration(
   artifact: SessionFormatArtifact,
   sourceIdentity: JsonlPhysicalIdentity,
   internals: JsonlGenerationInternals,
+  publication: JsonlMigrationPublicationOptions,
 ): Promise<JsonlPhysicalIdentity> {
+  const { signal, maxWriteBytes } = publication
+  signal?.throwIfAborted()
+  if (maxWriteBytes !== undefined && (!Number.isSafeInteger(maxWriteBytes) || maxWriteBytes < 0)) {
+    throw new JsonlGenerationWriteLimitError()
+  }
   await scheduler.yield()
   const { sourcePath, currentPath, compression, verifyCurrentFile } = options
   const eventCount = artifact.events.length
-  let staged = await writeSyncedTemp(currentPath, suffix, compression, artifact, options.format, undefined, internals)
+  let staged = await writeSyncedTemp(currentPath, suffix, compression, artifact, options.format, signal, internals, maxWriteBytes)
   try {
     const verifiedStage = await verifyCurrentFile(
       staged.path,
       compression,
       artifact.header.id,
       eventCount,
+      undefined,
+      signal,
     )
     if (verifiedStage.bytes !== staged.bytes || verifiedStage.digest !== staged.digest) {
       throw new Error('staged session generation changed during verification')
@@ -908,6 +958,7 @@ async function publishPreparedMigration(
     if (identity(beforePublish) !== identity(sourceIdentity)) {
       throw new JsonlGenerationSourceChangedError(sourcePath)
     }
+    signal?.throwIfAborted()
     const published = await publishCurrentExclusive(staged.path, currentPath, internals)
     if (published && internals.platform === 'win32') staged = { ...staged, path: '' }
     await internals.barrier('after-publication', 1)
@@ -984,7 +1035,16 @@ async function prepareMigration(
   return {
     sourceIdentity,
     artifact,
-    publish() {
+    async measure(measureSignal) {
+      let bytes = 0
+      await emitMigration(compression, artifact, format, (chunk) => {
+        measureSignal?.throwIfAborted()
+        bytes = addMigrationBytes(bytes, chunk.length)
+        return Promise.resolve()
+      }, measureSignal)
+      return bytes
+    },
+    publish(publicationOptions = {}) {
       if (publication === undefined) {
         publication = publishPreparedMigration(
           options,
@@ -992,6 +1052,7 @@ async function prepareMigration(
           artifact,
           sourceIdentity,
           internals,
+          publicationOptions,
         )
       }
       return publication

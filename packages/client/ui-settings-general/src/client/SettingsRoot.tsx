@@ -56,9 +56,24 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
   // projection falls back to the first row when the id is gone.
   const active = rows.find(r => r.id === activeId)?.id ?? rows[0]?.id
   const titleId = useId()
+  const guards = useRef(new Set<() => Promise<boolean>>())
+  const navigating = useRef(false)
+  const registerNavigationGuard = useCallback((guard: () => Promise<boolean>) => {
+    guards.current.add(guard)
+    return () => { guards.current.delete(guard) }
+  }, [])
+  const navigate = async (action: () => void) => {
+    if (navigating.current) return
+    navigating.current = true
+    try {
+      for (const guard of [...guards.current]) if (!await guard()) return
+      action()
+    } finally { navigating.current = false }
+  }
+  const close = () => { void navigate(onClose) }
 
   const panel = useRef<HTMLDivElement>(null)
-  useModalLayer(panel, true, onClose)
+  useModalLayer(panel, true, close)
 
   // Portalled beside #root like the Modal primitive: a covering surface mounted
   // inside the root would precede the columns' chrome in document order, so a
@@ -66,7 +81,7 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
   // Beside the root, base.css's `body > :not(#root)` rule subtracts it instead.
   return createPortal((
     <div className={css.overlay} role="presentation">
-      <div className={css.mask} aria-hidden="true" onClick={onClose} />
+      <div className={css.mask} aria-hidden="true" onClick={close} />
       <div ref={panel} tabIndex={-1} data-shortcut-modal="settings" className={css.panel} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <nav className={css.nav}>
           <div className={css.navTitle} id={titleId} tabIndex={-1}
@@ -79,7 +94,7 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
                 className={clsx(css.navCell, row.id === active && css.active)}
                 aria-current={row.id === active ? 'true' : undefined}
                 data-modal-autofocus={row.id === active ? '' : undefined}
-                onClick={() => { onSelect(row.id) }}
+                onClick={() => { if (row.id !== active) void navigate(() => { onSelect(row.id) }) }}
               >
                 {navIcon(row.id)}
                 <span className={css.navLabel}>{row.label}</span>
@@ -90,13 +105,13 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
         <div className={css.content}>
           <div className={css.header}>
             <div className={css.actions}>{renderSlot('settings.action', {})}</div>
-            <button type="button" className={css.close} onClick={onClose}>
+            <button type="button" className={css.close} onClick={close}>
               <IconCloseOutlineRegular size={14} />
               <span className={css.hiddenLabel}>{renderSlot('settings.close', {})}</span>
             </button>
           </div>
           <div className={css.options}>
-            {active !== undefined && renderSlot('settings.section', { close: onClose }, { only: active })}
+            {active !== undefined && renderSlot('settings.section', { close, registerNavigationGuard }, { only: active })}
           </div>
         </div>
       </div>
@@ -111,7 +126,7 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
  */
 export function SettingsRoot(props: SettingsRootComponentProps) {
   const {
-    wide, reconnect, useConnectionState, useSections, useOnboardingSteps, useSessions, renderSlot, t,
+    wide, reconnect, useConnectionState, useSections, useOnboardingSteps, useSessions, useMainSelection, renderSlot, t,
     useDesktopUpdate, openDesktopUpdate, useStore, actions, useShortcuts,
   } = props
   const { open, activeId } = useStore(state => state)
@@ -131,9 +146,9 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
   const connectionState = useConnectionState(state => state)
   const previousConnectionState = useRef(connectionState)
   const onboardingSteps = useOnboardingSteps(s => s)
+  const selected = useMainSelection(value => value.sessionId)
   const onboardingActive = useSessions((state) => {
-    const main = Object.values(state.byId)
-      .find(session => (session.retainedBy.mainView ?? 0) > 0)
+    const main = selected === null ? undefined : state.byId[selected]
     return state.phase === 'ready' && (main === undefined || main.blank)
   })
   const onboardingStep = requestedOnboarding !== undefined
@@ -231,15 +246,17 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
             {renderSlot('settings.trigger', { wide })}
           </button>
         </Tooltip> })}
-        <ConnectionIndicator
-          state={wide && desktopUpdate.presentation?.phase !== 'installing' ? connectionIndicator : undefined}
-          disconnectedLabel={t('connection.error')}
-          connectingLabel={t('connection.connecting')}
-          recoveredLabel={t('connection.connected')}
-          reconnectActionLabel={t('connection.reconnect')}
-          restartActionLabel={t('connection.restart')}
-          onReconnect={reconnect}
-        />
+        <div className={!wide ? css.railConnection : undefined}>
+          <ConnectionIndicator
+            state={desktopUpdate.presentation?.phase !== 'installing' ? connectionIndicator : undefined}
+            disconnectedLabel={t('connection.error')}
+            connectingLabel={t('connection.connecting')}
+            recoveredLabel={t('connection.connected')}
+            reconnectActionLabel={t('connection.reconnect')}
+            restartActionLabel={t('connection.restart')}
+            onReconnect={reconnect}
+          />
+        </div>
         <DesktopUpdateIndicator wide={wide} hidden={connectionIndicator !== undefined && desktopUpdate.presentation?.phase !== 'installing'}
           t={t} view={desktopUpdate} onOpen={openDesktopUpdate} />
       </div>

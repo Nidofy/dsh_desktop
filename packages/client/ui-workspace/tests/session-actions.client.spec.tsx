@@ -77,6 +77,7 @@ const standard: GlobalStandardProps = {
   useSessions: hook(sessions),
   useSessionStatus: hook(noStatus),
   useSessionRetainInfo: () => undefined,
+  useMainSelection: () => { throw new Error('Fixture does not read main selection') },
   usePanelInfo,
   useResource,
   useWorkspaces: hook(workspaces),

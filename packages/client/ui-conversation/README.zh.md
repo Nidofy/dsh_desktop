@@ -11,7 +11,9 @@ kind: "package-reference"
 
 ## 概述
 
-`ui-conversation` 拥有与 target 无关的 Conversation 组装和共享浏览器 shell。它消费 Session Controller 的 `SessionEventLikeEntry` feed，通过 `ctx.uiConversation` 暴露不依赖 React 的注册表与逐 Session binding，并通过 `ctx.uiSession` 提供 `useConversation`、`useInput` 和 `inputActions` 标准 props。它还拥有按会话的持久化图片 URL 缓存：`ctx.uiConversation.imageUrl(sessionId, attachment)` 为每个附件解析一个经会话授权的浏览器 URL，并随 Session binding 释放而撤销，因此所有 Conversation target 共享一次 `session.attachment` 读取。Chat 等具体 target 位于独立包，由各自包注册 Definition、快照 builder、View 和 renderer。
+`ConversationBinding.selectedView` 观察实际选择的 target。`select(target | null)` 发布展示选择；`activate(target)` 仍只物化后台 target，不选择它。释放期间的编辑器根卸载回调容忍已撤回的服务，不重新获取会话。
+
+`ui-conversation` 拥有与 target 无关的组装和浏览器 shell。它消费 Session Controller feed，通过 `ctx.uiConversation` 暴露不依赖 React 的注册表与 binding，并通过 `ctx.uiSession` 提供标准 props。图片 URL 缓存让各 target 共享一次经授权的附件读取，URL 随 Session binding 释放而撤销。Chat 等具体 target 注册自己的 Definition、快照、View 和 renderer。
 
 ## 目录
 
@@ -59,6 +61,8 @@ target package 通过 declaration merge 扩展 snapshot 与 Location data map，
 已认领的命令在仅删除参数和末尾分隔空格时保留身份与高亮，改动命令名才会释放认领。所有命令和语言使用相同规则，包括 `/goal`、`/目标`、`/plan` 和 `/计划`。输入法组合输入期间，命令提示和普通占位文字持续隐藏，直到编辑器提交最终文字且对应输入为空时才重新显示。
 
 工作区选择使用 `uiWorkspace.openWorkspace` 准备目标并提交导航。草稿文字和附件仅在该请求仍为当前请求时，通过它的同步准备回调搬移；后续导航或所有者释放会保留原草稿。
+
+`SessionInput.appendText(text, revision)` 仅向仍有效、处于 plain 阶段且草稿修订匹配的 composer 显式追加外部结果。它保留已有引用节点、附件和草稿选择，增加一个撤销记录而不提交。空文本、过期、繁忙或已释放的输入拒绝，草稿保持原样。
 
 本包占据 root 作用域 `main` 中的 `conversation` key。其 `main.conversation` 外壳将常驻的 `conversation.header` 放在可选 Session 的 `conversation.content` Component Factory 外。未选中 Session 时，头部仍承载根作用域导航；标题、操作和 View 标签保留在严格 Session 子组件中。Factory 拥有共享正文与 Composer，通过其标准 Hook 读取当前 Session，并公开 strict-Session `views` 与 root-scoped `widthControls` 两个局部位置。默认 adapter 渲染现有 `conversation.session` entry，主 occurrence 选择宽度拖拽条；嵌入式 occurrence 可以替换 `views`、省略拖拽条，且不渲染主 Header。共享正文与 Composer 注册 queue dock 和 Todo dock。Todo dock 在 composer 上方使用共享面板 elevation；其中的行分别以共享 idle、ongoing 与 done 标记表示待处理、进行中与已完成。`ctx.uiSession.provide()` 从同一个 Session binding 物化 Conversation 与 input source，并将 `inputActions` 作为稳定标准 prop 提供。
 

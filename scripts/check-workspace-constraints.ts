@@ -59,6 +59,8 @@ const experimentalPackageNamePrefix = '@deepseek-ai/dsh-experimental-'
 const standardReleaseMemberDirectory = /^(?:packages\/(?!experimental\/)[^/]+\/[^/]+|apps\/(?!desktop(?:-host)?$)[^/]+|vendor\/[^/]+)$/
 /** Installable application assembled by electron-builder rather than published to npm. */
 const desktopApplicationDirectory = 'apps/desktop'
+/** Private distribution extensions; these packages never participate in the official npm release. */
+const derivedPackageDirectory = /^packages\/nidofy\/[^/]+$/
 const localArtifactDirs = new Set(['node_modules'])
 const appPackageFiles: Readonly<Record<string, readonly string[]>> = {
   '@deepseek-ai/dsh': ['lib/*.js', 'lib/types/*.d.ts'],
@@ -392,7 +394,12 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
     && manifest.name !== undefined
     && publicNativePackages.has(manifest.name)
 
-  if (isPublicNativePackage) {
+  if (derivedPackageDirectory.test(dir)) {
+    const expectedName = '@nidofy/dsh-' + dir.slice(dir.lastIndexOf('/') + 1)
+    if (manifest.name !== expectedName) errors.push(`${label}: derived package name must be ${expectedName}`)
+    if (manifest.private !== true) errors.push(`${label}: derived package must set "private": true`)
+    if (manifest.publishConfig !== undefined) errors.push(`${label}: derived package must omit publishConfig`)
+  } else if (isPublicNativePackage) {
     if (manifest.private === true) {
       errors.push(`${label}: published Landlock package must not set "private": true`)
     }

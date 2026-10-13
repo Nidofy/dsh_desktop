@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/persistence.md
 /session-persistence:
-  en: b3d66086d8863a84
-  zh: dd532fd7c9947b35
+  en: 1f4b2a59f6a863b7
+  zh: 3b9a0a93ee298750
 /session-persistence/sessionhandle-one-open-channel-onto-a-stored-session:
-  en: 283765de86ff454d
-  zh: ef8fcf55a3071243
+  en: ea3f2d34dab2c8ef
+  zh: 579f390edab2043c
 /session-persistence/the-flush-checkpoint:
   en: a751d1952a47d938
   zh: f0ae8447fdc26dfb
@@ -35,3 +35,6 @@
 /session-persistence/the-backend:
   en: adcd78909565b046
   zh: a09bcb6ec0ebad9e
+/session-persistence/durable-observations-and-physical-generations:
+  en: 083112d76d7c1273
+  zh: d992b663e76132cd

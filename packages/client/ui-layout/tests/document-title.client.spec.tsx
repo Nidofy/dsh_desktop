@@ -23,15 +23,20 @@ function titleSources() {
     projectionsBySession: {},
   })
   const panelInfo = createSnapshotStore<PanelInfo>({ activePanelId: null })
+  const selection = createSnapshotStore({ sessionId: sessionId as SessionId | null, revision: 0 })
   return {
-    sessionId, sessions, panelInfo,
-    props: { useSessions: bindSnapshotSelector(sessions), usePanelInfo: bindSnapshotSelector(panelInfo) },
+    sessionId, sessions, panelInfo, selection,
+    props: {
+      useSessions: bindSnapshotSelector(sessions),
+      usePanelInfo: bindSnapshotSelector(panelInfo),
+      useMainSelection: bindSnapshotSelector(selection),
+    },
   }
 }
 
 describe('DocumentTitle', () => {
   it('projects a durable title and restores the product title', () => {
-    const { sessionId, sessions, props } = titleSources()
+    const { sessionId, sessions, selection, props } = titleSources()
     document.title = 'stale title'
     const mounted = render(<DocumentTitle {...props} productTitle="DeepSeek Harness" />)
     expect(document.title).toBe('DeepSeek Harness')
@@ -46,6 +51,7 @@ describe('DocumentTitle', () => {
         byId: { ...state.byId, [sessionId]: { ...state.byId[sessionId]!, retainedBy: {} } },
       })
     })
+    act(() => { selection.set({ sessionId: null, revision: 1 }) })
     expect(document.title).toBe('DeepSeek Harness')
     mounted.unmount()
     expect(document.title).toBe('DeepSeek Harness')

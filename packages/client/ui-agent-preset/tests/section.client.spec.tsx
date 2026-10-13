@@ -20,6 +20,7 @@ function view(partial: Partial<AgentPresetSectionState> = {}, startCreatorDraft?
     close: vi.fn() }
   const props: AgentPresetSectionProps = { ...actions,
     ...(startCreatorDraft === undefined ? {} : { startCreatorDraft }),
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: unusedHook, useSessions: unusedHook, useSessionStatus: unusedHook, useSessionRetainInfo: unusedHook,
     useWorkspaces: unusedHook, useResource: unusedHook,
     useAgentPresetSection: bindSnapshotSelector(store),

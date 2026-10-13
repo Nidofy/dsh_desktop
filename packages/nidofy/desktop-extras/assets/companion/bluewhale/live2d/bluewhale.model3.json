@@ -1,0 +1,19 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "bluewhale.moc3",
+    "Textures": [
+      "bluewhale.2048/texture_00.png"
+    ],
+    "DisplayInfo": "bluewhale.cdi3.json",
+    "Motions": {
+      "Idle": [
+        {
+          "File": "motions/idle.motion3.json",
+          "FadeInTime": 0.5,
+          "FadeOutTime": 0.5
+        }
+      ]
+    }
+  }
+}

@@ -315,6 +315,7 @@ function panelProps(data: WorkflowRunChatData, sessions = listState(), openSessi
     node: node(data),
     sessionId: PARENT_ID,
     useSessions: selector => selector(sessions),
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useResource,
     useSessionStatus: selector => selector(panelAttention),
     useSessionRetainInfo: () => undefined,

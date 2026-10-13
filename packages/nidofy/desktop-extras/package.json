@@ -28,8 +28,28 @@
       "types": "./lib/types/context.d.ts",
       "default": "./lib/context.js"
     },
+    "./cache": {
+      "types": "./lib/types/cache.d.ts",
+      "default": "./lib/cache.js"
+    },
+    "./notebook": {
+      "types": "./lib/types/notebook.d.ts",
+      "default": "./lib/notebook.js"
+    },
+    "./storage": {
+      "types": "./lib/types/storage.d.ts",
+      "default": "./lib/storage.js"
+    },
     "./notebook-types": {
       "types": "./lib/types/shared/notebook-types.d.ts"
+    },
+    "./management-ui": {
+      "types": "./lib/types/management-ui.d.ts",
+      "default": "./lib/management-ui.js"
+    },
+    "./task-recovery": {
+      "types": "./lib/types/task-recovery.d.ts",
+      "default": "./lib/task-recovery.js"
     }
   },
   "files": [
@@ -37,10 +57,17 @@
     "lib/types/**/*.d.ts",
     "assets",
     "cordis.patch.yml",
-    "lib/client.js"
+    "lib/client.js",
+    "!assets/pets/xiaojing/portrait.png",
+    "!assets/pets/xiaojing/spritesheet.png",
+    "!assets/pets/xiaojing/preview.html",
+    "!assets/pets/xiaojing/checksums.json",
+    "!assets/pets/xiaojing/*.md",
+    "!assets/pet/assets/xiaojing/staging.json"
   ],
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-session-persistence": "workspace:*",
     "@deepseek-ai/dsh-llm": "workspace:*",
     "@deepseek-ai/dsh-llm-pi-ai": "workspace:*",
     "@deepseek-ai/dsh-agent": "workspace:*",
@@ -66,13 +93,26 @@
         "@deepseek-ai/dsh-client-ui-workspace",
         "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-session"
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-conversation"
       ],
-      "platform": "web",
-      "immediately": true
+      "platform": "web"
     }
   },
   "devDependencies": {
+    "@deepseek-ai/dsh-client-ui-settings": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-settings-models": "workspace:*",
+    "@deepseek-ai/dsh-util-crypto": "workspace:*",
+    "@deepseek-ai/dsh-workspace": "workspace:*",
+    "@deepseek-ai/dsh-storage": "workspace:*",
+    "@deepseek-ai/dsh-storage-domain": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
+    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
+    "@deepseek-ai/dsh-remote-mock": "workspace:*",
+    "@deepseek-ai/dsh-client-store": "workspace:*",
+    "@deepseek-ai/dsh-api-session-controller": "workspace:*",
+    "@deepseek-ai/dsh-api-workspace-controller": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-conversation": "workspace:*",
     "@deepseek-ai/dsh-client-ui-workspace": "workspace:*",
     "react": "^18.2.0",
     "@types/react": "~18.3.1",
@@ -85,6 +125,9 @@
     "@deepseek-ai/dsh-agent-loop": "workspace:*",
     "@deepseek-ai/dsh-token-meter": "workspace:*",
     "@deepseek-ai/dsh-session-query-sqlite": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*"
+    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
+    "@testing-library/react": "^16.3.2",
+    "js-yaml": "^4.2.0",
+    "@types/js-yaml": "^4.0.9"
   }
 }

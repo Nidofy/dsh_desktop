@@ -9,6 +9,8 @@ English | [中文](README.zh.md)
 
 ## Summary
 
+Document titles consume the explicit root `useMainSelection` source. Retaining a background Session does not choose a title; clearing navigation restores the unselected title.
+
 This package provides the Web GUI's three-column AppFrame, edge-column widths, and `ctx.layout` presentation control. The right column concedes space before the center; its occupant renders fullscreen while the frame retains the wide-screen track underneath. The theme presenter owns color scheme, alias tokens, content font size, and document metadata. Layout state resets on reload.
 
 ## Table of Contents

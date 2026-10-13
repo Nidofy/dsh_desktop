@@ -14,9 +14,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
 import { AclWriteGrant, tempWriteSid, workspaceWriteSid } from '../src/index.ts'
+import { isolatedRecovery } from './fixtures/isolated-recovery.ts'
+
+const recoveryStorage = isolatedRecovery()
 
 const isWin32 = process.platform === 'win32'
-const runnerEntry = fileURLToPath(new URL('../src/runner.ts', import.meta.url))
+const runnerEntry = fileURLToPath(new URL('./fixtures/isolated-runner.ts', import.meta.url))
 
 // Functional probe, not where.exe: spawnSync never throws on a missing
 // binary (status null) and where.exe exits 1 without pwsh — only an actual
@@ -29,6 +32,7 @@ function runRunner(args: string[], timeoutMs = 30_000) {
   return spawnSync(process.execPath, ['--import', 'tsx/esm', runnerEntry, ...args], {
     timeout: timeoutMs,
     encoding: 'utf8',
+    env: { ...process.env, DSH_TEST_ACL_STORAGE: recoveryStorage() },
   })
 }
 
@@ -164,7 +168,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
     expect(existsSync(renamedDir)).toBe(true)
   }, 30_000)
 
-  it('paired SIDs: the runner trusts caller-owned private-temp grants and materializes nothing itself', () => {
+  it('paired SIDs without a live workspace owner fail closed before spawning', () => {
     const seamWorkspace = join(scratchRoot, 'seam-workspace')
     mkdirSync(seamWorkspace)
     const writeSid = workspaceWriteSid(seamWorkspace)
@@ -186,16 +190,10 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
         '--temp-write-sid', privateTempSid,
         '--', 'pwsh', '/NoLogo', '/NonInteractive', '/NoProfile', '/Command', probe,
       ])
-      expect(result.status, `stderr: ${result.stderr}`).toBe(0)
-      // The runner granted nothing (only the caller's temp-SID grant
-      // stands): the workspace write is denied, the private temp write lands,
-      // and the child's TMP/TEMP point at the private subdirectory.
-      expect(result.stdout).toContain('WORKSPACE-WRITE: DENIED')
-      expect(result.stdout).toContain('PRIVATE-TEMP-WRITE: OK')
-      expect(result.stdout).toContain(`TEMP-ENV: ${privateTemp}`)
-      expect(result.stdout).toContain(`TMP-ENV: ${privateTemp}`)
+      expect(result.status, `stderr: ${result.stderr}`).toBe(127)
+      expect(result.stderr).toContain('live --workspace-lease')
       expect(existsSync(join(seamWorkspace, 'server-granted.txt'))).toBe(false)
-      expect(existsSync(join(privateTemp, 'server-granted.txt'))).toBe(true)
+      expect(existsSync(join(privateTemp, 'server-granted.txt'))).toBe(false)
     } finally {
       grant.dispose()
       rmSync(privateTemp, { recursive: true, force: true })
@@ -213,7 +211,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
     const workspaceGrant = AclWriteGrant.create(writeSid)
     const grantA = AclWriteGrant.create(sidA)
     const grantB = AclWriteGrant.create(sidB)
-    workspaceGrant.add(writableDir)
+    workspaceGrant.add(writableDir, true)
     grantA.add(tempA)
     grantB.add(tempB)
     const sharedWorkspaceFile = join(writableDir, 'shared-between-sessions.txt')
@@ -229,6 +227,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
       const resultA = runRunner([
         '--workspace', writableDir, '--temp', tempA, '--mode', 'workspace-write',
         '--write-sid', writeSid, '--temp-write-sid', sidA,
+        '--workspace-lease', workspaceGrant.authorization(writableDir),
         '--', process.execPath, '-e', probe, join(tempA, 'a.txt'), join(tempB, 'a-escaped.txt'), sharedWorkspaceFile,
       ])
       expect(resultA.status, `stderr: ${resultA.stderr}`).toBe(0)
@@ -239,6 +238,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
       const resultB = runRunner([
         '--workspace', writableDir, '--temp', tempB, '--mode', 'workspace-write',
         '--write-sid', writeSid, '--temp-write-sid', sidB,
+        '--workspace-lease', workspaceGrant.authorization(writableDir),
         '--', process.execPath, '-e', probe, join(tempB, 'b.txt'), join(tempA, 'b-escaped.txt'), sharedWorkspaceFile, join(tempA, 'a.txt'),
       ])
       expect(resultB.status, `stderr: ${resultB.stderr}`).toBe(0)
@@ -339,7 +339,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
     mkdirSync(privateTemp)
     const privateTempSid = tempWriteSid(privateTemp)
     const grant = AclWriteGrant.create(writeSid)
-    grant.add(writableDir)
+    grant.add(writableDir, true)
     try {
       const downgradeProbe = [
         "$ErrorActionPreference='SilentlyContinue';",
@@ -360,6 +360,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
       const reupgraded = runRunner([
         '--workspace', writableDir, '--temp', privateTemp, '--mode', 'workspace-write', '--write-sid', writeSid,
         '--temp-write-sid', privateTempSid,
+        '--workspace-lease', grant.authorization(writableDir),
         '--', 'pwsh', '/NoLogo', '/NonInteractive', '/NoProfile', '/Command', reupgradeProbe,
       ])
       expect(reupgraded.status, `stderr: ${reupgraded.stderr}`).toBe(0)
@@ -484,6 +485,7 @@ describe.skipIf(!isWin32 || !pwshAvailable())('windows-acl runner', () => {
       const result = runRunner([
         '--workspace', ownWorkspace, '--temp', ownTemp, '--mode', 'workspace-write',
         '--write-sid', ownWorkspaceSid, '--temp-write-sid', ownTempSid,
+        '--workspace-lease', ownWorkspaceGrant.authorization(ownWorkspace),
         '--', 'pwsh', '/NoLogo', '/NonInteractive', '/NoProfile', '/Command', probe,
       ])
       expect(result.status, `stderr: ${result.stderr}`).toBe(0)
@@ -575,17 +577,18 @@ TryOpen 'DIRECTORY' '${child}'
     const shared = join(scratchRoot, 'shared-root')
     mkdirSync(shared)
     const sidA = workspaceWriteSid(shared)
-    const sidB = `${sidA}-1`
+    const sidB = sidA
     const grantA = AclWriteGrant.create(sidA)
     const grantB = AclWriteGrant.create(sidB)
     grantA.add(shared, true)
-    grantB.add(shared)
+    grantB.add(shared, true)
     try {
       grantB.dispose() // revokes B's ACE, must keep the shared label
       const target = join(shared, 'after-revoke.txt')
       const result = runRunner([
         '--workspace', shared, '--temp', isolatedTemp, '--mode', 'workspace-write',
         '--write-sid', sidA, '--temp-write-sid', tempWriteSid(isolatedTemp),
+        '--workspace-lease', grantA.authorization(shared),
         '--', process.execPath, '-e', "require('node:fs').writeFileSync(process.argv[1], 'written')", target,
       ])
       expect(result.status, `stderr: ${result.stderr}`).toBe(0)

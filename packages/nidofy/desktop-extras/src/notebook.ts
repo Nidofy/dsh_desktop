@@ -5,13 +5,18 @@ import { join } from 'node:path'
 import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { extractSessionEventText } from '@deepseek-ai/dsh-session-query'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { SessionPersistenceGeneration } from '@deepseek-ai/dsh-session-persistence'
 import { object, text } from './state.ts'
+import { notebookActiveInput } from './notebook-input.ts'
 
 /** Notebook categories describe current work rather than a chronological summary. */
 export const notebookKinds = ['objective', 'constraint', 'decision', 'file', 'verification', 'failure', 'issue', 'next'] as const
 import type { ActiveNotebookProjection, Note, Notebook, NotebookBudgets, NotebookHistoryPage, NotebookHistoryRecord, NotebookLimits, NotebookMigrateRecord, NotebookScope, NotebookStorageAdmission, NotebookStorageWrite, NotebookV2 } from './shared/notebook-types.ts'
-export type { ActiveNotebookProjection, Note, Notebook, NotebookBudgets, NotebookHistoryPage, NotebookHistoryRecord, NotebookLimits, NotebookMigrateRecord, NotebookRetireRecord, NotebookRestoreRecord, NotebookScope, NotebookStorageAdmission, NotebookStorageWrite, NotebookV2, NotebookV2Candidate } from './shared/notebook-types.ts'
-/** Empty notebooks have no processed source events. */
+export type { ActiveNotebookProjection, Note, Notebook, NotebookBudgets, NotebookHistoryPage, NotebookHistoryRecord, NotebookLimits, NotebookMigrateRecord, NotebookRetireRecord, NotebookRestoreRecord, NotebookScope, NotebookStorageAdmission, NotebookStorageLease, NotebookStorageWrite, NotebookV2, NotebookV2Candidate } from './shared/notebook-types.ts'
+/** Empty notebooks have no processed source events.
+ * @param sessionId - Owning Session id.
+ * @returns revision-zero v1 state with no entries or processed evidence.
+ */
 export function emptyNotebook(sessionId: string): Notebook {
   return { schemaVersion: 1, sessionId, revision: 0, sourceThrough: -1, entries: [] }
 }
@@ -24,7 +29,12 @@ function note(value: unknown): Note {
   if (!notebookKinds.includes(kind as Note['kind']) || typeof p.pinned !== 'boolean' || typeof p.active !== 'boolean') throw Error('NOTEBOOK_INVALID_ENTRY')
   return { id: text(p.id, 80), kind: kind as Note['kind'], text: text(p.text, 2048), seq: integer(p.seq, 0), quote: text(p.quote, 512), pinned: p.pinned, active: p.active, revision: integer(p.revision, 1) }
 }
-/** Validate durable or model-supplied notebook bytes before they become state. */
+/** Validate durable or model-supplied v1 state; invalid entries, scope or budgets reject.
+ * @param value - Parsed JSON state.
+ * @param sessionId - Required owning Session id.
+ * @param limits - Complete snapshot entry and UTF-8 byte bounds.
+ * @returns a detached validated notebook.
+ */
 export function parseNotebook(value: unknown, sessionId: string, limits: NotebookLimits): Notebook {
   const p = object(value)
   if (p.schemaVersion !== 1 || p.sessionId !== sessionId || !Array.isArray(p.entries)) throw Error('NOTEBOOK_INVALID_STATE')
@@ -37,7 +47,14 @@ export function parseNotebook(value: unknown, sessionId: string, limits: Noteboo
 function bounded(value: Notebook, limits: NotebookLimits): void {
   if (value.entries.length > limits.maxEntries || Buffer.byteLength(JSON.stringify(value)) > limits.maxBytes) throw Error('NOTEBOOK_BUDGET_EXCEEDED')
 }
-/** Apply an explicit delta with source checks; models cannot change pinned entries. */
+/** Apply an explicit v1 delta with source checks; models cannot change pinned entries.
+ * @param previous - Committed revision used for CAS and source advancement.
+ * @param input - Untrusted operations and sourceThrough cursor.
+ * @param events - Original owning Session events indexed by seq.
+ * @param actor - User edits may pin notes; model edits cannot change pinned entries.
+ * @param limits - Complete result entry and UTF-8 byte bounds.
+ * @returns a detached next revision; invalid evidence, conflicts and exceeded bounds reject.
+ */
 export function applyNotebookDelta(previous: Notebook, input: unknown, events: readonly SessionEvent[], actor: 'user' | 'model', limits: NotebookLimits): Notebook {
   const p = object(input)
   if (p.baseRevision !== previous.revision) throw Error('NOTEBOOK_REVISION_CONFLICT')
@@ -77,6 +94,10 @@ export class NotebookStore {
   private queue: Promise<unknown> = Promise.resolve()
   constructor(private readonly home: string, readonly limits: NotebookLimits) {}
   private directory(sessionId: string): string { return join(this.home, createHash('sha256').update(sessionId).digest('hex')) }
+  /** Read the selected v1 snapshot; unreadable or invalid existing state rejects.
+   * @param sessionId - Owning Session id.
+   * @returns validated state, or an empty revision-zero notebook when absent.
+   */
   async read(sessionId: string): Promise<Notebook> {
     let bytes: string
     try { bytes = await readFile(join(this.directory(sessionId), 'current.json'), 'utf8') }
@@ -84,6 +105,14 @@ export class NotebookStore {
     const value: unknown = JSON.parse(bytes)
     return parseNotebook(value, sessionId, this.limits)
   }
+  /** Serialize, validate and atomically select one v1 delta after writing its immutable revision.
+   * @param sessionId - Owning Session id.
+   * @param input - Untrusted delta carrying the expected base revision.
+   * @param events - Original Session evidence indexed by seq.
+   * @param actor - User or model edit authority.
+   * @param signal - Cancellation before writing and before selecting the current pointer.
+   * @returns the selected revision; validation and disk failures reject without selecting a partial state.
+   */
   update(sessionId: string, input: unknown, events: readonly SessionEvent[], actor: 'user' | 'model', signal?: AbortSignal): Promise<Notebook> {
     const operation = this.queue.catch(() => { /* A rejected operation must not block later revisions. */ }).then(async () => {
       signal?.throwIfAborted()
@@ -100,6 +129,7 @@ export class NotebookStore {
     this.queue = operation
     return operation
   }
+  /** Drain the current write queue, containing earlier failures; callers must stop admitting new writes first. */
   async close(): Promise<void> { await this.queue.catch(() => { /* The original caller receives write failures. */ }) }
 }
 
@@ -178,8 +208,9 @@ function parseJsonState(bytes: string): unknown {
 /** Validate durable or supplied v2 bytes before they become state; a different scope generation is a conflict, not corruption. */
 function parseStoredV2(value: unknown, scope: NotebookScope): StoredNotebookV2 {
   const p = object(value), s = object(p.scope), cursors = object(p.cursors)
+  if (typeof s.generation === 'number') throw Error('NOTEBOOK_GENERATION_REBIND_REQUIRED')
   if (p.schemaVersion !== 2 || typeof s.sessionId !== 'string' || s.sessionId === ''
-    || typeof s.generation !== 'number' || !Number.isSafeInteger(s.generation) || s.generation < 0) throw Error('NOTEBOOK_INVALID_STATE')
+    || typeof s.generation !== 'string' || s.generation === '') throw Error('NOTEBOOK_INVALID_STATE')
   if (s.sessionId !== scope.sessionId || s.generation !== scope.generation) throw Error('NOTEBOOK_SCOPE_CONFLICT')
   if (!Array.isArray(p.active)) throw Error('NOTEBOOK_INVALID_STATE')
   const revision = integer(p.revision, 0), active = p.active.map(note)
@@ -204,7 +235,7 @@ function parseHistoryRecord(value: unknown): NotebookHistoryRecord {
     return { action: 'migrate', historyRevision, atRevision, generation: null, legacySourceThrough: integer(p.legacySourceThrough, -1), note: row }
   }
   if (p.action === 'retire' || p.action === 'restore') {
-    const generation = integer(p.generation, 0)
+    const generation = SessionPersistenceGeneration(text(p.generation, 1024))
     if (p.action === 'retire') {
       const row = note(p.note)
       if (row.active) throw Error('NOTEBOOK_CORRUPT_STATE')
@@ -388,6 +419,44 @@ export class NotebookV2Store {
     return this.enqueue(async () => projectV2((await this.loadScope(scope)).stored))
   }
 
+  /** Read the selected v2 state, including both cursors, without exposing internal disk accounting.
+   * @param scope - Session and generation whose committed state is read; a mismatched generation rejects.
+   * @param signal - Cancellation before reading and during any lazy v1 conversion this read triggers.
+   * @param validatePublication - owner lifetime check before any lazy conversion publishes.
+   * @returns a detached state, empty at revision zero when unpublished. Unselected revision files and journal tails are excluded.
+   */
+  readCommitted(scope: NotebookScope, signal?: AbortSignal, validatePublication?: () => void): Promise<NotebookV2> {
+    return this.enqueue(async () => {
+      signal?.throwIfAborted()
+      const { stored } = await this.loadScope(scope, signal, validatePublication)
+      signal?.throwIfAborted()
+      validatePublication?.()
+      return { schemaVersion: 2, scope: { ...stored.scope }, revision: stored.revision,
+        cursors: { ...stored.cursors }, active: structuredClone(stored.active), historyRevision: stored.historyRevision }
+    })
+  }
+
+  /** Read only the selected pointer without recovering history or converting legacy data.
+   * @param scope - Owning physical Session generation; mismatches reject.
+   * @param signal - Cancellation during the bounded pointer read.
+   * @returns detached selected state, empty when no notebook exists; legacy-only state requires explicit recovery.
+   */
+  readSelected(scope: NotebookScope, signal?: AbortSignal): Promise<NotebookV2> {
+    return this.enqueue(async () => {
+      signal?.throwIfAborted()
+      const directory = this.directory(scope.sessionId)
+      const bytes = await readOptionalText(join(directory, 'v2', 'current.json'))
+      let stored: StoredNotebookV2
+      if (bytes === undefined) {
+        if (await readOptionalText(join(directory, 'current.json')) !== undefined) throw Error('NOTEBOOK_RECOVERY_REQUIRED')
+        stored = emptyStoredV2(scope)
+      } else { stored = parseStoredV2(parseJsonState(bytes), scope) }
+      signal?.throwIfAborted()
+      return { schemaVersion: 2, scope: { ...stored.scope }, revision: stored.revision,
+        cursors: { ...stored.cursors }, active: structuredClone(stored.active), historyRevision: stored.historyRevision }
+    })
+  }
+
   /** Read one bounded page of committed history records, oldest first.
    * @param scope - Session and generation whose journal is read.
    * @param pageToken - Record offset carried from the previous page; defaults to the first page.
@@ -415,12 +484,13 @@ export class NotebookV2Store {
    * @param signal - Aborts before the first disk write — including the lazy v1 conversion this
    * publish triggers — and before the commit pointer; partial writes never publish, and their
    * residue is fenced off and truncated by the next attempt.
+   * @param validatePublication - owner lifetime check after admission and immediately before pointer publication.
    * @returns the committed v2 revision.
    */
-  publish(expectedRevision: number, scope: NotebookScope, candidate: unknown, events: readonly SessionEvent[], actor: 'user' | 'model', signal?: AbortSignal): Promise<NotebookV2> {
+  publish(expectedRevision: number, scope: NotebookScope, candidate: unknown, events: readonly SessionEvent[], actor: 'user' | 'model', signal?: AbortSignal, validatePublication?: () => void): Promise<NotebookV2> {
     return this.enqueue(async () => {
       signal?.throwIfAborted()
-      const loaded = await this.loadScope(scope, signal)
+      const loaded = await this.loadScope(scope, signal, validatePublication)
       const stored = loaded.stored
       if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw Error('NOTEBOOK_INVALID_NUMBER')
       if (expectedRevision !== stored.revision) throw Error('NOTEBOOK_REVISION_CONFLICT')
@@ -495,7 +565,7 @@ export class NotebookV2Store {
         historyRevision: historyRecords.length > 0 ? nextHistoryRevision : stored.historyRevision,
         historyBytes: stored.historyBytes + appendBytes }
       const projection = projectV2(next)
-      if (next.active.length > this.budgets.maxActiveEntries || Buffer.byteLength(JSON.stringify(projection)) > this.budgets.maxActiveBytes) throw Error('NOTEBOOK_ACTIVE_BUDGET_EXCEEDED')
+      notebookActiveInput(projection, this.budgets)
       const stateBytes = storedV2Bytes(next), stateSize = Buffer.byteLength(stateBytes)
       const directory = this.directory(scope.sessionId), v2 = join(directory, 'v2')
       // Refuse before any disk mutation when the content-derived final name holds different
@@ -507,29 +577,38 @@ export class NotebookV2Store {
       const actualJournal = await journalSizeOf(v2)
       if (actualJournal < stored.historyBytes) throw Error('NOTEBOOK_CORRUPT_STATE')
       const journalResidue = actualJournal - stored.historyBytes
-      if (journalResidue !== 0) {
-        await truncate(join(v2, 'history.jsonl'), stored.historyBytes)
-        loaded.diskBytes -= journalResidue
-        loaded.journalSize = stored.historyBytes
-      }
       // Reserve the write peak: appended journal bytes, the immutable revision file unless the
       // identical content file already exists, and the atomic replacement temporary for current.
       const revisionReuse = twin === 'identical'
       const writePeak = appendBytes + (revisionReuse ? 0 : stateSize) + stateSize
       const write: NotebookStorageWrite = { scope, currentBytes: loaded.diskBytes,
         maxWriteBytes: writePeak, limitBytes: this.budgets.maxHistoryBytes }
-      await this.admission.admit(write)
-      signal?.throwIfAborted()
+      await localHistoryAdmission.admit(write)
+      const lease = await this.admission.admit(write)
       try {
-        await mkdir(v2, { recursive: true, mode: 0o700 })
-        if (append !== '') await appendFile(join(v2, 'history.jsonl'), append, 'utf8')
-        await writeStateFile(v2, next.revision, stateBytes)
-        signal?.throwIfAborted()
-        await writeFileAtomic(join(v2, 'current.json'), stateBytes, { mode: 0o600 })
+        const persist = async (): Promise<void> => {
+          signal?.throwIfAborted()
+          validatePublication?.()
+          if (journalResidue !== 0) {
+            await truncate(join(v2, 'history.jsonl'), stored.historyBytes)
+            loaded.diskBytes -= journalResidue
+            loaded.journalSize = stored.historyBytes
+          }
+          await mkdir(v2, { recursive: true, mode: 0o700 })
+          if (append !== '') await appendFile(join(v2, 'history.jsonl'), append, 'utf8')
+          await writeStateFile(v2, next.revision, stateBytes)
+          signal?.throwIfAborted()
+          validatePublication?.()
+          await writeFileAtomic(join(v2, 'current.json'), stateBytes, { mode: 0o600 })
+        }
+        if (lease) await lease.run(persist)
+        else await persist()
       } catch (error) {
         // A partial write invalidates the cached disk accounting; the next load re-measures.
         this.cache.delete(scope.sessionId)
         throw error
+      } finally {
+        await lease?.settle().catch((error: unknown) => { /* Unknown settlement retains the durable reservation. */ void error })
       }
       loaded.stored = next
       loaded.committed = true
@@ -554,7 +633,7 @@ export class NotebookV2Store {
    * @param scope - Session and generation whose state is loaded.
    * @param signal - Publish signal forwarded into the lazy conversion; absent for uncancellable reads.
    */
-  private async loadScope(scope: NotebookScope, signal?: AbortSignal): Promise<LoadedNotebookV2> {
+  private async loadScope(scope: NotebookScope, signal?: AbortSignal, validatePublication?: () => void): Promise<LoadedNotebookV2> {
     const cached = this.cache.get(scope.sessionId)
     if (cached && cached.committed && cached.stored.scope.generation === scope.generation) {
       const bytes = await readOptionalText(join(this.directory(scope.sessionId), 'v2', 'current.json'))
@@ -575,7 +654,7 @@ export class NotebookV2Store {
     }
     const legacy = await readOptionalText(join(directory, 'current.json'))
     if (legacy === undefined) return await this.freshScope(scope, v2)
-    return this.migrateScope(scope, v2, legacy, signal)
+    return this.migrateScope(scope, v2, legacy, signal, validatePublication)
   }
 
   /** Cache and return the unpublished empty state of a scope no v1 or v2 publication reached. */
@@ -597,7 +676,8 @@ export class NotebookV2Store {
    * aborts before the first disk write and before the commit pointer, leaving the v1 notebook
    * untouched.
    */
-  private async migrateScope(scope: NotebookScope, v2: string, legacyBytes: string, signal?: AbortSignal): Promise<LoadedNotebookV2> {
+  private async migrateScope(scope: NotebookScope, v2: string, legacyBytes: string, signal?: AbortSignal,
+    validatePublication?: () => void): Promise<LoadedNotebookV2> {
     let legacy: Notebook
     try {
       legacy = parseNotebook(JSON.parse(legacyBytes) as unknown, scope.sessionId, UNBOUNDED)
@@ -621,7 +701,7 @@ export class NotebookV2Store {
     const stored: StoredNotebookV2 = { schemaVersion: 2, scope: { sessionId: scope.sessionId, generation: scope.generation },
       revision: legacy.revision, cursors: { evidenceThrough: -1, commitThrough: -1 }, active,
       historyRevision: records.length > 0 ? 1 : 0, historyBytes: Buffer.byteLength(journal) }
-    if (active.length > this.budgets.maxActiveEntries || Buffer.byteLength(JSON.stringify(projectV2(stored))) > this.budgets.maxActiveBytes) throw Error('NOTEBOOK_ACTIVE_BUDGET_EXCEEDED')
+    notebookActiveInput(projectV2(stored), this.budgets)
     const stateBytes = storedV2Bytes(stored), stateSize = Buffer.byteLength(stateBytes)
     // Refuse before any write — journal included — when the content-derived immutable name holds
     // different bytes; whether they were ever committed is unknown and they must survive.
@@ -634,18 +714,27 @@ export class NotebookV2Store {
     const write: NotebookStorageWrite = { scope, currentBytes: await measureDisk(v2),
       maxWriteBytes: (journalReuse ? 0 : Buffer.byteLength(journal)) + (revisionReuse ? 0 : stateSize) + stateSize,
       limitBytes: this.budgets.maxHistoryBytes }
-    await this.admission.admit(write)
-    signal?.throwIfAborted()
+    await localHistoryAdmission.admit(write)
+    const lease = await this.admission.admit(write)
     try {
-      await mkdir(v2, { recursive: true, mode: 0o700 })
-      if (!journalReuse && journal !== '') await writeFileAtomic(join(v2, 'history.jsonl'), journal, { mode: 0o600 })
-      await writeStateFile(v2, stored.revision, stateBytes)
-      signal?.throwIfAborted()
-      await writeFileAtomic(join(v2, 'current.json'), stateBytes, { mode: 0o600 })
+      const persist = async (): Promise<void> => {
+        signal?.throwIfAborted()
+        validatePublication?.()
+        await mkdir(v2, { recursive: true, mode: 0o700 })
+        if (!journalReuse && journal !== '') await writeFileAtomic(join(v2, 'history.jsonl'), journal, { mode: 0o600 })
+        await writeStateFile(v2, stored.revision, stateBytes)
+        signal?.throwIfAborted()
+        validatePublication?.()
+        await writeFileAtomic(join(v2, 'current.json'), stateBytes, { mode: 0o600 })
+      }
+      if (lease) await lease.run(persist)
+      else await persist()
     } catch (error) {
       // A partial conversion invalidates the cached disk accounting; the next load re-measures.
       this.cache.delete(scope.sessionId)
       throw error
+    } finally {
+      await lease?.settle().catch((error: unknown) => { /* Unknown settlement retains the durable reservation. */ void error })
     }
     const index = indexRecords(records, active)
     const loaded: LoadedNotebookV2 = { stored, committed: true, records, used: index.used, retired: index.retired,

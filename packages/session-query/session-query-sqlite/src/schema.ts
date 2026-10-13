@@ -68,6 +68,8 @@ export async function openSearchDatabase(path: string, journalMode: JournalMode)
     // Apply mutating pragmas only after refusing foreign or canonical files.
     // journalMode is a validated closed union, not caller-controlled SQL.
     db.exec(`PRAGMA journal_mode = ${journalMode.toUpperCase()}`)
+    // An explicitly ephemeral index keeps its live overlay and sorting work ephemeral too.
+    if (actual === ':memory:') db.exec('PRAGMA temp_store = MEMORY')
     ensurePersistentSchema(db)
     ensureTemporarySchema(db)
     return db

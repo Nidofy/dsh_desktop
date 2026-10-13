@@ -213,3 +213,5 @@ kind: "package-library"
 </details>
 
 **运行时不变式：** 不发布伴生入口。这些是纯 props-in React atom，没有 Cordis API、事件、service 或跨插件可变状态；渲染约定由组件测试覆盖。
+
+Markdown代码块限制垂直视口，同时保留完整可选中、可复制的源码。增量高亮保持稳定节点，不虚拟化会话或改变滚动锚点。

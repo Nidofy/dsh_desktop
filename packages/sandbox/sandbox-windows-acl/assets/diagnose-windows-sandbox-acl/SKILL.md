@@ -5,6 +5,10 @@ description: 'Use on Windows for unexpected DSH sandbox access denials: workspac
 
 # Diagnose Windows sandbox ACL failures
 
+## Missing workspace recovery record
+
+`Legacy Windows sandbox grant has no recovery record` means the original permissions are unknown. Do not run this repair script for that error, delete grants, change labels, or retry. Preserve the workspace and recovery records. Use a verified original backup or a reviewed new workspace copied without security descriptors; never infer the original label. Journal conflicts require reviewing the record and external change. See the [upgrade guide](../../../../../docs/upgrade-guide/v0.2.0-rc.2/windows-acl-workspace-leases/guide.md).
+
 **Write every approval request in plain words, in the user's language.** The prompt is all the user reads before widening access, so it must stand alone: which folder the script touches, that it adds the signed-in user's full-control entry where a right is missing and removes foreign package entries, that file contents and owners are unchanged, and that the printed recovery command undoes each change. Keep error codes, `WRITE_DAC`/`WRITE_OWNER`, `S-1-15-2-*` SIDs, `icacls`, ACL, ACE, verdict names and switches out of the request: write Windows file permissions, not ACL or ACE. Ask once, for one command.
 
 ## One command diagnoses and repairs
@@ -40,7 +44,7 @@ Every record reaches stdout, the `acl-report-*.jsonl` file under `-Out`, and the
 | `stop` | Nothing repaired, or a refusal ended the run. Report and stop. |
 | `restore_pending_then_stop` | Rollback unverified. Run the printed recovery commands in order, then stop. |
 
-A deny ACE's presence alone does not establish causation, and the script never removes one; DSH's `S-1-4-*` grants and the Everyone `DeleteSubdirectoriesAndFiles` deny are expected, not conflicts. A deny that blocks the repair ends the run without a repair (`REPAIR_REFUSED`, or `GRANT_FAILED`) after restoring what it attempted. Each change leaves two files in `-Out` (`acl-backup-<id>.json` and its `.ps1`), and the run prints the matching `ROLLBACK` command.
+A deny alone does not establish causation. This script never removes denies or DSH `S-1-4-*` grants, which can belong to active leases, and never validates their recovery records. Unbacked grants follow the migration rule above. A deny that blocks the repair ends the run without a repair (`REPAIR_REFUSED`, or `GRANT_FAILED`) after restoring what it attempted. Each change leaves two files in `-Out` (`acl-backup-<id>.json` and its `.ps1`), and the run prints the matching `ROLLBACK` command.
 
 ## After a repair, and when it stops
 

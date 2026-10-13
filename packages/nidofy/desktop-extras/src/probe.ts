@@ -56,7 +56,9 @@ export class Probe {
   async settled(): Promise<void> { await this.done }
   private async persist(report: ProbeReport): Promise<void> {
     await mkdir(this.home, { recursive: true, mode: 0o700 })
-    await writeFileAtomic(join(this.home, 'last-probe.json'), JSON.stringify(report), { mode: 0o600 })
+    const path = join(this.home, 'last-probe.json'), bytes = JSON.stringify(report), storage = this.ctx.get('nidofyStorage')
+    const write = () => writeFileAtomic(path, bytes, { mode: 0o600 })
+    await (storage ? storage.write(path, Buffer.byteLength(bytes) * 2, write) : write())
   }
   private async run(report: ProbeReport, provider: string, model: string, controller: AbortController): Promise<void> {
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)]), calls: PreparedLlmCall[] = []

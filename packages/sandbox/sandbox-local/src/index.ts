@@ -9,12 +9,10 @@
  * the per-WORKSPACE identity derived from the canonical workspace path
  * (`workspaceWriteSid`), while every live session receives a RANDOM private
  * temp directory and its own derived capability (`tempWriteSid`). The
- * workspace-root ACE materializes once per workspace per server lifetime
- * and STANDS (the cross-session reuse cache — the exact-ACE skip makes
- * every later provision O(1) instead of re-propagating the tree per
- * session); the private-temp ACEs are revoked on dispose. The runner
- * receives both SIDs (their presence marks the seam-managed contract) and
- * stops managing DACLs itself. The rung reports partial enforcement because
+ * workspace grant is shared by process leases. Policy changes release session
+ * admission; existing child leases delay restoration until their jobs close.
+ * Startup recovers abandoned journals. Each runner receives both SIDs and a
+ * live owner reference; stale prepared commands cannot acquire a new grant. The rung reports partial enforcement because
  * NTFS hard links alias one file object across paths, reads stay unconfined,
  * and a tree another AppContainer tool has ACL'd with a package SID is not
  * readable by the Low-integrity child.
@@ -244,10 +242,7 @@ const RUNNER_FAILURE_RULES = {
 /**
  * Local process-sandbox provider. Registers as `ctx.sandbox`. Caches the
  * chain verdict and, on the windows-acl rung, the write grants
- * ({@link AclWriteGrant}: the standing workspace-root grant per workspace
- * and the revocable private-temp grant per live session/workspace pair, the
- * latter revoked on provider dispose); the one-time probes spawn nothing
- * else.
+ * ({@link AclWriteGrant}: session workspace leases and private-temp grants).
  */
 export class LocalSandboxProvider extends SandboxProvider {
   // Inline schema call: the config catalog walks `static Config` statically.
@@ -266,13 +261,10 @@ export class LocalSandboxProvider extends SandboxProvider {
   /** Cached chain verdict; undefined until the first confined wrap needs it. */
   private selectedRunner: SelectedRunner | 'unavailable' | undefined
   /**
-   * Server-lifetime write grants (windows-acl rung): the STANDING
-   * workspace-root grant per workspace (its ACE is the cross-session reuse
-   * cache and outlives the provider — never revoked) and the REVOCABLE
-   * private-temp grant per live session/workspace pair (revoked on provider
-   * dispose).
+   * Session workspace admissions and provider-owned private-temp grants.
+   * Child runners hold separate leases through process completion.
    */
-  private readonly workspaceGrants = new Map<string, AclWriteGrant>()
+  private readonly workspaceGrants = new Map<string, { sessionId: SessionId; root: string; grant: AclWriteGrant }>()
   private readonly tempCapabilities = new Map<string, AclTempCapability>()
 
   constructor(ctx: Context, config: Config) {
@@ -300,11 +292,17 @@ export class LocalSandboxProvider extends SandboxProvider {
     /* v8 ignore next 3 -- Windows-only registration; the Linux coverage lane cannot take this branch */
     if (process.platform === 'win32' && this.runnerCommand === undefined) {
       ctx.inject(['skills'], (skillsCtx) => { registerAclDiagnosisSkill(skillsCtx) })
+      let pending: readonly unknown[]
+      try { pending = AclWriteGrant.recover() } catch (error) { pending = [error] }
+      for (const error of pending) ctx.logger.warn('Windows ACL recovery remains pending; workspace admission still requires recovery checks', error)
     }
-    // The temp grants are revoked with the provider: a clean server
-    // shutdown leaves no temp ACEs behind (workspace ACEs stand by design —
-    // the reuse cache; an unclean shutdown leaves them for the next
-    // provision's exact-ACE skip).
+    // Policy compositions extend the event map; the backend only needs its tag.
+    ctx.on('session/event', (session, event: { type: string }) => {
+      if (event.type === 'sandbox/mode') this.releaseSessionAclGrants(session.id)
+    }, { global: true })
+    ctx.on('session/disposed', (session) => { this.releaseSessionAclGrants(session.id) }, { global: true })
+    // Provider teardown releases admissions; live runner leases delay workspace
+    // restoration. Abandoned process leases are recovered on the next startup.
     ctx.effect(() => () => {
       this.revokeAclGrants()
     })
@@ -357,10 +355,8 @@ export class LocalSandboxProvider extends SandboxProvider {
   /**
    * The windows-acl runner argv for one policy. With a calling session (the
    * policy's `sessionId`) under workspace-write, the grants are materialized
-   * once per provider lifetime — the standing workspace-root grant per
-   * workspace and a revocable, RANDOM private-temp capability per live
-   * session/workspace pair. The runner receives `--write-sid` plus
-   * `--temp-write-sid` and grants nothing itself. Agentless workspace-write
+   * once per live admission, shared with other owners of the same workspace.
+   * The runner receives both SIDs and a live --workspace-lease to join. Agentless workspace-write
    * calls pass the ambient temp ROOT and no SID flags: the runner creates and
    * removes a random private child directory for that one invocation.
    * @param policy - the resolved per-call policy.
@@ -377,6 +373,8 @@ export class LocalSandboxProvider extends SandboxProvider {
       ]
     }
     const temp = this.materializeAclGrant(sessionId, policy.workspaceRoot)
+    const owner = this.workspaceGrants.get(JSON.stringify([String(sessionId), policy.workspaceRoot]))
+    if (owner === undefined) throw new Error('Windows ACL workspace admission was released before runner preparation')
     return [
       ...this.windowsAclRunnerInvocation(),
       '--workspace', policy.workspaceRoot,
@@ -384,13 +382,12 @@ export class LocalSandboxProvider extends SandboxProvider {
       '--mode', policy.mode,
       '--write-sid', workspaceWriteSid(policy.workspaceRoot),
       '--temp-write-sid', temp.writeSid,
+      '--workspace-lease', owner.grant.authorization(policy.workspaceRoot),
     ]
   }
 
   /**
-   * Materialize one workspace-write policy's ACEs once per provider
-   * lifetime. The workspace SID and standing root grant are shared by the
-   * workspace. The temp directory is random and carries a distinct SID, so
+   * Acquire one session workspace admission, shared by live workspace owners. The temp directory is random and carries a distinct SID, so
    * another session on the same workspace cannot use the shared workspace
    * SID to enter it. A fresh provider always chooses a new path; crash
    * residue therefore cannot collide with or authorize a resumed session.
@@ -403,14 +400,13 @@ export class LocalSandboxProvider extends SandboxProvider {
   private materializeAclGrant(sessionId: SessionId, workspaceRoot: string): AclTempCapability {
     assertTempRootOutsideWorkspace(workspaceRoot, tmpdir())
     const writeSid = workspaceWriteSid(workspaceRoot)
-    if (!this.workspaceGrants.has(workspaceRoot)) {
+    const key = JSON.stringify([String(sessionId), workspaceRoot])
+    if (!this.workspaceGrants.has(key)) {
       const grant = AclWriteGrant.create(writeSid)
       try {
         grant.add(workspaceRoot, true)
       } catch (error) {
-        // Free the SID; a standing ACE (if the apply succeeded before a
-        // post-apply throw) is the intended end state, not an error
-        // artifact — nothing to revoke.
+        // Free native resources; the lease layer rolls back or retains recovery data.
         try {
           grant.dispose()
         } catch (cleanupError) {
@@ -418,9 +414,8 @@ export class LocalSandboxProvider extends SandboxProvider {
         }
         throw error
       }
-      this.workspaceGrants.set(workspaceRoot, grant)
+      this.workspaceGrants.set(key, { sessionId, root: workspaceRoot, grant })
     }
-    const key = JSON.stringify([String(sessionId), workspaceRoot])
     const existing = this.tempCapabilities.get(key)
     if (existing !== undefined) return existing
     const tempDir = mkdtempSync(join(tmpdir(), 'dsh-'))
@@ -456,8 +451,8 @@ export class LocalSandboxProvider extends SandboxProvider {
   /**
    * Dispose every write grant (provider dispose): the revocable temp ACEs
    * are revoked, the private temp directories this provider created are
-   * removed, and every SID allocation is freed; the standing workspace ACEs
-   * stay (the reuse cache). Cleanup failures are reported, not thrown:
+   * removed, and every SID allocation is freed. Workspace restoration waits for
+   * the last live process lease. Cleanup failures are reported, not thrown:
    * cordis teardown must not be aborted by grant cleanup. A crash skips all
    * of it, but a new provider never reuses the residue's random path or SID;
    * OS temp hygiene (or manual removal) eventually reclaims it.
@@ -465,7 +460,9 @@ export class LocalSandboxProvider extends SandboxProvider {
   private revokeAclGrants(): void {
     if (this.workspaceGrants.size === 0 && this.tempCapabilities.size === 0) return
     const failures: unknown[] = []
-    for (const grant of [...this.workspaceGrants.values(), ...[...this.tempCapabilities.values()].map(capability => capability.grant)]) {
+    const grants = [...this.workspaceGrants.values()].map(owner => owner.grant)
+      .concat([...this.tempCapabilities.values()].map(capability => capability.grant))
+    for (const grant of grants) {
       try {
         grant.dispose()
       } catch (error) {
@@ -484,6 +481,17 @@ export class LocalSandboxProvider extends SandboxProvider {
     if (failures.length > 0) {
       this.ctx.logger.warn(`sandbox-local: windows-acl grant cleanup completed with ${failures.length} failure(s)`)
       for (const error of failures) this.ctx.logger.warn(error)
+    }
+  }
+
+  /** Revoke future runner admission; live runner leases delay restoration until their children exit. */
+  private releaseSessionAclGrants(sessionId: SessionId): void {
+    for (const [key, owner] of this.workspaceGrants) {
+      if (owner.sessionId !== sessionId) continue
+      this.workspaceGrants.delete(key)
+      try { owner.grant.dispose() } catch (error) {
+        this.ctx.logger.warn(`Windows ACL recovery remains pending for ${owner.root}`, error)
+      }
     }
   }
 

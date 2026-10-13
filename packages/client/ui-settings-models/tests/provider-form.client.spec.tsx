@@ -1120,7 +1120,9 @@ describe('hand-declared providers', () => {
     // Walking away leaves a real provider behind; reporting no change would
     // leave the page without the row it now has.
     fireEvent.click(screen.getByText(en.cancel))
-    expect(onClose).toHaveBeenCalledWith(true)
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: en.discard }))
+    await waitFor(() => { expect(onClose).toHaveBeenCalledWith(true) })
   })
 
   it('never contradicts a filled-in field with the next gate\u2019s copy', () => {

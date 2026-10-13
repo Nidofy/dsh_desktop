@@ -50,8 +50,11 @@ export { REGION_BEGIN, REGION_END }
  * errors, so the partition can never silently drift from the service API.
  */
 export const SERVICE_PAGE: Record<string, string> = {
+  nidofyStorage: 'storage.md',
   nidofyContextPaths: 'session-query.md',
   nidofyNotebook: 'compaction.md',
+  nidofyNotebookV2: 'compaction.md',
+  nidofyCacheInput: 'llm-streaming.md',
   speechToText: 'voice-input.md',
   speechController: 'voice-input.md',
   otel: 'otel.md',
@@ -61,6 +64,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   pluginManager: 'boot.md',
   pluginRegistryProbe: 'boot.md',
   configEditor: 'boot.md',
+  outboundHttp: 'boot.md',
   profileContext: 'boot.md',
   hmr: 'boot.md',
   mcpResources: 'mcp.md',
@@ -178,6 +182,7 @@ export const SERVICE_WALK_EXEMPTIONS: Record<string, string> = {
   fileUpload: 'client-side browser upload service — packages/client/file-upload/README.md owns the API',
   uiRenderer: 'client-side interface-typed browser service — packages/client/ui-renderer/README.md owns the API',
   uiSession: 'client-side Session source adapter — packages/client/ui-session/README.md owns the API',
+  companion: 'client-side transient Desktop scope and bounded committed-fact projections — packages/nidofy/desktop-extras/README.md owns the API',
   uiConversation: 'client-side Conversation registries and assembler — packages/client/ui-conversation/README.md owns the API',
   uiWorkspace: 'client-side Workspace navigation adapter — packages/client/ui-workspace/README.md owns the API',
   settingsSchema: 'client-side schema introspection service — packages/client/ui-settings/README.md owns the API',
@@ -280,7 +285,18 @@ export const EVENT_WALK_EXEMPTIONS: Record<string, string> = {
  * appear on more than one page.
  */
 export const LINK_MAP: Readonly<Record<string, string>> = {
+  StorageOperationId: 'storage.md#desktop-managed-quota',
+  QuotaInspection: 'storage.md#desktop-managed-quota',
+  QuotaStatus: 'storage.md#desktop-managed-quota',
+  QuotaLease: 'storage.md#desktop-managed-quota',
+  HttpEgressLease: 'boot.md#http-authorization',
+  ImportLease: 'storage.md#desktop-managed-quota',
   Notebook: 'compaction.md',
+  NotebookV2: 'compaction.md',
+  NotebookSynchronization: 'compaction.md',
+  NotebookReadOptions: 'compaction.md',
+  NotebookInputCapture: 'compaction.md#notebook-input-capture',
+  DesktopCacheInput: 'llm-streaming.md#desktop-cache-input',
   EventLogOptions: 'otel.md',
   EventLogReporter: 'otel.md',
   SessionLogOptions: 'otel.md',
@@ -457,6 +473,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   StoredImageAttachment: 'attachment.md',
   ShellExecRequest: 'shell.md',
   ShellExecSpec: 'shell.md',
+  ShellVerificationInputs: 'shell.md#verification-inputs',
   ShellExecution: 'shell.md',
   ShellProcess: 'shell.md',
   ShellPromotionOffer: 'shell.md',
@@ -545,6 +562,8 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   SessionPersistenceListOptions: 'persistence.md',
   SessionPersistenceSnapshot: 'persistence.md',
   SessionInspection: 'persistence.md',
+  SessionDurableObservation: 'persistence.md',
+  SessionPersistenceGeneration: 'persistence.md',
   SessionStorageMetadata: 'persistence.md',
   ConfinedArgv: 'sandbox.md',
   SandboxExecutionPolicy: 'sandbox.md',

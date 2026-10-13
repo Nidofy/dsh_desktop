@@ -42,6 +42,7 @@ function mount(active = 'en') {
   const props: LanguageRowComponentProps = {
     useSessions: emptySessions(),
     useSessionStatus,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: emptyWorkspaces(),
     useStore: bindSnapshotSelector(store),

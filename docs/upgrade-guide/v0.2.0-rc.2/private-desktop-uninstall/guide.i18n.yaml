@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.0-rc.2/private-desktop-uninstall/guide.md
+/:
+  en: 2cd1de69508709c0
+  zh: 4b5dbc8a9a460374
+/private-windows-desktop-uninstall-preserves-data:
+  en: 48966e90a2d1621b
+  zh: 9ea5eb32fab1a80a
+/private-windows-desktop-uninstall-preserves-data/change:
+  en: d6296809a4340020
+  zh: 704481c0acae6574
+/private-windows-desktop-uninstall-preserves-data/migration:
+  en: 4daf8dd290c44049
+  zh: 27292d6430e35a34

@@ -747,12 +747,16 @@ FIXME(call-config-shape): revisit which remaining fields are genuinely epoch-lev
 ```ts type-equiv
 /**
  * Provider, model, reasoning effort, and sampling scalars of one conversation's
- * requests. Every field maps 1:1 onto the same-named `GenerateOptions` field;
+ * requests. Dispatch fields map onto the same-named `GenerateOptions` fields;
  * the loop builds requests from the logged header rather than accepting these
  * per call.
  */
 interface LlmCallConfig {
   provider: string
+  /** Stable selection identity captured by a revisioned route owner. Display and
+   * selection replay use this value; dispatch always uses `provider`. Omission
+   * preserves the provider itself, including in older request headers. */
+  providerIdentity?: string
   model: string
   reasoningEffort?: ReasoningEffortId
   temperature?: number
@@ -883,6 +887,18 @@ declare abstract class LlmAdapter {
 ```
 
 `ContentBlockType` (the key set the `index`-correlated blocks carry) derives from [`ContentBlockMap`](#content-blocks-and-messages) above.
+
+<a id="desktop-cache-input"></a>
+## Desktop cache input
+
+`DesktopCacheInput` from [`@nidofy/dsh-desktop-extras/cache`](../../packages/nidofy/desktop-extras/src/cache.ts) is the product's detached current preference capture. `ctx.nidofyCacheInput.input()` reads it without I/O, preparing a payload or exposing keys/credentials. The service identity changes on reload. Consumers must separately validate the actual applied payload observation; current policy cannot attest a historical request or provider cache hit.
+
+| Field | Meaning |
+|---|---|
+| `preferenceRevision` | Actual validated preference-store revision |
+| `enabled` | Cache feature is selected in current preferences |
+| `mounted` | Cache hook is actually mounted; a transition can disagree with enabled |
+| `policy` | Complete detached native/off/session mode and model allowlist |
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -1077,6 +1093,23 @@ stream(options: GenerateOptions): AsyncIterable<StreamChunk>
 Types: [FileAttachmentRef](attachment.md)
 
 Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
+
+<a id="ctxnidofycacheinput--desktopcacheinputservice"></a>
+
+### `ctx.nidofyCacheInput` — `DesktopCacheInputService`
+
+Read-only product preference owner; a captured preference is distinct from a subsequently applied payload hint.
+
+```ts cordis-catalog
+/** Capture the current actual preference/mount state without preparing a payload, sending or reading credentials.
+ * @returns Detached complete policy and preference revision. Enabled/mounted disagreement is an unfinished feature transition.
+ */
+input(): DesktopCacheInput
+```
+
+Types: [DesktopCacheInput](llm-streaming.md#desktop-cache-input)
+
+Source: [`packages/nidofy/desktop-extras/src/cache.ts`](../../packages/nidofy/desktop-extras/src/cache.ts)
 
 <a id="llm-events"></a>
 

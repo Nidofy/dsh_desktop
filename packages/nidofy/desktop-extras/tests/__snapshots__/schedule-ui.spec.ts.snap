@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requires a new future rule and separate consent for paused plans in Chinese=false 1`] = `
+"Schedule migrationEnable the bundled Automation tasks plugin in the main window under Plugins → Official. No download is needed. Imported plans stay paused; restore each to a selected session with a new future rule. Missed occurrences never replay.Local file pathImport plan manifestRefreshSchedule migrationPAUSED · Local plan{
+  "id": "plan",
+  "status": "PAUSED",
+  "title": "Local plan",
+  "prompt": "isolated prompt",
+  "original": {
+    "scheduledAt": 1
+  }
+}Target session IDNew repeat interval (seconds, at least 60)I selected a main Session and a new future rule and confirm enabling this paused plan.Confirm selected plan{
+  "enabled": true,
+  "officialTasks": 0,
+  "paused": 1
+}"
+`;
+
+exports[`requires a new future rule and separate consent for paused plans in Chinese=true 1`] = `
+"自动化迁移在主窗口「插件 → 官方 → 自动化任务」启用预置插件，无需下载。旧计划导入后保持暂停；逐项选择会话和新的未来时间恢复，不补跑积压任务。本地文件路径导入计划清单刷新自动化迁移PAUSED · Local plan{
+  "id": "plan",
+  "status": "PAUSED",
+  "title": "Local plan",
+  "prompt": "isolated prompt",
+  "original": {
+    "scheduledAt": 1
+  }
+}目标会话 ID新的重复间隔（秒，至少 60）我已选择主会话与新的未来规则，确认启用此暂停计划。确认恢复所选计划{
+  "enabled": true,
+  "officialTasks": 0,
+  "paused": 1
+}"
+`;

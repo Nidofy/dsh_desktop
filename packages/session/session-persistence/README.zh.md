@@ -66,6 +66,8 @@ await ctx.sessionPersistence.flush()                           // backend-wide d
 
 -----
 
+`observeDurable()` 同时返回已确认的原始前缀、持久物理代次和 `durableThrough`。普通 handle 读取可能包含尚未确认的追加，不能作为耐久证据。`withGeneration()` 在异步 admission 和提交期间保护派生状态发布；不支持这些能力的 provider 明确拒绝。缓存 revision 和格式版本不能代替物理代次。
+
 <a id="understand-the-implementation"></a>
 ## 理解实现
 

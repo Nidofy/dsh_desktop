@@ -53,7 +53,10 @@ export class OwnerCredentials extends CredentialProvider {
     return Promise.resolve({ configured: false, writable: true })
   }
   override listRecords(): Promise<readonly CredentialRecordEntry[]> { return Promise.resolve([]) }
-  override async modifyRecord(_key: CredentialKey): Promise<CredentialRecord | undefined> { return undefined }
+  override async modifyRecord(_key: CredentialKey,
+    _mutate: (current: CredentialRecord | undefined) => Promise<CredentialRecord | undefined>): Promise<CredentialRecord | undefined> {
+    return undefined
+  }
   override async deleteRecord(_key: CredentialKey): Promise<void> {}
 }
 

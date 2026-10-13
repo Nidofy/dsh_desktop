@@ -2,6 +2,7 @@
 import { mkdir, readFile, lstat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import type { StorageService } from './storage.ts'
 
 export interface PetSettings {
   id: string
@@ -71,7 +72,7 @@ function validatePet(value: unknown, requiredId?: string): PetSettings {
   if (!Number.isSafeInteger(pet.affinity) || pet.affinity < 0 || pet.affinity > 100 || !Number.isSafeInteger(pet.lastInteractionMs) || pet.lastInteractionMs < 0) throw Error('INVALID_PET_MOOD')
   if (!['top', 'bottom'].includes(String(bubble.placement)) || !['dark', 'light', 'blue'].includes(String(bubble.theme)) || !Number.isInteger(bubble.fontSize) || Number(bubble.fontSize) < 10 || Number(bubble.fontSize) > 22 || !Number.isInteger(bubble.durationMs) || Number(bubble.durationMs) < 1000 || Number(bubble.durationMs) > 15000) throw Error('INVALID_PET_BUBBLE')
   const templates = object(bubble.templates)
-  for (const [k, v] of Object.entries(templates)) if (!['WAITING_INPUT', 'WAITING_PERMISSION', 'COMPLETED', 'FAILED', 'BLOCKED', 'LIMIT_REACHED', 'UNKNOWN', 'INTERRUPTED'].includes(k) || text(v, 160).length > 160) throw Error('INVALID_PET_TEMPLATE')
+  for (const [k, v] of Object.entries(templates)) if (!['WAITING_INPUT', 'WAITING_PERMISSION', 'COMPLETED', 'FAILED', 'CANCELLED', 'BLOCKED', 'LIMIT_REACHED', 'UNKNOWN', 'INTERRUPTED'].includes(k) || text(v, 160).length > 160) throw Error('INVALID_PET_TEMPLATE')
   const position = pet.position === null ? null : object(pet.position)
   if (position && (!Number.isInteger(position.x) || !Number.isInteger(position.y) || Math.abs(Number(position.x)) > 100000 || Math.abs(Number(position.y)) > 100000)) throw Error('INVALID_PET_POSITION')
   return { id, enabled: pet.enabled, resource, pinned, scale: pet.scale, interaction:  pet.interaction, look:  pet.look, quiet:  pet.quiet,
@@ -94,7 +95,7 @@ export class PreferenceStore {
   value = defaults()
   warning: string | undefined
   private queue: Promise<unknown> = Promise.resolve()
-  constructor(readonly home: string) {}
+  constructor(readonly home: string, private readonly storage?: Pick<StorageService, 'write'>) {}
   async open(): Promise<void> {
     try { this.value = validate(await readJson(join(this.home, 'preferences.json'))) }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') this.warning = 'PREFERENCES_UNREADABLE' }
@@ -106,7 +107,9 @@ export class PreferenceStore {
       if (next.revision !== this.value.revision) throw Error('PREFERENCES_CONFLICT')
       next.revision++
       await mkdir(this.home, { recursive: true, mode: 0o700 })
-      await writeFileAtomic(join(this.home, 'preferences.json'), JSON.stringify(next), { mode: 0o600 })
+      const path = join(this.home, 'preferences.json'), bytes = JSON.stringify(next)
+      const write = () => writeFileAtomic(path, bytes, { mode: 0o600 })
+      await (this.storage ? this.storage.write(path, Buffer.byteLength(bytes) * 2, write) : write())
       this.value = next
       return structuredClone(next)
     })

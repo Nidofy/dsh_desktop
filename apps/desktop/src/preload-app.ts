@@ -13,6 +13,7 @@ import { createDesktopBrowserBridge } from './preload-browser.ts'
 function createProductApi(): DshDesktopProductApi {
   return {
     protocolVersion: 1,
+    windowIdentity: () => ipcRenderer.invoke(DESKTOP_IPC.windowIdentity) as Promise<number>,
     browser: createDesktopBrowserBridge(),
     deviceInfo: () => ipcRenderer.invoke(DESKTOP_IPC.deviceInfo) as Promise<string>,
     keyboard: {
@@ -70,10 +71,19 @@ if (location.protocol === `${SCHEME}:` && location.hostname === 'app') {
     },
   })
   contextBridge.exposeInMainWorld('nidofyWorkbench', {
-    openPanel: (panel: string, workspace?: string) => ipcRenderer.invoke('nidofy:open-panel', panel, workspace),
+    coordinatePet: (scope: object, input: object) => ipcRenderer.invoke('nidofy:pet-coordinate', scope, input),
+    onPetNavigate: (listener: (sessionId: string) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, sessionId: unknown): void => {
+        if (typeof sessionId === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(sessionId)) listener(sessionId)
+      }
+      ipcRenderer.on('nidofy:pet-navigate', handler)
+      return () => { ipcRenderer.removeListener('nidofy:pet-navigate', handler) }
+    },
+    openPanel: (panel: string, workspace?: string, scope?: object) => ipcRenderer.invoke('nidofy:open-panel', panel, workspace, scope),
+    scopeChanged: (scope: object, connected: boolean) => { ipcRenderer.send('nidofy:companion-scope', scope, connected) },
     artifact: (id: string, action: string) => ipcRenderer.invoke('nidofy:artifact', id, action),
-    notify: (title: string, body: string) => ipcRenderer.invoke('nidofy:notify', title, body),
-    notifications: (enabled: boolean) => ipcRenderer.invoke('nidofy:notifications', enabled),
+    notifications: () => ipcRenderer.invoke('nidofy:notifications'),
+    openSession: (id: string) => ipcRenderer.invoke('nidofy:open-session', id),
   })
   contextBridge.exposeInMainWorld('dshOnboarding', {
     hasApiKey: () => ipcRenderer.invoke(DESKTOP_IPC.onboardingApiKey) as Promise<boolean>,
@@ -87,7 +97,7 @@ if (location.protocol === `${SCHEME}:` && location.hostname === 'app') {
     if (previous === null) body.removeAttribute('tabindex')
     else body.setAttribute('tabindex', previous)
   })
-  syncWindowsAppearance()
+  if (!location.pathname.startsWith('/api/')) syncWindowsAppearance()
   if (process.platform === 'win32') installMandatoryUpdateOverlay()
   contextBridge.exposeInMainWorld('__DSH_DIRECTORY_PICKER__', {
     pick: () => ipcRenderer.invoke(DESKTOP_IPC.directoryPick) as Promise<string | null>,

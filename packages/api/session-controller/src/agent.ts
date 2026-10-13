@@ -298,7 +298,7 @@ export class ApiSessionAgentController {
         if (loggedHeader === undefined) return defaultModel.currentSelection()
         const logged = loggedHeader.config
         return {
-          provider: logged.provider,
+          provider: logged.providerIdentity ?? logged.provider,
           model: logged.model,
           // An effort the adapter defaulted is not a conversation choice: restoring
           // it as one would make an unchanged default read as a request change.

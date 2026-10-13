@@ -2,8 +2,11 @@
   "schemaVersion": 1,
   "scope": "manual-dispatch-only",
   "repository": "D:/Documents/FeiyangChen/devApps/dshWinUi/electron",
-  "maxImplementers": 3,
-  "optionalTasks": ["T21", "T22"],
+  "maxImplementers": 1,
+  "optionalTasks": [
+    "T21",
+    "T22"
+  ],
   "gates": [
     {
       "id": "G-A",
@@ -17,7 +20,8 @@
       ],
       "optionalDependencies": [],
       "prompt": "prompts/G-A.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     },
     {
       "id": "G-B",
@@ -33,7 +37,8 @@
       ],
       "optionalDependencies": [],
       "prompt": "prompts/G-B.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     },
     {
       "id": "G-C",
@@ -47,7 +52,8 @@
       ],
       "optionalDependencies": [],
       "prompt": "prompts/G-C.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     },
     {
       "id": "G-D",
@@ -61,7 +67,8 @@
       ],
       "optionalDependencies": [],
       "prompt": "prompts/G-D.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     },
     {
       "id": "G-E",
@@ -76,7 +83,8 @@
         "T22"
       ],
       "prompt": "prompts/G-E.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     },
     {
       "id": "G-F",
@@ -88,7 +96,8 @@
       ],
       "optionalDependencies": [],
       "prompt": "prompts/G-F.txt",
-      "status": "NOT_STARTED"
+      "status": "NOT_STARTED",
+      "execution": "Checklist within current development phase; no separate approval session"
     }
   ],
   "tasks": [
@@ -96,73 +105,145 @@
       "id": "T00",
       "title": "基线、接口约定与派工登记",
       "model": "GPT-6 Astra",
-      "effort": "high",
-      "review": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
+      "reviewRecord": "../reviews/T00-review-1.md",
       "stage": "S0",
       "dependencies": [],
       "prompt": "prompts/T00-baseline-contracts.txt",
-      "status": "READY_FOR_REVIEW",
+      "status": "REVIEWED",
       "deliveryRegistry": "../registry.json",
-      "handoff": "../handoffs/T00.md"
+      "handoff": "../handoffs/T00.md",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "READY_FOR_REVIEW",
+          "note": "original dispatch snapshot retained"
+        }
+      ],
+      "authorStatus": "READY_FOR_REVIEW"
     },
     {
       "id": "T01",
       "title": "连接退化启动与凭据保留",
-      "model": "GLM-5.3",
-      "effort": "使用当前连接支持的编码推理档",
-      "review": "GPT-6.1-Sol；G-A 由 Astra 复核",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S1",
       "dependencies": [
         "T00"
       ],
       "prompt": "prompts/T01-connection-recovery.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "NOT_STARTED",
+          "note": "previous dispatch registration retained"
+        }
+      ],
+      "launchState": "SOURCE_RECEIVED_RUNTIME_ACCEPTANCE_PENDING",
+      "deliveryRegistry": "../registry.json",
+      "integrationRecord": "../handoffs/R-integration-20261005.md",
+      "authorStatus": "READY_FOR_REVIEW",
+      "reviewRecord": "../reviews/T01-review-3.md",
+      "handoff": "../handoffs/T01.md"
     },
     {
       "id": "T02",
       "title": "Windows 安全凭据后端与转换",
-      "model": "Claude Opus 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S1",
       "dependencies": [
         "T01"
       ],
       "prompt": "prompts/T02-secure-credentials.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "NOT_STARTED",
+          "note": "previous dispatch registration retained"
+        },
+        {
+          "date": "2026-10-07",
+          "status": "READY",
+          "note": "Previous registry entry retained; actual source delivery and focused tests now observed."
+        }
+      ],
+      "launchState": "SOURCE_DELIVERED_PRODUCT_WIRING_PENDING",
+      "deliveryRegistry": "../registry.json",
+      "integrationRecord": "../handoffs/R-integration-20261005.md",
+      "sourceDeliveryObserved": true,
+      "progressEvidence": "STATUS-2026-10-07.md"
     },
     {
       "id": "T03",
       "title": "Notebook 活动集、历史与 v2 转换",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S1",
       "dependencies": [
         "T00"
       ],
       "prompt": "prompts/T03-notebook-v2.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "NOT_STARTED",
+          "note": "previous dispatch registration retained"
+        }
+      ],
+      "launchState": "SOURCE_RECEIVED_RUNTIME_ACCEPTANCE_PENDING",
+      "deliveryRegistry": "../registry.json",
+      "integrationRecord": "../handoffs/R-integration-20261005.md",
+      "authorStatus": "READY_FOR_REVIEW",
+      "reviewRecord": "../reviews/T03-review-4.md",
+      "handoff": "../handoffs/T03.md"
     },
     {
       "id": "T04",
       "title": "压缩证据预算与提交游标",
-      "model": "Claude Opus 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S1",
       "dependencies": [
         "T03"
       ],
       "prompt": "prompts/T04-compaction-budget.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "NOT_STARTED",
+          "note": "previous dispatch registration retained"
+        },
+        {
+          "date": "2026-10-07",
+          "status": "DEPENDENCY_BLOCKED",
+          "note": "Previous registry entry retained; actual source delivery and focused tests now observed."
+        }
+      ],
+      "launchState": "SOURCE_DELIVERED_DURABLE_API_AND_PRODUCT_WIRING_PENDING",
+      "deliveryRegistry": "../registry.json",
+      "integrationRecord": "../handoffs/R-integration-20261005.md",
+      "readyUnits": [
+        "budget/evidence selection and candidate construction using reviewed v2 storage library"
+      ],
+      "sourceDeliveryObserved": true,
+      "progressEvidence": "STATUS-2026-10-07.md"
     },
     {
       "id": "T05",
       "title": "Notebook 增量同步与长历史测量",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S1",
       "dependencies": [
         "T04"
@@ -173,9 +254,9 @@
     {
       "id": "T06",
       "title": "受管存储计量、配额与跨进程预留",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T02",
@@ -188,8 +269,8 @@
       "id": "T07",
       "title": "原生安全清理与快照操作接线",
       "model": "GPT-6.1-Sol",
-      "effort": "high",
-      "review": "GPT-6 Astra",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T06"
@@ -200,9 +281,9 @@
     {
       "id": "T08",
       "title": "存储与快照管理界面",
-      "model": "Claude Sonnet 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T07"
@@ -213,9 +294,9 @@
     {
       "id": "T09",
       "title": "高级连接、缓存与部署网络设置",
-      "model": "Claude Sonnet 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T02"
@@ -226,90 +307,92 @@
     {
       "id": "T10",
       "title": "旧数据迁移向导与恢复回执",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol；数据发布部分 Astra 抽查",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T07",
         "T09"
       ],
       "prompt": "prompts/T10-migration-wizard.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T11",
       "title": "任务验证回执与过期判断",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S3",
       "dependencies": [
         "T07",
         "T10"
       ],
       "prompt": "prompts/T11-verification-records.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T12",
       "title": "持久通知偏好与统一去重",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S3",
       "dependencies": [
         "T11"
       ],
       "prompt": "prompts/T12-durable-notifications.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T13",
       "title": "显式会话绑定与轻量角色状态",
       "model": "GPT-6.1-Sol",
-      "effort": "high",
-      "review": "GPT-6 Astra",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S3",
       "dependencies": [
         "T05",
         "T12"
       ],
       "prompt": "prompts/T13-companion-scope.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T14",
       "title": "静态角色、动态说明与窄屏入口",
-      "model": "Claude Sonnet 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S4",
       "dependencies": [
         "T13"
       ],
       "prompt": "prompts/T14-companion-ui.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T15",
       "title": "固定单模型 Live2D 渲染插件",
-      "model": "Claude Sonnet 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6.1-Sol；资源生命周期 Opus 抽查",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S4",
       "dependencies": [
         "T14"
       ],
       "prompt": "prompts/T15-live2d-renderer.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "launchState": "LOCAL_FIXED_WEBGL_100_CYCLES_VALIDATED_ART_SEAMS_GPU_PEAKS_UNKNOWN",
+      "handoff": "../handoffs/relay-31-sol.md"
     },
     {
       "id": "T16",
       "title": "角色与桌宠关注、互动协调",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S4",
       "dependencies": [
         "T12",
@@ -317,28 +400,32 @@
         "T14"
       ],
       "prompt": "prompts/T16-pet-coordination.txt",
-      "status": "NOT_STARTED"
+      "status": "VALIDATED",
+      "launchState": "CONFIGURED_PET_COORDINATION_PORTABLE_VALIDATED",
+      "handoff": "../handoffs/relay-31-sol.md"
     },
     {
       "id": "T17",
       "title": "中文历史检索与显式项目分组",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol；权限范围 Astra 抽查",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S3",
       "dependencies": [
         "T05",
         "T10"
       ],
       "prompt": "prompts/T17-local-history-search.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "launchState": "PORTABLE_CHINESE_HISTORY_APPEND_UNDO_VALIDATED_BOUNDED_COVERAGE",
+      "handoff": "../handoffs/relay-31-sol.md"
     },
     {
       "id": "T18",
       "title": "规则 Hint 与项目返回卡",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "Claude Sonnet 5.5 审 UI；GPT-6.1-Sol 集成",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S4",
       "dependencies": [
         "T11",
@@ -352,9 +439,9 @@
     {
       "id": "T19",
       "title": "Electron 自检中心",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S5",
       "dependencies": [
         "T10",
@@ -362,42 +449,44 @@
         "T23"
       ],
       "prompt": "prompts/T19-selftest-center.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T20",
       "title": "任务级 A/B 实验与有界矩阵",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S5",
       "dependencies": [
         "T11",
         "T19"
       ],
       "prompt": "prompts/T20-ab-experiments.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T21",
       "title": "受控侧边分析",
-      "model": "Claude Opus 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S5-可选",
       "dependencies": [
         "T18",
         "T23"
       ],
       "prompt": "prompts/T21-side-analysis.txt",
-      "status": "NOT_STARTED"
+      "status": "VALIDATED",
+      "launchState": "LOCAL_PORTABLE_SIDE_ANALYSIS_HISTORY_RETENTION_VALIDATED",
+      "handoff": "../handoffs/relay-33-sol.md"
     },
     {
       "id": "T22",
       "title": "自然语言设置与可选口吻",
-      "model": "Claude Sonnet 5.5",
-      "effort": "Thinking",
-      "review": "GPT-6.1-Sol；动作权限 Astra 抽查",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S5-可选",
       "dependencies": [
         "T09",
@@ -405,60 +494,91 @@
         "T21"
       ],
       "prompt": "prompts/T22-natural-settings.txt",
-      "status": "NOT_STARTED"
+      "status": "VALIDATED",
+      "launchState": "EXPLICIT_CURRENT_SETTINGS_READ_PORTABLE_VALIDATED",
+      "handoff": "../handoffs/relay-36-astra.md"
     },
     {
       "id": "T23",
       "title": "工作区出口策略与网络边界",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S2",
       "dependencies": [
         "T02",
         "T09"
       ],
       "prompt": "prompts/T23-egress-policy.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL"
     },
     {
       "id": "T24",
       "title": "候选构建、升级回退与发行证据",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol；最终 Astra",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
       "stage": "S6",
       "dependencies": [
         "G-E"
       ],
       "prompt": "prompts/T24-release-qualification.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "launchState": "LOCAL_PORTABLE_DIRECTORY_ZIP_ENTRYPOINT_VALIDATED_RELEASE_DEFERRED",
+      "handoff": "../handoffs/relay-31-sol.md"
     },
     {
       "id": "T25",
       "title": "独立验收场景与故障注入",
-      "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "model": "GPT-6.1-Sol",
+      "effort": "high（常规工作可用默认档）",
+      "review": "当棒验证；仅具体高风险/阻塞时交 Astra",
+      "reviewRecord": "../reviews/T25-review-2.md",
       "stage": "S0起贯穿",
       "dependencies": [
         "T00"
       ],
       "prompt": "prompts/T25-independent-acceptance.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "history": [
+        {
+          "date": "2026-10-05",
+          "status": "NOT_STARTED",
+          "note": "original dispatch snapshot retained"
+        },
+        {
+          "date": "2026-10-05",
+          "status": "NEEDS_FIX",
+          "authorStatus": "READY_FOR_REVIEW",
+          "reviewRecord": "../reviews/T25-review-1.md",
+          "note": "previous dispatch registration retained"
+        }
+      ],
+      "authorStatus": "READY_FOR_REVIEW",
+      "deliveryRegistry": "../registry.json",
+      "handoff": "../handoffs/T25.md",
+      "launchState": "TEST_DELIVERY_INTEGRATED_R_ADAPTATION_REVIEW_PENDING",
+      "integrationRecord": "../handoffs/R-integration-20261005.md"
     },
     {
       "id": "T26",
       "title": "用户文档、支持矩阵与交付核对",
       "model": "GLM-5.3",
-      "effort": "编码推理档",
-      "review": "GPT-6.1-Sol",
+      "effort": "文档任务支持的推理档",
+      "review": "当前代码作者核实文档事实",
       "stage": "S6",
       "dependencies": [
         "T24"
       ],
       "prompt": "prompts/T26-docs-capability-matrix.txt",
-      "status": "NOT_STARTED"
+      "status": "PARTIAL",
+      "launchState": "CURRENT_LOCAL_PORTABLE_SCOPE_AND_UPGRADE_LIMITS_DOCUMENTED",
+      "handoff": "../handoffs/relay-36-astra.md"
     }
-  ]
+  ],
+  "executionMode": "codex-sol-astra-continuous",
+  "executionPolicy": "CONTINUOUS.md",
+  "separateReviewRequired": false,
+  "separateIntegrationRequired": false,
+  "documentationOnlyModel": "GLM-5.3"
 }

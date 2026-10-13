@@ -4,6 +4,7 @@ export const recoveryKey = 'desktopTaskRecovery';
 import {createHash} from 'node:crypto';
 const keep = value => typeof value === 'string' ? value.slice(0,128) : '';
 const identity = value => createHash('sha256').update(typeof value==='string'?value:'').digest('hex');
+export function terminalStatus(kind){return {completed:'COMPLETED',aborted:'CANCELLED',blocked:'BLOCKED',error:'FAILED','max-tokens':'LIMIT_REACHED',interrupted:'INTERRUPTED'}[kind]??'UNKNOWN';}
 export function recoveryInitial(header, inheritedEventCount = 0) {
   return {turn:null,step:null,status:'IDLE',updatedAt:header.createdAt,lastConfirmedSeq:null,
     lastModel:null,lastTool:null,pendingTools:[],pendingApprovals:[],coverage:'COMPLETE',ignoreBefore:inheritedEventCount};
@@ -33,7 +34,7 @@ export function recoveryFold(state, event) {
     }
     case 'approval/decided': return next({pendingApprovals:state.pendingApprovals.filter(id=>id!==identity(d.id))});
     case 'turn/end': {
-      const status={completed:'COMPLETED',aborted:'CANCELLED',blocked:'BLOCKED',error:'FAILED','max-tokens':'LIMIT_REACHED',interrupted:'INTERRUPTED'}[d.reason?.kind]??'UNKNOWN';
+      const status=terminalStatus(d.reason?.kind);
       // Cold reads may synthesize this closer. It is not a newly confirmed
       // durable operation or a known time of process death.
       return next({status,...(status==='INTERRUPTED'?{updatedAt:state.updatedAt,lastConfirmedSeq:state.lastConfirmedSeq}:{}),lastModel:state.lastModel?.status==='UNCONFIRMED'?{...state.lastModel,status:'UNKNOWN'}:state.lastModel});

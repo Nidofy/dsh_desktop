@@ -134,6 +134,15 @@ export class SessionInputShell implements SessionInput {
     submit: () => { this.submit('queue') },
   }
 
+  /** @param text - User-selected plain excerpt. @param revision - Current draft revision.
+   * @returns Whether an editable draft accepted it.
+   */
+  appendText(text: string, revision: number): boolean {
+    if (this.disposed || this.snapshot.phase !== 'plain' || revision !== this.rev) return false
+    this.draftEditor.appendAsyncText(text)
+    return true
+  }
+
   private readonly core = new SubmitMachine()
   private readonly draftEditor: DraftEditorRuntime
   private get projection(): EditorProjection {

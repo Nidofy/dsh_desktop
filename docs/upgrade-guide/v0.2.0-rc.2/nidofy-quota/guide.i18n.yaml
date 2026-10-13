@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.0-rc.2/nidofy-quota/guide.md
+/:
+  en: eb6385cd0f5b7194
+  zh: 391c389ff092aa08
+/nidofy-managed-storage-admission:
+  en: 137a60b2efb55b1e
+  zh: 5cb7ecd4ea06c922
+/nidofy-managed-storage-admission/change:
+  en: dad6c36acf2c9647
+  zh: b26ce9982ddf05d8
+/nidofy-managed-storage-admission/migration:
+  en: cdd4ca57c82987f9
+  zh: feeb2fefacaa6f32

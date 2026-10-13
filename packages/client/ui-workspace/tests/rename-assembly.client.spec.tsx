@@ -32,7 +32,7 @@ usePinnedBrowserLanguages('zh-CN')
 const SID = 's1' as SessionId
 
 afterEach(cleanup)
-beforeEach(() => { localStorage.clear() })
+beforeEach(() => { localStorage.clear(); localStorage.setItem('dsh.sessions.current', JSON.stringify({ sessionId: SID })) })
 
 /** Runtime with the locale face installed (the browser entry declares `locale:` — zh default backs the t seat). */
 async function createRuntime(): Promise<SlotTestRuntime> {

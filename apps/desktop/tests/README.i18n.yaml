@@ -2,24 +2,39 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/tests/README.md
-/desktop-local-update-verification:
-  en: 194f1f0f1ca90743
-  zh: 773ca28e04c8911f
-/desktop-local-update-verification/summary:
-  en: 94559f431b0b2151
-  zh: 1a22166a2bc59686
-/desktop-local-update-verification/table-of-contents:
-  en: a5edee063916cd27
-  zh: 7a5286350ff09e58
-/desktop-local-update-verification/native-overlay-visibility:
+/desktop-local-verification:
+  en: 5056a9b4d24c1880
+  zh: 4d0c9d8e5f69d153
+/desktop-local-verification/summary:
+  en: e976dc7d9f18c070
+  zh: 9018b6130e590cc7
+/desktop-local-verification/table-of-contents:
+  en: 76fd66d67fb7dd9c
+  zh: 07fc609af8e44e80
+/desktop-local-verification/companion-carrier:
+  en: a3e5d1ea78be7397
+  zh: 356d6472ffb4777c
+/desktop-local-verification/self-test-carrier:
+  en: 9c37b5bc2c15de53
+  zh: 476afffeedf4b5e1
+/desktop-local-verification/native-overlay-visibility:
   en: cff2c259a195bb57
   zh: fa03ff3fdc32a346
-/desktop-local-update-verification/manual-walkthrough:
+/desktop-local-verification/manual-walkthrough:
   en: c4b4ee8763d8464a
   zh: ee2159bc08966592
-/desktop-local-update-verification/evidence:
-  en: 331a6709d0f7d03f
-  zh: 98499192ef9d3a81
-/desktop-local-update-verification/open-verification:
+/desktop-local-verification/evidence:
+  en: 139b13e3f278b57b
+  zh: 7604671463d5ec1d
+/desktop-local-verification/receipt-comparison-profile:
+  en: cedecbfa7a8c85e0
+  zh: 77daa020a269ea79
+/desktop-local-verification/isolated-engineering-profile:
+  en: 62c09cb02949a134
+  zh: 04ced043efe976e8
+/desktop-local-verification/single-task-request-profile:
+  en: cae713e418e516eb
+  zh: 18bbb8f299cb4332
+/desktop-local-verification/open-verification:
   en: 20e9ea47acb1ff50
   zh: acce24b56d57e12c

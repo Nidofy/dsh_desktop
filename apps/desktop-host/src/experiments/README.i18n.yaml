@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write apps/desktop-host/src/experiments/README.md
+/:
+  en: dca2a226fc16afc9
+  zh: 4cb90109967055cf
+/task-receipt-comparisons:
+  en: bf37a58108d33dc6
+  zh: 4827a87d798cdada
+/task-receipt-comparisons/summary:
+  en: af51182b30b7e0cf
+  zh: db562d78d0d671de
+/task-receipt-comparisons/table-of-contents:
+  en: e0b8eb82b85df437
+  zh: 1bd0d0c656ab897b
+/task-receipt-comparisons/select-and-compare:
+  en: 275c3880668d265c
+  zh: 19cec014281273e9
+/task-receipt-comparisons/records-and-import:
+  en: 263e42de3e1114f6
+  zh: 89f90a353ef14040
+/task-receipt-comparisons/single-task-request:
+  en: e36d40b5600e2950
+  zh: f4950a4e88158a33
+/task-receipt-comparisons/isolated-engineering-task:
+  en: d9cecec4d6b3c096
+  zh: 72ae598479b317a8
+/task-receipt-comparisons/bounded-matrix:
+  en: 5dadc185d0c2f739
+  zh: 66bee15709b58070
+/task-receipt-comparisons/implementation:
+  en: a0593569ea4041a4
+  zh: 8728c75c77a2fa04
+/task-receipt-comparisons/known-limitations:
+  en: f99aa0cc31ee0fa5
+  zh: 5bfaf7155b3453a8
+/task-receipt-comparisons/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

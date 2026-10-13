@@ -188,7 +188,7 @@ export class SessionController extends TypertRemoteService {
         const agent = ctx.agents.get(session.id)
         if (agent?.session === session) this.agents.consumeSelection(
           agent,
-          event.data.header.config.provider,
+          event.data.header.config.providerIdentity ?? event.data.header.config.provider,
           event.data.header.config.model,
           event.data.header.config.reasoningEffort,
         )

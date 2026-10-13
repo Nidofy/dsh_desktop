@@ -11,6 +11,9 @@ import * as SkillRegistry from '@deepseek-ai/dsh-skill'
 import * as SandboxLocal from '@deepseek-ai/dsh-sandbox-local'
 import { expect, it } from 'vitest'
 import { ACL_DIAGNOSIS_SKILL } from '../src/acl-skill.ts'
+import { isolatedRecovery } from './fixtures/isolated-recovery.ts'
+
+isolatedRecovery()
 
 // sandbox-local's POSIX suites are excluded on Windows; this owner runs in Windows coverage.
 it.skipIf(process.platform !== 'win32')('loads and unloads the ACL skill through the real sandbox-local composition', async () => {

@@ -121,6 +121,8 @@ Provider plugins own catalog availability; only the account route requires a sto
 
 -----
 
+An optional application HTTP policy is captured with the prepared connection. Messages and Files use its request-local fetch for uploads, inspections and cleanup as well as inference. The original origin and policy generation remain fixed, and each actual send rechecks authorization. See the [Desktop policy reference](../../../apps/desktop-host/src/connections/README.md); direct library callers without this injection retain their existing behavior.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 

@@ -86,6 +86,7 @@ function props(
   }
   const unused = (): never => { throw new Error('Subagent header fixture does not provide this slot source or action') }
   const standard = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: unused,
     useSessionRetainInfo: unused,
     useWorkspaces: unused,

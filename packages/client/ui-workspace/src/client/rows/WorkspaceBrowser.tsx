@@ -53,6 +53,7 @@ const SEARCH_DEBOUNCE_MS = 250
 const SEARCH_QUERY_MAX_CODE_UNITS = 500
 /** Idle Session rows visible per Workspace before the local overflow control. */
 const COLLAPSED_SESSION_LIMIT = 5
+const EMPTY_SESSION_LIMITS: Readonly<Record<string, number>> = {}
 
 /** Keep provisional and running rows outside the idle-session quota, including parents with running children. */
 function collapsedSessionRows(sessions: readonly SessionNode[], limit = COLLAPSED_SESSION_LIMIT): {
@@ -241,6 +242,8 @@ type SessionTreeProps = Pick<
   nestWorkspaces: boolean
   /** Explicit persisted group expansion, including descendants in tree mode. */
   groupExpansion: Readonly<Record<string, boolean>>
+  sessionLimits: Readonly<Record<string, number>>
+  setSessionLimit: (key: string, limit: number) => void
   /** Persist one Workspace group's expansion. */
   setGroupExpanded: (key: string, expanded: boolean) => void
   /** Save a drag order and select Manual. */
@@ -277,7 +280,7 @@ function EmptySessions({ rowState, onLeaveArchivedOnly, t }: Pick<SessionTreePro
   )
 }
 
-/** The scrolling session tree; unmounting drops the sessions subscription and local row limits. */
+/** The scrolling session tree; row limits belong to the browser viewing store. */
 function SessionTree({
   list, useSessionStatus, startSession, open, workspaces, ungroupedSessionIds,
   rowState, onLeaveArchivedOnly,
@@ -285,7 +288,7 @@ function SessionTree({
   onRenameRequest, onDeleteRequest, onSessionRenameRequest,
   renderSlot,
   insertWorkspaceBefore,
-  nestWorkspaces, groupExpansion, setGroupExpanded,
+  nestWorkspaces, groupExpansion, setGroupExpanded, sessionLimits, setSessionLimit,
   setSessionOrder, home, t,
   revealSessionId, onSessionRevealed, shortcuts,
 }: SessionTreeProps) {
@@ -293,11 +296,10 @@ function SessionTree({
   const statuses = useSessionStatus(s => s)
   const current = panelActive
     ? undefined
-    : Object.values(list.byId).find(session => (session.retainedBy.mainView ?? 0) > 0)?.id
+    : rowState.currentSessionId
   const revealGroup = revealSessionId === undefined || !workspaceReady
     ? undefined
     : owningGroupKey(workspaces, revealSessionId)
-  const [sessionLimits, setSessionLimits] = useState<Readonly<Record<string, number>>>({})
   // Transient drag marker state; the selected mode owns the resulting order.
   const [drag, setDrag] = useState<DragState | null>(null)
   const sessionDropCommitted = useRef(false)
@@ -352,8 +354,8 @@ function SessionTree({
     const group = groups.find(candidate => candidate.key === revealGroup)
     if (group === undefined || !group.expanded || !group.sessions.some(row => row.id === revealSessionId)) return
     if (collapsedSessionRows(group.sessions).rows.some(row => row.id === revealSessionId)) return
-    setSessionLimits(limits => limits[revealGroup] === Infinity ? limits : { ...limits, [revealGroup]: Infinity })
-  }, [groups, revealGroup, revealSessionId])
+    if (sessionLimits[revealGroup] !== Number.MAX_SAFE_INTEGER) setSessionLimit(revealGroup, Number.MAX_SAFE_INTEGER)
+  }, [groups, revealGroup, revealSessionId, sessionLimits, setSessionLimit])
   const now = Date.now()
   const commitSessionDrag = (activeDrag: DragState, over: NonNullable<DragState['over']>): void => {
     if (sessionDropCommitted.current) return
@@ -501,7 +503,7 @@ function SessionTree({
           t={t}
           onToggle={() => {
             if (group.expanded) {
-              setSessionLimits(limits => ({ ...limits, [group.key]: COLLAPSED_SESSION_LIMIT }))
+              setSessionLimit(group.key, COLLAPSED_SESSION_LIMIT)
             }
             setGroupExpanded(group.key, !group.expanded)
           }}
@@ -585,14 +587,11 @@ function SessionTree({
             data-row-key={`overflow:${group.key}`}
             aria-expanded={sessionsExpanded}
             onClick={() => {
-              setSessionLimits(limits => ({
-                ...limits,
-                [group.key]: sessionsExpanded
-                  ? COLLAPSED_SESSION_LIMIT
-                  : visible.hiddenCount <= COLLAPSED_SESSION_LIMIT
-                    ? Infinity
-                    : (limits[group.key] ?? COLLAPSED_SESSION_LIMIT) + COLLAPSED_SESSION_LIMIT,
-              }))
+              setSessionLimit(group.key, sessionsExpanded
+                ? COLLAPSED_SESSION_LIMIT
+                : visible.hiddenCount <= COLLAPSED_SESSION_LIMIT
+                  ? Number.MAX_SAFE_INTEGER
+                  : (sessionLimits[group.key] ?? COLLAPSED_SESSION_LIMIT) + COLLAPSED_SESSION_LIMIT)
             }}
           >
             {sessionsExpanded
@@ -615,7 +614,8 @@ function SessionTree({
         ready={list.phase === 'ready' && workspaceReady && !nativeDragActive}
         resetKey={JSON.stringify([animationResetKey, sessionLimits])}
       >
-        {groups.length === 0 && (
+        {list.phase !== 'ready' && <div role="status" aria-label={t('search.pending')} className={css.skeletonRow}><span className={css.skeletonBar} /></div>}
+        {list.phase === 'ready' && groups.length === 0 && (
           <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} t={t} />
         )}
         {groupRows}
@@ -660,7 +660,7 @@ function FlatList({
   useNativeDragAcceptance(drag !== null)
   const currentId = panelActive
     ? undefined
-    : Object.values(list.byId).find(session => (session.retainedBy.mainView ?? 0) > 0)?.id
+    : rowState.currentSessionId
   const commitDrag = (activeDrag: DragState, over: NonNullable<DragState['over']>): void => {
     if (dropCommitted.current) return
     dropCommitted.current = true
@@ -678,7 +678,8 @@ function FlatList({
         ready={list.phase === 'ready' && workspaceReady && drag === null}
         resetKey={animationResetKey}
       >
-        {rows.length === 0 && (
+        {list.phase !== 'ready' && <div role="status" aria-label={t('search.pending')} className={css.skeletonRow}><span className={css.skeletonBar} /></div>}
+        {list.phase === 'ready' && rows.length === 0 && (
           <EmptySessions rowState={rowState} onLeaveArchivedOnly={onLeaveArchivedOnly} t={t} />
         )}
         {rows.map((node) => {
@@ -738,6 +739,7 @@ interface RemoteSearchState {
 /** Flat search body: local metadata matches plus the current Host result page. */
 function SearchResults({
   useSessions,
+  useMainSelection,
   useSessionStatus,
   open,
   onUnarchive,
@@ -746,10 +748,11 @@ function SearchResults({
   archivedFilter,
   query,
   remote,
+  retry,
   resultLimit,
   usePanelInfo,
   t,
-}: Pick<WorkspaceBrowserProps, 'useSessions' | 'useSessionStatus' | 'open' | 't' | 'usePanelInfo'> & {
+}: Pick<WorkspaceBrowserProps, 'useSessions' | 'useSessionStatus' | 'useMainSelection' | 'open' | 't' | 'usePanelInfo'> & {
   workspaces: readonly WorkspaceView[]
   archivedSessionIds: readonly SessionNode['id'][]
   /** Search matches follow the archived filter selected for the list. */
@@ -758,10 +761,12 @@ function SearchResults({
   onUnarchive: (id: SessionNode['id']) => void
   query: string
   remote: RemoteSearchState
+  retry: () => void
   resultLimit: number
 }) {
   const panelActive = usePanelInfo(info => info.activePanelId !== null)
   const list = useSessions(s => s)
+  const selected = useMainSelection(value => value.sessionId) ?? undefined
   const statuses = useSessionStatus(s => s)
   const currentRemote = remote.query === query
     ? remote
@@ -776,13 +781,14 @@ function SearchResults({
       statuses,
       currentRemote,
       resultLimit,
+      selected,
     ),
-    [list, workspaces, query, archivedSessionIds, archivedFilter, statuses, currentRemote, resultLimit],
+    [list, workspaces, query, archivedSessionIds, archivedFilter, statuses, currentRemote, resultLimit, selected],
   )
   const pending = currentRemote.status === 'loading'
   const currentId = panelActive
     ? undefined
-    : Object.values(list.byId).find(session => (session.retainedBy.mainView ?? 0) > 0)?.id
+    : selected
 
   return (
     <div className={clsx(css.treeBody, css.wide)}>
@@ -814,7 +820,10 @@ function SearchResults({
             ))}
           </div>
         )}
-        {!pending && results.items.length === 0 && (
+        {currentRemote.status === 'error' && <div className={css.searchStatus} role="status">
+          {t('search.failed')} <button type="button" onClick={retry}>{t('search.retry')}</button>
+        </div>}
+        {!pending && currentRemote.status !== 'error' && results.items.length === 0 && (
           <div className={css.empty}>{t('search.noMatches')}</div>
         )}
         {results.hasMore && (
@@ -838,6 +847,7 @@ export function WorkspaceBrowser({
   usePanelInfo,
   expandSidebar,
   useSessions,
+  useMainSelection,
   useSessionStatus,
   useWorkspaces,
   useStore,
@@ -896,6 +906,7 @@ export function WorkspaceBrowser({
   // without the field; they read as the default hide-archived view.
   const archivedFilter = useStore(s => s.archivedFilter ?? 'default')
   const groupExpansion = useStore(s => s.groupExpansion)
+  const sessionLimits = useStore(s => s.sessionLimits ?? EMPTY_SESSION_LIMITS)
   const sessionOrderByAccount = useStore(s => s.sessionOrderByAccount)
   // Archived sessions are not openable: the row stays visible under the
   // filter but a click explains instead of navigating.
@@ -908,8 +919,7 @@ export function WorkspaceBrowser({
   }
   const leaveArchivedOnly = (): void => { actions.setArchivedFilter('default') }
   const workspaceReady = workspacePhase === 'ready' && workspaceStreamState !== 'loading'
-  const mainSessionId = Object.values(list.byId)
-    .find(session => (session.retainedBy.mainView ?? 0) > 0)?.id
+  const mainSessionId = useMainSelection(value => value.sessionId) ?? undefined
   const currentBlank = mainSessionId !== undefined && list.byId[mainSessionId]?.blank === true
     ? mainSessionId
     : undefined
@@ -922,10 +932,10 @@ export function WorkspaceBrowser({
     [archivedSessionIds, pinnedSessionIds],
   )
   const rowState = useMemo<SessionRowState>(
-    () => ({ ...orderState, archivedFilter }),
-    [orderState, archivedFilter],
+    () => ({ ...orderState, archivedFilter, currentSessionId: mainSessionId }),
+    [orderState, archivedFilter, mainSessionId],
   )
-  const flatMemberIds = useMemo(() => sessionMemberIds(list), [list])
+  const flatMemberIds = useMemo(() => sessionMemberIds(list, mainSessionId), [list, mainSessionId])
   const orderedWorkspaces = useMemo(() => workspaces.map((workspace) => {
     const memberIds = workspace.sessionIds
     const baseOrder = orderBy === 'updated'
@@ -1015,6 +1025,7 @@ export function WorkspaceBrowser({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [revealSessionId, setRevealSessionId] = useState<SessionId | undefined>(undefined)
   const normalizedQuery = sanitizeSearchQuery(query).trim()
+  const [searchAttempt, retrySearch] = useState(0)
   const [remoteSearch, setRemoteSearch] = useState<RemoteSearchState>({
     query: '',
     status: 'idle',
@@ -1096,12 +1107,12 @@ export function WorkspaceBrowser({
       return
     }
     const controller = new AbortController()
-    setRemoteSearch({
+    setRemoteSearch(previous => ({
       query: normalizedQuery,
       status: 'loading',
-      items: [],
-      hasMore: false,
-    })
+      items: previous.query === normalizedQuery ? previous.items : [],
+      hasMore: previous.query === normalizedQuery && previous.hasMore,
+    }))
     const timer = window.setTimeout(() => {
       searchSessions(normalizedQuery, controller.signal).then((result) => {
         if (controller.signal.aborted) return
@@ -1113,19 +1124,14 @@ export function WorkspaceBrowser({
         })
       }).catch(() => {
         if (controller.signal.aborted) return
-        setRemoteSearch({
-          query: normalizedQuery,
-          status: 'error',
-          items: [],
-          hasMore: false,
-        })
+        setRemoteSearch(previous => ({ ...previous, status: 'error' }))
       })
     }, SEARCH_DEBOUNCE_MS)
     return () => {
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [normalizedQuery, searchSessions])
+  }, [normalizedQuery, searchSessions, searchAttempt])
 
   // Rename dialog (browser-owned so it outlives row unmounts during collapse).
   // The stored title decides whether confirming is a real rename; the draft is
@@ -1346,6 +1352,7 @@ export function WorkspaceBrowser({
             <SearchResults
               usePanelInfo={usePanelInfo}
               useSessions={useSessions}
+              useMainSelection={useMainSelection}
               useSessionStatus={useSessionStatus}
               open={openSearchResult}
               onUnarchive={onSessionUnarchive}
@@ -1354,6 +1361,7 @@ export function WorkspaceBrowser({
               archivedFilter={archivedFilter}
               query={normalizedQuery}
               remote={remoteSearch}
+              retry={() => { retrySearch(value => value + 1) }}
               resultLimit={searchResultLimit}
               t={t}
             />
@@ -1392,6 +1400,8 @@ export function WorkspaceBrowser({
                 nestWorkspaces={groupBy === 'workspace-tree'}
                 animationResetKey={`${groupBy}/${orderBy}/${archivedFilter}`}
                 groupExpansion={groupExpansion}
+                sessionLimits={sessionLimits}
+                setSessionLimit={actions.setSessionLimit}
                 setGroupExpanded={actions.setGroupExpanded}
                 setSessionOrder={saveSessionOrder}
                 rowState={rowState}

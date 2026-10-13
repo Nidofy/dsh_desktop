@@ -17,6 +17,7 @@ const unused = (): never => { throw new Error('This isolated component does not 
 const standard: GlobalStandardProps & SessionStandardProps = {
   sessionId: SESSION, useSession: unused, useProjection: unused, useConversation: unused,
   useInput: unused, useChat: unused, useTrajectory: unused,
+  useMainSelection: () => { throw new Error('Fixture does not read main selection') },
   usePanelInfo: unused, useSessions: unused, useSessionStatus: unused,
   useSessionRetainInfo: unused, useResource: unused, useWorkspaces: unused,
   inputActions: { captureInsertion: unused, insertText: unused, setDraft: unused,

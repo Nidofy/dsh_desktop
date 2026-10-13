@@ -94,6 +94,8 @@ When a server connection drops â€” for example a local server process crashes â€
 
 -----
 
+An optional `outboundHttp` application provider authorizes Streamable HTTP before the first connection and every reconnect. Negotiation and subsequent POST, GET and DELETE requests share its origin-bound fetch, which rechecks the captured policy on each send. Unscoped connection traffic cannot bypass narrower Workspace limits. Stdio remains a subprocess requiring separate network controls. See the [Desktop policy reference](../../../apps/desktop-host/src/connections/README.md).
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 

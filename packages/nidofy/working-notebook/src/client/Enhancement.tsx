@@ -29,6 +29,6 @@ export function Enhancement({ t }: PropsLocale<'nidofy.notebook'>) {
   return <section className="nidofy-note-enhancement">
     <label className="nidofy-note-pin"><input type="checkbox" checked={settings?.autoOrganize ?? false} disabled={!settings || busy} onChange={(event) => { void save(event.target.checked) }} />{t('autoOrganize')}</label>
     <small>{t('autoOrganizeHint')}</small>
-    {error && <p role="alert">{t('contextError')} {error}</p>}
+    {error && <div role="alert"><p>{t('contextError')}</p><details><summary>{t('errorDetails')}</summary><pre>{error}</pre></details></div>}
   </section>
 }

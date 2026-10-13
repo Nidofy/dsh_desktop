@@ -1,0 +1,4 @@
+接续前读 AGENTS、CONTINUOUS、NEXT_HANDOFF 与 handoffs/relay-37-astra.md、relay-37-ui-disposition.md。
+Relay37三份UI review共105编号已逐项处置，当前交付为 .build/p37f/Start DSH.exe、.build/p37f.zip 与唯一relay-37-final候选。完整构建及实际包Settings密钥Keep/Discard、窄屏、管理页主题/复用、Live2D GPU通过。详情和真实验证边界在handoff；不要机械重跑通过组或据历史脏状态重打全部包。
+保留源码/用户数据/历史包/证据。真实旧S-1-4 ACL无确定原备份不修复；新授权拒绝该旧树。通知v2使旧p36不能无条件读取同一用户目录；回退须遵守升级说明。DS069隔离架构、资源发行权利、Windows实际zoom/更新弹窗/系统点击穿透和正式发行现场资格未覆盖，不能说全部资格通过。全局doc剩三类历史失败记录在handoff，不得篡改历史证据凑绿。
+当前没有额外授权外发、push、发布或收费API。后续按用户新目标推进，不制造下一小项循环。

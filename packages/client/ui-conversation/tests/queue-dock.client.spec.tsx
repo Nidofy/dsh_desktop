@@ -101,6 +101,7 @@ function kitFor(snapshot: SessionSnapshot, injected: Partial<QueueDockInjected> 
   return {
     sessionId: SID,
     t,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo,
     useSessions: (() => { throw new Error('unused') }) as SnapshotSelectorHook<SessionListState>,
     useSessionRetainInfo: () => undefined,

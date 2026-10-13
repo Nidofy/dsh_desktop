@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`discards old search, preview and citation responses after the user changes their selection 1`] = `"No matching history in the searched sources."`;
+
+exports[`discards old search, preview and citation responses after the user changes their selection 2`] = `"已检索来源中没有匹配历史。"`;
+
+exports[`saves only explicit workspace selections and carries their revision through previews and citation 1`] = `"Selected directories share local history access. Only choose workspaces you want in this project; names and path prefixes do not link them. Saving changes invalidates previous project results.main · /projectworktree · /worktreeSave project associationRemove project association"`;
+
+exports[`saves only explicit workspace selections and carries their revision through previews and citation 2`] = `"选定目录将共享本地历史读取权限。请只选择需要关联的工作区；名称与路径前缀不会自动关联。保存变更后，旧项目结果失效。main · /projectworktree · /worktree保存项目关联移除项目关联"`;

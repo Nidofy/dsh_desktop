@@ -30,6 +30,21 @@ export class DesktopArtifacts{
     if(!id){id=randomUUID();this.leases.set(id,{root,path,target,identity,fingerprint:fingerprint(stat),createdAt:this.now()});if(this.leases.size>512)this.leases.delete(this.leases.keys().next().value);}
     return {...metadata,id,name:basename(path),path,available:true,size:stat.size,modifiedAt:stat.mtimeMs,canOpen:OPENABLE.has(extname(path).toLowerCase()),canSave:stat.size<=MAX_DOWNLOAD};
   }
+  /** Observe actual artifact bytes at run settlement. Existing identical bytes are still an observation of this run. */
+  async observeRun(workspace,path){
+    let file;
+    try {
+      const root=await rootPath(workspace),{target,stat}=await resolveFile(root,path);
+      if(stat.size>MAX_DOWNLOAD) return {path,observation:'unknown',digest:null,bytes:null};
+      file=await open(target,'r');const before=await file.stat(),hash=createHash('sha256'),buffer=Buffer.alloc(64*1024);let bytes=0;
+      for(;;){const part=await file.read(buffer,0,buffer.length,null);if(!part.bytesRead)break;bytes+=part.bytesRead;if(bytes>MAX_DOWNLOAD)throw Error('ARTIFACT_CHANGED');hash.update(buffer.subarray(0,part.bytesRead));}
+      const after=await file.stat(),selected=await resolveFile(root,path);
+      if(fingerprint(stat)!==fingerprint(before)||fingerprint(before)!==fingerprint(after)||fingerprint(after)!==fingerprint(selected.stat)||bytes!==after.size)
+        throw Error('ARTIFACT_CHANGED');
+      return {path,observation:'observed-after-run',digest:hash.digest('hex'),bytes};
+    } catch(error) {return {path,observation:error?.code==='ENOENT'?'missing':'unknown',digest:null,bytes:null};}
+    finally {await file?.close();}
+  }
   async resolveLease(id){const value=this.leases.get(id);if(!value||this.now()-value.createdAt>600000)fail('EXPIRED','文件入口已过期，请刷新列表');const {target,stat}=await resolveFile(value.root,value.path);if(target!==value.target||fingerprint(stat)!==value.fingerprint)fail('CHANGED','文件已变化，请刷新后重新选择');return {...value,stat};}
   async action(id,action,signal){if(!['open','reveal'].includes(action))fail('ACTION','不支持的文件操作');const value=await this.resolveLease(id);if(action==='open'&&!OPENABLE.has(extname(value.path).toLowerCase()))fail('OPEN_TYPE','此类型不直接启动；可定位文件或另存后自行处理');if(!this.openNative)fail('UNAVAILABLE','本机打开服务不可用');signal?.throwIfAborted();await this.openNative(value.target,action,signal);return {accepted:true};}
   async download(id,res,signal){const value=await this.resolveLease(id);if(value.stat.size>MAX_DOWNLOAD)fail('LIMIT','另存上限为 512 MiB，请定位后使用文件管理器复制');

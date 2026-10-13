@@ -132,6 +132,16 @@ interface PruneResult {
 }
 ```
 
+## 工作笔记 v2
+
+`NotebookV2` 保存 Session 物理 scope、Notebook revision、活动笔记、`historyRevision` 以及 `cursors.evidenceThrough` / `cursors.commitThrough`。scope 由 Session id 和官方不透明持久化代次组成。恢复与提交消费 provider 拥有的原始耐久坐标；发布还核对设置生命周期，并在 storage admission 期间持有代次保护。[工作笔记包](../../packages/nidofy/working-notebook/README.zh.md)负责产品配置与兼容处理。
+
+`NotebookV2Service.read` 在实际代次保护下读取选定 v2 指针，不写恢复或转换文件。显式 `synchronize` 在启动及成功压缩后补齐耐久候选，可复用一次观察；候选重建从已提交游标之后开始。`NotebookSynchronization` 提供进程内的 `idle`、`organizing`、`ready` 或 `failed` 整理状态及上次补齐的耐久切点。`NotebookReadOptions` 限制空闲元数据条目和最近原始事件窗口。历史验证在恢复、历史读取和发布时运行。全量耐久观察与冷解码仍随完整日志增长；产品没有按范围取得耐久前缀的 API。
+
+<a id="notebook-input-capture"></a>
+
+`NotebookInputCapture` 由 `NotebookV2Service.input(sessionId, signal)` 返回：`scope` 保存实际 Session／代次，`revision` 为已提交笔记修订，`text` 为 prompt assembly 使用的完整活动输入（空活动集为空字符串），`maxActiveEntries`／`maxActiveBytes` 为真实渲染限额，`policy` 保存 `autoOrganize` 和设置修订。读取使用原代次保护，不 flush、补齐、转换或写源，不创建 Agent 或模型请求；捕获期间设置变化会拒绝。冷读取可能扫描完整源，暖读取复用有界物理 scope 元数据。捕获输入本身不授予发送、工具或工程执行权限。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -224,6 +234,45 @@ read(sessionId: string): Promise<Notebook>
 ```
 
 Source: [`packages/nidofy/desktop-extras/src/context.ts`](../../packages/nidofy/desktop-extras/src/context.ts)
+
+<a id="ctxnidofynotebookv2--notebookv2service"></a>
+
+### `ctx.nidofyNotebookV2` — `NotebookV2Service`
+
+Committed v2 reader shared by product tools, prompts and authenticated UI.
+
+```ts cordis-catalog
+/** Read selected state against the actual persistence generation without notebook writes or recovery.
+ * @param sessionId - owning session.
+ * @param signal - caller cancellation.
+ * @returns the selected state with both committed cursors.
+ */
+read(sessionId: string, signal: AbortSignal): Promise<NotebookV2>
+
+/** Explicitly reconcile durable candidates, including startup conversion.
+ * @param sessionId - owning session.
+ * @param signal - caller cancellation.
+ * @returns the committed state after reconciliation; failures remain visible in synchronization status.
+ */
+synchronize(sessionId: string, signal: AbortSignal): Promise<NotebookV2>
+
+/** Read organization progress without scanning or modifying storage.
+ * @param sessionId - owning session.
+ * @returns detached process-local progress, idle before synchronization.
+ */
+synchronization(sessionId: string): NotebookSynchronization
+
+/** Capture the exact input used by prompt assembly without synchronization, compaction or note writes.
+ * @param sessionId - Explicit owning Session; unrelated Sessions are never selected by inference.
+ * @param signal - Caller lifetime; a settings change during capture refuses the result.
+ * @returns Complete note text, physical scope, committed revision and actual rendering bounds/settings.
+ */
+input(sessionId: string, signal: AbortSignal): Promise<NotebookInputCapture>
+```
+
+Types: [NotebookInputCapture](compaction.zh.md#notebook-input-capture)
+
+Source: [`packages/nidofy/desktop-extras/src/context-v2.ts`](../../packages/nidofy/desktop-extras/src/context-v2.ts)
 
 <a id="ctxtoolresultpruner--toolresultpruner"></a>
 

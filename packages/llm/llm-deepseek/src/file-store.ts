@@ -21,6 +21,8 @@ export interface DeepSeekFilePolicy {
 
 /** Connection facts needed by file operations. */
 export interface DeepSeekFileConnection {
+  /** Request-local authorization transport; also applies to explicit cleanup. */
+  fetch?: typeof globalThis.fetch
   baseURL: string
   /** Provider-resolved authentication headers for this endpoint. */
   headers: Readonly<Record<string, string>>
@@ -134,10 +136,11 @@ export class DeepSeekFileStore {
   }
 
   private client(connection: DeepSeekFileConnection): DeepSeekFilesClient {
+    const fetch = connection.fetch ?? this.fetchImpl
     return new DeepSeekFilesClient({
       baseURL: connection.baseURL,
       headers: connection.headers,
-      ...this.fetchImpl === undefined ? {} : { fetch: this.fetchImpl },
+      ...fetch === undefined ? {} : { fetch },
     })
   }
 

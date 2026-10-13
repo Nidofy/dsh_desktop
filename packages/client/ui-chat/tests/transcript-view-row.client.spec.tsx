@@ -38,6 +38,7 @@ function mount(mode: TranscriptViewMode = 'standard', dictionary: typeof en | ty
   const source = createSnapshotStore<TranscriptViewMode>(mode)
   const setTranscriptView = vi.fn((next: TranscriptViewMode) => { source.set(next) })
   const props: TranscriptViewRowProps = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: selector => selector({ activePanelId: null }),
     useSessions: emptySessions(),
     useSessionStatus: noPendingInteraction(),

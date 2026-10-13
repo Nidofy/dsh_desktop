@@ -1,5 +1,7 @@
 /** zh base dictionary for the common namespace: cross-feature standard words. */
 export const zh = {
+  'ui.failed': '这部分界面无法显示。可重新加载界面以连接；不会重启 Host 或重放任务。',
+  'ui.reload': '重新加载界面',
   'ok': '确定',
   'cancel': '取消',
   'close': '关闭',

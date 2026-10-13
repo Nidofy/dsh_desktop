@@ -65,6 +65,8 @@ const result = await execution.result()
 if (result.timedOut) console.log('timed out after', result.timeoutMs)
 ```
 
+`verificationInputs` reports the currently resolved absolute PowerShell executable, collector/grace settings, environment overrides and UTF-8 preamble without spawning. A bare executable name returns null. Verification callers read and hash the reported file bytes; this method does not infer the command’s other dependencies. Subclasses that change argv or add preparation must override the observation or return null.
+
 ### Background processes
 
 Resolve with `onExpiry: 'none'` and await `execute` to run a command in the background; no deadline is armed. Cancellation or preparation failure rejects before a handle is published. `readOutput()` merges the stream deltas into one consuming read, marking stderr under a `[stderr]` section; `kill()` terminates the provider-managed range; `done` settles when the direct command closes and never rejects. Job ids, ownership, polling, and notices belong to the generic `ctx.jobs` runtime, which the tool layer registers the handle with.

@@ -61,6 +61,7 @@ const useSessionStatus: PermissionRowProps['useSessionStatus'] = selector => sel
 const runtime = {
   useSessions: (() => { throw new Error('unused') }) as never,
   useSessionStatus,
+  useMainSelection: () => { throw new Error('Fixture does not read main selection') },
   usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
   useWorkspaces: (() => { throw new Error('unused') }) as never,
 }

@@ -127,6 +127,7 @@ function renderTab(
   }
   const unusedStandardHook = (): never => { throw new Error('Plugin manager fixture does not provide global state') }
   const standard = {
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: unusedStandardHook,
     useWorkspaces: unusedStandardHook,
     useSessions: unusedStandardHook,

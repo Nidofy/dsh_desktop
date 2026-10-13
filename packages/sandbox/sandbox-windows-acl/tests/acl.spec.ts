@@ -17,6 +17,10 @@ import koffi from 'koffi'
 
 import { buildExplicitAccess, grantWrite, lockFilePath, revokeWrite, withPathLock } from '../src/acl.ts'
 import { AclSandbox } from '../src/index.ts'
+import { workspaceWriteSid } from '../src/workspace-sid.ts'
+import { isolatedRecovery } from './fixtures/isolated-recovery.ts'
+
+isolatedRecovery()
 import { createRestrictedToken, makeWellKnownSid } from '../src/token.ts'
 import { allocOverlapped, allocPtrSlot, decodePtr, isInvalidHandle, isNullPtr, win32 } from '../src/ffi.ts'
 import type { NativePtr, Win32Bindings } from '../src/ffi.ts'
@@ -364,41 +368,37 @@ describe.skipIf(!isWin32)('ACL editing', () => {
     }
   })
 
-  it('interleaved sandbox instances: A.init → B.init → A.dispose → B.dispose leaves BOTH standing workspace ACEs (the per-workspace reuse cache)', async () => {
+  it('interleaved sandbox instances share a workspace lease and restore after the final dispose', async () => {
     const api = await win32()
     const dir = scratch()
-    const sandboxA = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: 'S-1-4-9000-1', mode: 'workspace-write' })
-    const sandboxB = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: 'S-1-4-9000-2', mode: 'workspace-write' })
+    const sid = workspaceWriteSid(dir)
+    const sandboxA = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: sid, mode: 'workspace-write' })
+    const sandboxB = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: sid, mode: 'workspace-write' })
     await sandboxA.init()
     await sandboxB.init()
-    // Workspace ACEs are STANDING: dispose frees the instance's SID
-    // allocations but deliberately leaves the ACEs — they are the reuse
-    // cache the next provision's exact-ACE skip consumes.
     sandboxA.dispose()
+    expect(readDirectAces(api, dir).some(ace => ace.sid === sid)).toBe(true)
     sandboxB.dispose()
     const aces = readDirectAces(api, dir)
-    expect(aces.some(ace => ace.sid === 'S-1-4-9000-1')).toBe(true)
-    expect(aces.some(ace => ace.sid === 'S-1-4-9000-2')).toBe(true)
+    expect(aces.some(ace => ace.sid === sid)).toBe(false)
   })
 
-  it('dispose revokes the revocable temp ACE and label and keeps the standing workspace pair (self-managed flow)', async () => {
+  it('dispose revokes temp and restores the workspace grant and label (self-managed flow)', async () => {
     const api = await win32()
     const workspaceDir = scratch()
     const tempDir = scratch()
     const sandbox = new AclSandbox({
       writableDirs: [workspaceDir],
       tempDir,
-      writeSid: 'S-1-4-9000-3',
+      writeSid: workspaceWriteSid(workspaceDir),
       tempWriteSid: 'S-1-4-9000-3-1',
       mode: 'workspace-write',
     })
     await sandbox.init()
     sandbox.dispose()
     const workspaceAces = readDirectAces(api, workspaceDir)
-    expect(workspaceAces.some(ace => ace.sid === 'S-1-4-9000-3')).toBe(true)
-    expect(readLabelAces(api, workspaceDir)).toEqual([
-      { sid: 'S-1-16-4096', mask: abi.SYSTEM_MANDATORY_LABEL_NO_WRITE_UP },
-    ])
+    expect(workspaceAces.some(ace => ace.sid === workspaceWriteSid(workspaceDir))).toBe(false)
+    expect(readLabelAces(api, workspaceDir)).toEqual([])
     const tempAces = readDirectAces(api, tempDir)
     expect(tempAces.some(ace => ace.sid === 'S-1-4-9000-3-1')).toBe(false)
     expect(readLabelAces(api, tempDir)).toEqual([])
@@ -407,7 +407,7 @@ describe.skipIf(!isWin32)('ACL editing', () => {
   it('rejects an overlapping private temp directory before applying either capability', async () => {
     const workspaceDir = scratch()
     const nestedTemp = join(workspaceDir, 'temp')
-    const writeSid = 'S-1-4-9000-30'
+    const writeSid = workspaceWriteSid(workspaceDir)
     const privateTempSid = 'S-1-4-9000-30-1'
     mkdirSync(nestedTemp)
     const sandbox = new AclSandbox({
@@ -497,10 +497,11 @@ describe.skipIf(!isWin32)('ACL editing', () => {
   it('the applied grant mask carries DELETE and FILE_DELETE_CHILD (never WRITE_DAC/WRITE_OWNER)', async () => {
     const api = await win32()
     const dir = scratch()
-    const sandbox = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: 'S-1-4-1234-5', mode: 'workspace-write' })
+    const sid = workspaceWriteSid(dir)
+    const sandbox = new AclSandbox({ writableDirs: [dir], tempDir: null, writeSid: sid, mode: 'workspace-write' })
     try {
       await sandbox.init()
-      const grant = readDirectAces(api, dir).find(ace => ace.sid === 'S-1-4-1234-5')
+      const grant = readDirectAces(api, dir).find(ace => ace.sid === sid)
       expect(grant).toBeDefined()
       const mask = grant?.mask ?? 0
       expect(mask).toBe(abi.GRANT_MASK)

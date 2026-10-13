@@ -1,3 +1,4 @@
+import { useCredentialDraftGuard, type DraftGuardRegistration } from './credential-draft.tsx'
 /**
  * One provider's editor card, hand-written per adapter family: the primary
  * field is a single write-only **API key** input (the page never asks for an
@@ -95,6 +96,8 @@ export interface ProviderEditorProps {
    * still.
    */
   onBusyChange?: (busy: boolean) => void
+  /** Settings surface discard registration; secrets remain local to this card. */
+  registerNavigationGuard?: DraftGuardRegistration
 }
 
 /** A user-section subtree as a plain draft object (absent → empty). */
@@ -172,6 +175,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
   const [listBusy, setListBusy] = useState(false)
   const { onBusyChange } = props
   useEffect(() => { onBusyChange?.(busy || listBusy) }, [busy, listBusy, onBusyChange])
+  const guard = useCredentialDraftGuard(keyDraft.length > 0, busy, t, props.registerNavigationGuard)
   const [failure, setFailure] = useState<string | undefined>(undefined)
   // A settings success advances both retry baselines immediately. Keeping the
   // derived fields in the draft prevents a pushed namespace refresh from
@@ -521,6 +525,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
             {`${t('model')} ${String(modelFailure.index + 1)}: ${t(modelFailure.key)}`}
           </p>
         )}
+      {guard.confirmation}
       <EditorFooter
         t={t}
         busy={busy}
@@ -531,7 +536,9 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
         submitLabelKey={props.submitLabelKey ?? 'apply'}
         submitBusyLabelKey={props.submitBusyLabelKey ?? 'applying'}
         {...props.cancelLabelKey === undefined ? {} : { cancelLabelKey: props.cancelLabelKey }}
-        onCancel={() => { props.onClose(false) }}
+        onCancel={() => {
+          if (!keyDraft) props.onClose(false); else void guard.ask().then((allowed) => { if (allowed) props.onClose(false) })
+        }}
         onSubmit={() => { props.onSubmitCredential?.(); void apply() }}
       />
     </div>

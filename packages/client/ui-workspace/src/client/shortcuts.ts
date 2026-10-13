@@ -70,8 +70,10 @@ export function installWorkspaceShortcuts(
   archiveSession: (sessionId: SessionId) => void,
 ): void {
   const t = ctx.locale.bind('workspace')
-  const current = () => Object.values(ctx.sessions.list.getSnapshot().byId)
-    .find(row => (row.retainedBy.mainView ?? 0) > 0)
+  const current = () => {
+    const id = ctx.uiSession.mainSelection.getSnapshot().sessionId
+    return id === null ? undefined : ctx.sessions.list.getSnapshot().byId[id]
+  }
   const addReason = () => ctx.slots.entries('sidebar.workspaces.directoryFlow').length === 0
     ? t('shortcut.noPicker')
     : controls.state.getSnapshot().directoryBusy ? t('shortcut.directoryBusy') : null

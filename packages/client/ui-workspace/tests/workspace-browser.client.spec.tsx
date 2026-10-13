@@ -42,6 +42,7 @@ const summary = (id: string, updatedAt: number, overrides: Partial<SessionSummar
   id: sid(id), title: overrides.displayTitle ?? id, displayTitle: id, running: false, blank: false, updatedAt, ...overrides,
   retainedBy: overrides.retainedBy ?? {},
 })
+const selections = new WeakMap<SessionListState, SessionId>()
 const sessionState = (
   items: readonly SessionSummary[],
   overrides: Partial<SessionListState> & { main?: SessionId } = {},
@@ -57,10 +58,12 @@ const sessionState = (
   if (main === undefined) return state
   const row = state.byId[main]
   if (row === undefined) return state
-  return {
+  const selectedState = {
     ...state,
     byId: { ...state.byId, [main]: { ...row, retainedBy: { ...row.retainedBy, mainView: 1 } } },
   }
+  selections.set(selectedState, main)
+  return selectedState
 }
 const workspace = (id: string, sessionIds: string[], title = id): WorkspaceView => ({
   workspaceId: wid(id), path: `/projects/${id}`, title,
@@ -118,6 +121,7 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     wide: true,
     expandSidebar: vi.fn(),
     useSessions: hook(sessionState([])),
+    useMainSelection: selector => selector({ sessionId: null, revision: 0 }),
     useSessionStatus: hook(noPendingInteraction),
     useSessionRetainInfo: () => undefined,
     usePanelInfo, useResource,
@@ -140,6 +144,9 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     t,
     ...overrides,
   }
+  if (!overrides.useMainSelection) props.useMainSelection = selector => selector({
+    sessionId: props.useSessions(state => selections.get(state)) ?? null, revision: 0,
+  })
   const view = render(<WorkspaceBrowser {...props} />)
   return { view, props, store, controls }
 }
@@ -151,6 +158,18 @@ function rerender(b: ReturnType<typeof mount>, overrides: Partial<WorkspaceBrows
 }
 
 describe('WorkspaceBrowser', () => {
+  it('retains the expanded batch after the browser surface remounts', () => {
+    const items = Array.from({ length: 17 }, (_, index) => summary(`kept-${index + 1}`, 17 - index))
+    const props = { useSessions: hook(sessionState(items)), useWorkspaces: hook(workspaceState([workspace('alpha', items.map(item => item.id))])) }
+    const first = mount(props)
+    fireEvent.click(screen.getByText('alpha'))
+    fireEvent.click(screen.getByRole('button', { name: '展开其余 12 个会话' }))
+    expect(screen.getByText('kept-10')).toBeTruthy()
+    first.view.unmount()
+    mount(props)
+    expect(screen.getByText('kept-10')).toBeTruthy()
+    expect(screen.queryByText('kept-11')).toBeNull()
+  })
   it.each([{ messages: en, common: commonEn }, { messages: zh, common: commonZh }])('shows localized fork failures and dismisses them', ({ messages, common }) => {
     const b = mount({ t: makeTranslate(messages, common) })
     act(() => { b.controls.forkFailed('unavailable') })
@@ -1282,7 +1301,7 @@ describe('WorkspaceBrowser', () => {
     expect(screen.getByText('a')).toBeTruthy()
     // Selection hop inside the same group: the effect re-runs and leaves the
     // expansion list unchanged (no duplicate key, group still open).
-    rerender(b, { useSessions: hook({ ...first, main: sid('b') }) })
+    rerender(b, { useMainSelection: selector => selector({ sessionId: sid('b'), revision: 1 }) })
     expect(screen.getByText('b')).toBeTruthy()
     fireEvent.click(screen.getByText('alpha'))
     expect(screen.queryByText('b')).toBeNull()
@@ -1305,7 +1324,7 @@ describe('WorkspaceBrowser', () => {
     expect(screen.queryByText('alpha-blank')).toBeNull()
     expect(screen.queryByText('beta-blank')).toBeNull()
 
-    rerender(b, { useSessions: hook({ ...sessions, main: staleBlank.id }) })
+    rerender(b, { useMainSelection: selector => selector({ sessionId: staleBlank.id, revision: 1 }) })
     expect(screen.getAllByText('新会话')).toHaveLength(1)
     b.store.actions.setGroupBy('flat')
     rerender(b, {})
@@ -1677,10 +1696,11 @@ describe('WorkspaceBrowser', () => {
     }
   })
 
-  it('keeps local matches without a warning when Host search fails', async () => {
+  it('keeps local matches and offers an explicit retry when Host search fails', async () => {
     vi.useFakeTimers()
     try {
-      const searchSessions = vi.fn(async () => { throw new Error('index unavailable') })
+      const searchSessions = vi.fn().mockRejectedValueOnce(new Error('index unavailable'))
+        .mockResolvedValue({ items: [], hasMore: false })
       mount({
         useSessions: hook(sessionState([
           summary('local-hit', 1, { displayTitle: 'Needle title' }),
@@ -1694,8 +1714,13 @@ describe('WorkspaceBrowser', () => {
       expect(screen.getByText('Needle title')).toBeTruthy()
       await act(async () => { await vi.advanceTimersByTimeAsync(250) })
       expect(screen.getByText('Needle title')).toBeTruthy()
-      expect(screen.queryByText('内容搜索暂不可用，仅显示名称匹配。')).toBeNull()
+      expect(screen.getByText('无法搜索会话历史，已有结果已保留')).toBeTruthy()
       expect(screen.queryByText('无匹配会话')).toBeNull()
+      fireEvent.click(screen.getByRole('button', { name: '重试' }))
+      await act(async () => { await vi.advanceTimersByTimeAsync(250) })
+      expect(searchSessions).toHaveBeenCalledTimes(2)
+      expect(screen.queryByText('无法搜索会话历史，已有结果已保留')).toBeNull()
+      expect(screen.getByText('Needle title')).toBeTruthy()
     } finally {
       vi.useRealTimers()
     }

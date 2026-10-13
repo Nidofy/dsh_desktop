@@ -4,11 +4,13 @@ English | [中文](persistence.zh.md)
 
 The **durability seam** for the event log. [session.md](session.md) describes the in-memory `Session` — the append-only `SessionEvent` log that is the source of truth. This page describes how that log is made durable: the abstract `SessionPersistence` service, its provider model and shipped JSONL backend, the flush checkpoint, crash recovery, and the metadata header that travels alongside the log. The event vocabulary the log carries is enumerated, member by member, in the generated [persistence log event catalog](../persistence-catalog.md).
 
-The seam is a [capability seam](../../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md): one abstract service ([dsh-session-persistence](../../packages/session/session-persistence), `ctx.sessionPersistence`) exposing `create`/`open`/`stat`/`list` over the existing `SessionEvent` — **no parallel persisted event type** — where `create` and `open` return a per-session `SessionHandle` (`read`/`append`/`flush`/`close`) that carries all log access and single-writer ownership. The repository ships [dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl) as its provider; out-of-tree providers may implement the same service contract. See the [handle-based persistence Agent Note](../../.agents/notes/implemented/architecture/2026-08-27-handle-based-session-persistence.md) and the [session-persistence Agent Note](../../.agents/notes/implemented/architecture/2026-06-14-session-persistence.md).
+The seam is a [capability seam](../../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md): one abstract service ([dsh-session-persistence](../../packages/session/session-persistence), `ctx.sessionPersistence`) exposing `create`/`open`/`stat`/`list` over the existing `SessionEvent` — **no parallel persisted event type** — where `create` and `open` return a per-session `SessionHandle` (`read`/`append`/`flush`/`close`) that carries ordinary log access and single-writer ownership. The repository ships [dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl) as its provider; out-of-tree providers may implement the same service contract. See the [handle-based persistence Agent Note](../../.agents/notes/implemented/architecture/2026-08-27-handle-based-session-persistence.md) and the [session-persistence Agent Note](../../.agents/notes/implemented/architecture/2026-06-14-session-persistence.md).
 
 ## `SessionHandle` — one open channel onto a stored session
 
-Every log read and write flows through a handle, never through id-addressed service methods: the handle is the single door the cross-process write lease guards. A read returns a caller-owned outer slice and the producer-established aliasing state of its event values. One handle type serves both accesses — a mutation on a `read` handle is a runtime `SessionReadOnlyError` rather than a typed split — and in-process single-writer ownership makes a second `open(id, 'write')` reject with `SessionAlreadyOwnedError` while an owner is active.
+The JSONL provider accepts an optional trusted `JsonlMigrationWriter` before writing a historical successor. Its [package reference](../../packages/session/session-persistence-jsonl/README.md) owns byte measurement and admission; the [upgrade guide](../upgrade-guide/v0.2.0-rc.2/session-migration-cancellation/guide.md) describes cancellation before and after publication. This does not change the abstract service or Loader configuration, add a Session format, or grant product import/adoption authority.
+
+Handle operations provide ordinary log access; durable observations and derived publications also use the provider-owned write exclusion. A read returns a caller-owned outer slice and the producer-established aliasing state of its event values. One handle type serves both accesses — a mutation on a `read` handle is a runtime `SessionReadOnlyError` rather than a typed split — and in-process single-writer ownership makes a second `open(id, 'write')` reject with `SessionAlreadyOwnedError` while an owner is active.
 
 ```ts type-equiv
 /** One persistence event slice returned by {@link SessionHandle.read}. */
@@ -328,6 +330,10 @@ The shipped provider implements the abstract `SessionPersistence` contract (`cre
 
 - **[dsh-session-persistence-jsonl](../../packages/session/session-persistence-jsonl)** — an append-only logical JSONL log per session, stored as checksummed concatenated Zstandard frames by default or raw lines by configuration, with crash-safe atomic materialization, per-batch `fsync` appends, and torn-tail truncation before the first new append. `stat`/`list` carry `sizeBytes` and a best-effort `fs.stat`-derived revision.
 
+## Durable observations and physical generations
+
+`SessionDurableObservation` extends the inspection fields (`meta`, `inheritedEventCount`, `events`) with `generation` and `durableThrough`. Its raw logical events contain exactly seq 0 through the acknowledged cut, or an empty array with -1. `SessionPersistenceGeneration` is a branded opaque string for one physical incarnation; it is stable through appends and cold starts and is not a cache revision or format number. `observeDurable()` confirms this prefix; `withGeneration()` excludes replacement through the callback settlement. Unsupported providers refuse rather than use ordinary best-effort reads. The [JSONL provider](../../packages/session/session-persistence-jsonl/README.md) owns file identity, historical conversion and lease semantics.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -385,6 +391,26 @@ abstract open(id: SessionId, access: SessionAccess, options?: SessionPersistence
  *   remaining handles still flush.
  */
 abstract flush(): Promise<void>
+
+/** Observe a confirmed raw prefix without relying on best-effort read visibility.
+ * Providers without this capability refuse explicitly; ordinary read is never a fallback.
+ * @param _id - stored session to observe.
+ * @param _options - cancellation for observation work.
+ * @returns detached metadata and raw events paired with their physical generation and durable cut.
+ */
+observeDurable(_id: SessionId, _options?: SessionPersistenceOpenOptions): Promise<SessionDurableObservation>
+
+/** Execute a derived-state publication while excluding generation replacement and migration.
+ * The callback must not mutate this session or recursively acquire this protection. Providers
+ * refuse if the expected generation is no longer selected or exclusion cannot be obtained.
+ * The protection remains held across asynchronous admission and ends after callback settlement.
+ * @param _id - session whose physical generation must remain selected.
+ * @param _generation - identity captured by observeDurable.
+ * @param _publish - derived-state publication, including its admission and commit point.
+ * @param _options - cancellation before invoking the callback.
+ * @returns the callback result; an already committed result must not be undone by later logging.
+ */
+withGeneration<T>(_id: SessionId, _generation: SessionPersistenceGeneration, _publish: () => Promise<T>, _options?: SessionPersistenceOpenOptions): Promise<T>
 
 /**
  * Observe one stored session without reading its event log or taking

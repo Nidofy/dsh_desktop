@@ -20,6 +20,14 @@ export interface Config {
   readonly runtimeDir: string
 }
 
+/** Resolve the standalone Node carried by the selected primary-runtime payload.
+ * @param source - Application-selected bundled payload directory.
+ * @returns Absolute Node executable used by Office and fixed local self-test commands.
+ */
+export function desktopNodeExecutable(source: string): string {
+  return join(source, 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')
+}
+
 /**
  * Enable offline Office authoring and structural checks in the Desktop profile.
  * @param ctx - Profile scope; child plugins declare their own service requirements.
@@ -32,7 +40,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   const packageRoot = dirname(archive === undefined ? manifest : join(`${archive}.unpacked`, relative(archive, manifest)))
   await ctx.plugin(officeSkills, {
     assetRoot: join(dirname(config.source), 'office-skills'),
-    node: join(config.source, 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node'),
+    node: desktopNodeExecutable(config.source),
     cli: join(packageRoot, 'lib', 'cli.js'),
   })
 }

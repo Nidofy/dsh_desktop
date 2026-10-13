@@ -24,6 +24,8 @@ import type { SubprocessCollect, SubprocessHandle, SubprocessOutputReader, Subpr
 import { clampTimeout, deadline, MAX_TIMER_DELAY_MS, timeoutOf } from '@deepseek-ai/dsh-timeout'
 /* jscpd:ignore-end */
 import { resolvePwshPath } from './resolve.ts'
+import { isAbsolute } from 'node:path'
+import type { ShellVerificationInputs } from '@deepseek-ai/dsh-shell'
 
 /* jscpd:ignore-start -- deliberate call-for-call mirror of dsh-bash-local (Agent Note: pwsh-tool-and-executor). */
 /**
@@ -147,6 +149,14 @@ export class PwshLocalExecutor extends ShellExecutor {
       this.declaredPwshPath = declared
     }
     return this.resolvedPwshPath
+  }
+
+  override verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null> {
+    if (!isAbsolute(this.pwshPath)) return Promise.resolve(null)
+    return Promise.resolve({ executablePaths: [this.pwshPath], configuration: {
+      graceMs: this.config.graceMs.get(), maxOutputBytes: this.config.maxOutputBytes.get(),
+      maxSpillBytes: this.config.maxSpillBytes.get(), environmentOverrides: ENV_OVERRIDES, encoding: ENCODING_PREAMBLE,
+    } })
   }
 
   constructor(ctx: Context, readonly config: Config) {

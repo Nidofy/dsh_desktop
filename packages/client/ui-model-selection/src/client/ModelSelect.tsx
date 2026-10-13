@@ -451,7 +451,7 @@ export function ModelSelect(
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? `${id}-menu` : undefined}
-        title={triggerLabel}
+        title={state.routable === false ? t('trigger.unavailable') : triggerLabel}
         aria-busy={busy}
         data-selection-focus={selectionFocus ? '' : undefined}
         onBlur={() => { setSelectionFocus(false) }}
@@ -466,6 +466,7 @@ export function ModelSelect(
       >
         <IconDataOutlineRegular className={css.triggerIcon} size={16} />
         <span className={css.triggerLabel}>{modelLabel}</span>
+        {state.routable === false && <span role="status" aria-label={t('trigger.unavailable')}><IconWarningOutlineRegular size={16} /></span>}
         {effortLabel !== undefined && <span className={css.triggerEffort}>{effortLabel}</span>}
         {busy
           ? <StateDot state="ongoing" />

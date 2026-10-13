@@ -1,19 +1,7 @@
-独立任务审查
-推荐模型：使用该任务 prompt 的“推荐复核”；通常 GPT-6.1-Sol，凭据/原生/权限疑点使用 Astra。
+REVIEW｜连续开发参考检查清单
 
-输入（人工填写）：
-任务 ID：<Txx>
-任务 worktree：<Electron 内的绝对路径>
-实际交付范围：<变更文件、功能说明与已有交接；提交记录可选>
-交付文件：<该 worktree 中 migration/roadmap/handoffs/Txx.md>
-所有工作均限定在 D:/Documents/FeiyangChen/devApps/dshWinUi/electron 内。不要自动启动其他模型、推送、合并主线或发布。先读当前仓库 AGENTS.md、适用下级规则、migration/roadmap/dispatch/SCOPE.md、contracts-v1.md 与 HANDOFF_TEMPLATE.md。保留用户修改。未知/未执行的验证不得写 PASS。模型在客户端人工选择；本 prompt 不会调度模型。
+本文件不再创建独立阶段、审查会话或集成审批。执行入口是 Electron 主目录 migration/roadmap/dispatch/prompts/SOL_CONTINUE.txt 或 ASTRA_CONTINUE.txt；当棒作者按 CONTINUOUS.md 实施、接线、验证并继续。GLM 不执行代码审查或集成。
 
-你是独立审查者。本轮只读业务代码，作者应已停止修改。检查当前文件内容与实际 diff（包括未提交及未跟踪的相关文件），核实依赖能力、变更范围和测试是否对应当前实现；不要求提供或匹配提交号。不要凭作者摘要判定通过。
+对实际代码和相关消费者进行当棒自检；高风险且尚无充分独立判断时并入 Astra 开发棒。缺陷直接修复并运行受影响验证，旧已关闭审查不重开。提供真实失败场景与证据，不凭作者摘要、提交号或 mock 宣称最终通过。
 
-检查：
-1. 对照任务每条验收项检查真实实现与消费者，数据/权限/生命周期/失败恢复重点看代码路径与行为，不用命名或意图作证。
-2. 按风险重跑最小相关测试。需要补故障测试时在 Electron 内独立 review worktree 操作，先记录目录、实际代码状态与依赖；新的审查副本必须包含待审实现及相关未提交文件，不能默认只检出分支就包含全部改动；不能在作者仍写入的目录增改测试。
-3. 区分实现缺陷、范围缺口、环境阻塞、资产阻塞。只用 mock 的集成结论应退为 PARTIAL。
-4. 输出发现：优先级、文件与行号、触发条件、实际影响、最小修复建议、可复核测试。没有发现时明确已查范围和剩余限制。
-5. 报告存 migration/roadmap/reviews/<Txx>-review-<轮次>.md，只有本审查者写入。记录全部命令/退出码与未执行项；测试数据用独立隔离目录。
-6. 输出 REVIEWED、NEEDS_FIX 或 BLOCKED；REVIEWED 不代表已集成或已发布。审查发现交回作者修复，再针对实际修改复核，避免两个模型同时修代码。
+每棒结束生成 NEXT_HANDOFF.md、NEXT_PROMPT.txt 与简短 relay 历史，下一模型从实际进度继续。

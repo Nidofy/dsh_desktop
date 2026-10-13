@@ -208,6 +208,7 @@ function sessionsDouble(ctx: Context, state: {
   }>
 }) {
   const listeners = new Set<() => void>()
+  const selectionListeners = new Set<() => void>()
   const bindings = new Map<string, { sessionId: SessionId; ctx: Context }>()
   const snapshot = () => ({
     ...state,
@@ -219,7 +220,7 @@ function sessionsDouble(ctx: Context, state: {
       },
     ])),
   })
-  return {
+  const result = {
     list: {
       getSnapshot: snapshot,
       subscribe: (fn: () => void) => {
@@ -250,9 +251,14 @@ function sessionsDouble(ctx: Context, state: {
       },
     }),
     /** Push a list change the way the runtime's store does. */
-    notify: () => { for (const fn of listeners) fn() },
-    listenerCount: () => listeners.size,
+    notify: () => { for (const fn of selectionListeners) fn(); for (const fn of listeners) fn() },
+    listenerCount: () => listeners.size + selectionListeners.size,
   }
+  ctx.provide('uiSession', { mainBinding: {
+    getSnapshot: () => state.current === undefined ? undefined : result.binding(state.current),
+    subscribe: (listener: () => void) => { selectionListeners.add(listener); return () => selectionListeners.delete(listener) },
+  } })
+  return result
 }
 
 async function settingsWithoutChip(initialPreset: string, settingsRosterGate?: Promise<undefined>) {
@@ -285,7 +291,7 @@ describe('ui-agent-preset apply', () => {
     try {
       await run(b.section)
       expect(b.calls.filter(call => call.startsWith('select:'))).toEqual([`select:${selected}`])
-      expect(b.sessions.listenerCount()).toBe(1)
+      expect(b.sessions.listenerCount()).toBe(2)
     } finally {
       await b.ctx.fiber.dispose()
     }
@@ -299,7 +305,7 @@ describe('ui-agent-preset apply', () => {
       const b = await settingsWithoutChip(initial, saved.promise)
       const operation = run(b.section)
       try {
-        expect(b.sessions.listenerCount()).toBe(1)
+        expect(b.sessions.listenerCount()).toBe(2)
         await b.settingsRosterStarted
         await (owner === 'feature' ? b.feature : b.bindingOwner).dispose()
         expect(b.sessions.listenerCount()).toBe(0)
@@ -320,7 +326,7 @@ describe('ui-agent-preset apply', () => {
 
   it('declares the services it uses', () => {
     expect(inject).toEqual([
-      'slots', 'sessions', 'locale', 'remote', 'remote.agentPresets', 'remote.settings', 'configForms',
+      'slots', 'sessions', 'uiSession', 'locale', 'remote', 'remote.agentPresets', 'remote.settings', 'configForms',
     ])
   })
 

@@ -225,7 +225,9 @@ export function apply(ctx: Context, config: Config): void {
   // through `ctx` per call, so they stay correct across the collection rebuilds
   // a configuration change causes, and a sign-in survives one.
   const auth = { credentials: credentialStoreFrom(ctx), authContext: authContextFrom(ctx) }
+  const outboundHttp = ctx.get('outboundHttp')
   const adapter = new PiAiAdapter({
+    prepareHttp: url => outboundHttp?.prepare(url) ?? Promise.resolve(undefined),
     preparePayload: scope => ctx.bail('llm-pi-ai/prepare-payload', scope),
     profiles,
     resolveApiKey,
@@ -292,6 +294,7 @@ export function apply(ctx: Context, config: Config): void {
   ctx.llm.registerModelDiscovery(settingsNs, (request, signal) => discoverModels(
     { ...request, ...signal === undefined ? {} : { signal } },
     () => storedDiscoveryProfile(request.provider),
+    url => outboundHttp?.prepare(url) ?? Promise.resolve(undefined),
   ))
   // Route effects bind to this apply fiber via the stable `ctx` reference,
   // even when a swap runs inside the scoped settings callback below. A bare

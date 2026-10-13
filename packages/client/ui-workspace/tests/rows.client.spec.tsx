@@ -1101,3 +1101,25 @@ it.each([['未命名', t], ['Untitled', tEn]])('labels unnamed search results as
   fireEvent.click(screen.getByText(label))
   expect(onOpen).toHaveBeenCalledWith(result.id)
 })
+
+it('navigates focused tree rows and preserves nested controls and composition keys', () => {
+  const onOpen = vi.fn()
+  const node: SessionNode = { id: sid('keyboard'), title: 'Keyboard Session', blank: false, running: false,
+    runningSubagentCount: 0, completed: false, updatedAt: 0, pinned: false, archived: false }
+  render(<div role="tree"><SessionNodeItem node={node} currentId={undefined} now={0} onOpen={onOpen} t={t} />
+    <SessionNodeItem node={{ ...node, id: sid('second'), title: 'Second' }} currentId={undefined} now={0} onOpen={onOpen} t={t} /></div>)
+  const [first, second] = screen.getAllByRole('treeitem')
+  first!.focus()
+  fireEvent.keyDown(first!, { key: 'Enter', isComposing: true })
+  fireEvent.keyDown(first!, { key: 'Enter', keyCode: 229 })
+  fireEvent.keyDown(first!, { key: 'Enter', ctrlKey: true })
+  expect(onOpen).not.toHaveBeenCalled()
+  fireEvent.keyDown(first!, { key: 'Enter' })
+  expect(onOpen).toHaveBeenCalledWith(node.id)
+  fireEvent.keyDown(first!, { key: 'ArrowDown' })
+  expect(document.activeElement).toBe(second)
+  fireEvent.keyDown(second!, { key: 'Home' })
+  expect(document.activeElement).toBe(first)
+  fireEvent.keyDown(first!, { key: 'End' })
+  expect(document.activeElement).toBe(second)
+})

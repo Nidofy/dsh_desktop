@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write apps/desktop-host/src/selftest/README.md
+/:
+  en: 492dff42a4017fb2
+  zh: fafb6452e7067ead
+/electron-self-test:
+  en: bc72b0b85bc00c4d
+  zh: 6a279346d05150da
+/electron-self-test/summary:
+  en: dda44489b6a52dbf
+  zh: 6e44c0d27e799670
+/electron-self-test/table-of-contents:
+  en: 1049ac89b8608700
+  zh: 36479f32f9c4fa52
+/electron-self-test/run-and-inspect:
+  en: b61224acbb34b0df
+  zh: a739dd52053881e5
+/electron-self-test/persistence-and-cancellation:
+  en: 31bb8a65c80c627c
+  zh: 665c063946fec0ed
+/electron-self-test/measurement-limits:
+  en: b6391de43958f706
+  zh: a6590eda8bcb73a1
+/electron-self-test/prefix-classifications:
+  en: f2933327d3812300
+  zh: 1a2ef74d440a277d
+/electron-self-test/known-limitations:
+  en: 4dc358963f2887b2
+  zh: e137d6245bff094b

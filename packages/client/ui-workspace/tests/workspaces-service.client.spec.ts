@@ -290,6 +290,7 @@ function bench(options: BenchOptions = {}) {
   options.configureSessions?.(sessions)
   const view = createWorkspaceViewStore().create()
   const notify = vi.fn<(toast: RowToast) => void>()
+  ctx.provide('uiSession', { selectMain: vi.fn() })
   const uiWorkspace = new UiWorkspaceService(
     ctx,
     directoryPicker.remote,

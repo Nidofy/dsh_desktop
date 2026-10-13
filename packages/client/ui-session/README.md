@@ -8,9 +8,11 @@ English | [中文](README.zh.md)
 
 ## Summary
 
+`UiSession.selectMain(reference)` publishes the navigation owner’s borrowed exact binding through `mainBinding`, `mainSelection` and the root `useMainSelection` hook. Publish a successor before releasing its predecessor; clear selection before owner disposal. Retain counts never select the root view or acknowledge completion. Explicit `bindingSource(reference)` remains available for other surfaces.
+
 Use this package to expose Session catalog, retain information, and unified UI status through standard Slot hooks. It materializes per-`SessionBinding` hooks and props, while `SessionProvider` can inherit an outer binding or bind an explicit `SessionReference`. It owns process-local pending-interaction and completion-reminder policy without owning Controller transport, history, or references.
 
-Running status comes from Host list baselines or status events. Subagent catalog rows and retained subagent fallback rows do not establish running status; main view references still acknowledge completions.
+Running status comes from Host list baselines or status events. Subagent catalog rows and retained subagent fallback rows do not establish running status; only the explicit main selection acknowledges completions.
 
 ## Table of Contents
 

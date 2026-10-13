@@ -25,9 +25,19 @@ function flatten(rows: EntryOptions[]): EntryOptions[] {
 /** Persist complete raw configs and apply them through the normal Loader path. */
 export class ConfigEditor extends Service {
   static inject = ['loader', 'profileContext']
+  private readonly validators = new Set<(entry: Entry, config: Record<string, unknown>) => Promise<() => Promise<void>>>()
 
   constructor(private readonly ownerContext: Context) {
     super(ownerContext, 'configEditor')
+  }
+
+  /** Register application authorization for complete candidate configurations.
+   * @param prepare - Captures authorization before persistence and returns its final live check.
+   * @returns Disposer; the registering application owns its lifetime.
+   */
+  registerValidator(prepare: (entry: Entry, config: Record<string, unknown>) => Promise<() => Promise<void>>): () => void {
+    this.validators.add(prepare)
+    return () => { this.validators.delete(prepare) }
   }
 
   /** The profile patch edited by this service. */
@@ -99,9 +109,11 @@ export class ConfigEditor extends Service {
         const inherited = this.inherited(entry, loadProfileDirectory('dsh', this.ownerContext.profileContext.dir, this.ownerContext.profileContext.installAnchor))
         const next = change(current, inherited)
         const fiber = entry.fiber
-        if (fiber.state !== FiberState.ACTIVE) throw new Error('Configuration plugin is no longer active')
+        const active = (): boolean => fiber.state === FiberState.ACTIVE
+        if (!active()) throw new Error('Configuration plugin is no longer active')
         const resolved: unknown = fiber.ctx.waterfall(fiber, 'internal/config', next, () => next)
         resolveConfig(fiber.runtime as NonNullable<typeof fiber.runtime>, resolved)
+        const authorization = await Promise.all([...this.validators].map(prepare => prepare(entry, structuredClone(next))))
         let before: string
         try { before = await readFile(path, 'utf8') }
         catch (error) {
@@ -138,6 +150,10 @@ export class ConfigEditor extends Service {
         const effective = flatten(composeEntries([patches])).find(row => row.id === entry.options.id)
         if (!isDeepStrictEqual(effective?.config ?? {}, next)) {
           throw new Error(`Configuration for "${entry.options.id}" is overridden by a home patch or command-line overlay`)
+        }
+        for (const check of authorization) await check()
+        if (!this.entries().includes(entry) || entry.fiber !== fiber || !active()) {
+          throw new Error('Configuration entry changed during authorization')
         }
         await writeFileAtomic(path, String(document), { mode: 0o600 })
         try {

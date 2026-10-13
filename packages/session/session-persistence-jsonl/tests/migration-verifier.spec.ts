@@ -47,6 +47,21 @@ afterEach(() => {
 })
 
 describe('migration verifier Worker lifecycle', () => {
+  it('keeps cancellation pending until the verifier has actually terminated', async () => {
+    const controller = new AbortController(), reason = Error('stop verifier'), drained = Promise.withResolvers<number>()
+    const verification = verifyCurrentGenerationInWorker('/cancel-stage', 'none', 'session', 0, undefined, controller.signal)
+    const instance = worker()
+    instance.terminate.mockReturnValueOnce(drained.promise)
+    let settled = false
+    void verification.finally(() => { settled = true }).catch(() => {})
+    controller.abort(reason)
+    await Promise.resolve()
+    expect(settled).toBe(false)
+    expect(instance.terminate).toHaveBeenCalledOnce()
+    drained.resolve(0)
+    await expect(verification).rejects.toBe(reason)
+  })
+
   it('resolves only after terminating a successful Worker', async () => {
     const expectedPrefix = { bytes: 3, digest: 'a'.repeat(64) }
     const verification = verifyCurrentGenerationInWorker('/stage', 'none', 'session', 2, expectedPrefix)

@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shows stale parsed tests and records an independent local acceptance in Chinese=false 1`] = `
+"Parsed tests: PASSED
+Input coverage: complete
+Current input freshness: STALE
+User acceptance: PENDING
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "runId": "11111111-1111-1111-1111-111111111111",
+  "tests": "PASSED",
+  "coverage": "complete",
+  "freshness": "STALE",
+  "acceptance": "PENDING",
+  "artifacts": []
+}"
+`;
+
+exports[`shows stale parsed tests and records an independent local acceptance in Chinese=true 1`] = `
+"解析的测试事实: PASSED
+输入覆盖: complete
+当前输入新鲜度: STALE
+用户验收: PENDING
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "runId": "11111111-1111-1111-1111-111111111111",
+  "tests": "PASSED",
+  "coverage": "complete",
+  "freshness": "STALE",
+  "acceptance": "PENDING",
+  "artifacts": []
+}"
+`;

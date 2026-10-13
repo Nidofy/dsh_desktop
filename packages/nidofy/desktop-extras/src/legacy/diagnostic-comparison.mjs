@@ -11,7 +11,7 @@ export function normalizeReport(input) {
     ...fields(r,['id','session','purpose','startedAt','endedAt','provider','model','effort','status'],text),
     ...fields(r,['durationMs','firstOutputMs','firstTextMs','turn','step','toolCallCount','messageCount','toolCount'],number),
     ...(r.configuration?{configuration:requestConfiguration(r.configuration)}:{}),
-    usage:fields(r.usage,numbers,number),
+    usage:{...fields(r.usage,numbers,number),aggregateInputTokens:[r.usage?.inputTokens,r.usage?.cacheReadTokens,r.usage?.cacheWriteTokens].every(value=>Number.isSafeInteger(value)&&value>=0)?r.usage.inputTokens+r.usage.cacheReadTokens+r.usage.cacheWriteTokens:null},
     fingerprint:{complete:r.fingerprint?.complete===true,...fields(r.fingerprint,['system','tools','toolsSerializationOrder','skillCatalog','projectInstructions','model','config'],hash)},
     continuity:{...fields(r.continuity,['sequence','timeSincePreviousComparableRequest','interveningRequestCount'],number),reasons:(r.continuity?.reasons??[]).slice(0,16).map(text)},
   }));
@@ -53,12 +53,12 @@ export function summarize(report) {
   const total=eligible.reduce((n,r)=>n+r.usage.aggregateInputTokens,0);
   const intervals=rows.map(r=>[Date.parse(r.startedAt),Date.parse(r.startedAt)+r.durationMs]);
   const tools=report.tools??[], top=tools.filter(t=>!t.nested), groups=Object.create(null);
-  for(const t of tools){const key=(t.nested?'PTC / ':'')+t.name;const g=groups[key]??={calls:0,completed:0,errors:0,unsettled:0,durationMs:0};g.calls++;g.completed+=t.status==='completed';g.errors+=t.status==='error';g.unsettled+=t.status==='running';g.durationMs+=t.durationMs??0;}
+  for(const t of tools){const key=(t.nested?'PTC / ':'')+t.name;const g=groups[key]??={calls:0,completed:0,errors:0,unsettled:0,durationMs:0};g.calls++;g.completed+=t.status==='completed';g.errors+=t.status==='error';g.unsettled+=!['completed','error'].includes(t.status);g.durationMs+=t.durationMs??0;}
   const seen=new Set();let repeatedReads=0;
   for(const t of tools.filter(t=>t.name==='read'&&t.targetHash)){const k=t.session+':'+t.targetHash;if(seen.has(k))repeatedReads++;seen.add(k);}
   const start=Date.parse(report.measurement?.startedAt),end=Date.parse(report.measurement?.endedAt);
   return {requests:rows.length,...Object.fromEntries(numbers.map(k=>[k,sum(k)])),
-    cacheRate:{value:total?eligible.reduce((n,r)=>n+r.usage.cacheReadTokens,0)/total:null,known:eligible.length,total:rows.length},
+    cacheRate:{value:total&&eligible.length===rows.length?eligible.reduce((n,r)=>n+r.usage.cacheReadTokens,0)/total:null,known:eligible.length,total:rows.length},
     wallMs:Number.isFinite(start)&&end>=start?end-start:null,
     requestUnionMs:unionMs(intervals),toolUnionMs:report.toolsAvailable===false?null:unionMs(top.filter(t=>t.durationMs!=null).map(t=>[Date.parse(t.startedAt),Date.parse(t.startedAt)+t.durationMs])),
     toolCalls:report.toolsAvailable===false?null:top.length,nestedCalls:report.toolsAvailable===false?null:tools.length-top.length,toolGroups:groups,repeatedReads:report.toolsAvailable===false?null:repeatedReads,

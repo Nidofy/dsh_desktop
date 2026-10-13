@@ -3,11 +3,9 @@
  * from the canonical workspace path, whose ACEs form that workspace's write
  * allowlist. Every confined execution of the same workspace — across
  * sessions, server restarts, and calls — carries the SAME write SID, so the
- * workspace-root ACE materializes once per workspace per machine (the
- * grant's exact-ACE skip then makes every later provision O(1)) instead of
- * once per session. The SID's power is defined solely by the ACEs that name
- * it (which exist only on the workspace tree and the session's private temp
- * directory), and only tokens minted for that workspace carry it — the SID
+ * active workspace leases can share one grant without relabeling on reentry.
+ * The SID's power is defined solely by the ACEs that name it in the workspace,
+ * and only tokens minted for that workspace carry it — the SID
  * string itself is not a secret. Temporary directories use a separate,
  * per-directory identity from {@link tempWriteSid}; sharing the workspace
  * identity with temp would let sibling sessions write one another's temp
@@ -17,10 +15,9 @@
  * Windows — the sandbox-policy `resolveWorkspaceRoot` already applies it):
  * canonicalization converges case/alias spellings, so two spellings of one
  * workspace derive one SID; an as-spelled fallback path would mint a second
- * identity for the same directory (self-healing, at the cost of one extra
- * tree propagation). Renaming the workspace directory derives a new SID —
- * the old standing ACEs are inert residue, and the next session re-propagates
- * once.
+ * identity for the same directory, which the recovery lease rejects.
+ * Renaming a workspace derives a new SID; finish its leases before moving it.
+ * A missing or replaced live root retains its journal for operator recovery.
  * @module @deepseek-ai/dsh-sandbox-windows-acl/workspace-sid
  */
 

@@ -126,6 +126,11 @@ export interface SettingsHeaderOwnerProps {
 export interface SettingsSectionOwnerProps {
   /** Close the settings panel (the shell owns the open state). */
   close: () => void
+  /** Register a mounted editor's asynchronous discard decision for section changes and panel dismissal.
+   * @param guard - Returns true only when the user permits leaving the editor.
+   * @returns Disposer removing this editor's guard.
+   */
+  registerNavigationGuard?: ((guard: () => Promise<boolean>) => () => void) | undefined
 }
 
 /** Owner share of the currently active settings-backed onboarding step. */

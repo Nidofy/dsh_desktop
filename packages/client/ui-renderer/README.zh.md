@@ -103,3 +103,5 @@ React、React DOM、Cordis、ui-slots 与 ui-primitives 通过 Web 外壳的静�
 无。
 
 </details>
+
+根或entry渲染失败显示本地化恢复说明与显式界面重载。重载不重启Host或重放agent请求；错误报告与entry隔离继续有效。

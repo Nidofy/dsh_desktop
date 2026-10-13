@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { resolveDesktopDistribution } from '../scripts/desktop-distribution.mjs'
 import { resolveDesktopPolicyEnvironment } from '../scripts/desktop-policy-environment.mjs'
 import { validateDesktopPackageEnvironment } from '../scripts/desktop-package-environment.mjs'
@@ -8,6 +9,22 @@ import { desktopTargetBuildPaths, resolveDesktopTargetBuildPaths } from '../scri
 
 const environment = { DSH_DESKTOP_DISTRIBUTION: 'intranet', DSH_DESKTOP_APP_ID: 'io.github.nidofy.dsh.intranet' }
 const personal = { DSH_DESKTOP_DISTRIBUTION: 'personal', DSH_DESKTOP_APP_ID: 'io.github.nidofy.dsh.desktop' }
+
+it.each([environment, personal])('preserves private distribution data on OS-launched uninstall: $DSH_DESKTOP_DISTRIBUTION', (distribution) => {
+  const config = createElectronBuilderConfig({ ...distribution, DSH_DESKTOP_UNSIGNED: '1' }, 'win32', 'x64')
+  const include = readFileSync(config.nsis.include, 'utf8')
+  expect(config.nsis.include.replaceAll('\\', '/')).toMatch(/\/installer-private\.nsh$/)
+  expect(include).toContain('!define DSH_KEEP_DISTRIBUTION_DATA')
+  expect(include).toContain('installer.nsh')
+})
+
+it('retains the upstream uninstall cleanup policy without private distribution metadata', () => {
+  const config = createElectronBuilderConfig({ DSH_DESKTOP_APP_ID: 'com.example.installer', DSH_DESKTOP_UNSIGNED: '1',
+    DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+    DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }) }, 'win32', 'x64')
+  expect(config.nsis.include.replaceAll('\\', '/')).toMatch(/\/installer\.nsh$/)
+  expect(readFileSync(config.nsis.include, 'utf8')).not.toContain('!define DSH_KEEP_DISTRIBUTION_DATA')
+})
 
 it('keeps personal identity and data separate from intranet and upstream', () => {
   const policy = readDesktopDistribution(resolveDesktopDistribution(personal))

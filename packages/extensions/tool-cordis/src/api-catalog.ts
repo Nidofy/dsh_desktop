@@ -687,6 +687,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Persist complete raw configs and apply them through the normal Loader path.',
     methods: [
       {
+        signature: 'registerValidator(prepare: (entry: Entry, config: Record<string, unknown>) => Promise<() => Promise<void>>): () => void',
+        description: 'Register application authorization for complete candidate configurations.',
+        parameters: [{ name: 'prepare', description: 'Captures authorization before persistence and returns its final live check.' }],
+        returns: 'Disposer; the registering application owns its lifetime.',
+      },
+      {
         signature: 'entries(): Entry[]',
         description: 'Addressable profile rows; nested Includes have independent configuration ownership.',
         parameters: [],
@@ -1547,6 +1553,137 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'nidofyCacheInput',
+    summary: 'Read-only product preference owner; a captured preference is distinct from a subsequently applied payload hint.',
+    description: 'Read-only product preference owner; a captured preference is distinct from a subsequently applied payload hint.',
+    methods: [
+      {
+        signature: 'readonly identity: symbol = Symbol(\'nidofyCacheInput\')',
+        description: 'Stable owner identity across caller-traced service proxies; reload revokes prior captures.',
+        parameters: [],
+      },
+      {
+        signature: 'input(): DesktopCacheInput',
+        description: 'Capture the current actual preference/mount state without preparing a payload, sending or reading credentials.',
+        parameters: [],
+        returns: 'Detached complete policy and preference revision. Enabled/mounted disagreement is an unfinished feature transition.',
+      },
+    ],
+  },
+  {
+    key: 'nidofyNotebookV2',
+    summary: 'Committed v2 reader shared by product tools, prompts and authenticated UI.',
+    description: 'Committed v2 reader shared by product tools, prompts and authenticated UI.',
+    methods: [
+      {
+        signature: 'read(sessionId: string, signal: AbortSignal): Promise<NotebookV2>',
+        description: 'Read selected state against the actual persistence generation without notebook writes or recovery.',
+        parameters: [{ name: 'sessionId', description: 'owning session.' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'the selected state with both committed cursors.',
+      },
+      {
+        signature: 'synchronize(sessionId: string, signal: AbortSignal): Promise<NotebookV2>',
+        description: 'Explicitly reconcile durable candidates, including startup conversion.',
+        parameters: [{ name: 'sessionId', description: 'owning session.' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'the committed state after reconciliation; failures remain visible in synchronization status.',
+      },
+      {
+        signature: 'synchronization(sessionId: string): NotebookSynchronization',
+        description: 'Read organization progress without scanning or modifying storage.',
+        parameters: [{ name: 'sessionId', description: 'owning session.' }],
+        returns: 'detached process-local progress, idle before synchronization.',
+      },
+      {
+        signature: 'input(sessionId: string, signal: AbortSignal): Promise<NotebookInputCapture>',
+        description: 'Capture the exact input used by prompt assembly without synchronization, compaction or note writes.',
+        parameters: [{ name: 'sessionId', description: 'Explicit owning Session; unrelated Sessions are never selected by inference.' }, { name: 'signal', description: 'Caller lifetime; a settings change during capture refuses the result.' }],
+        returns: 'Complete note text, physical scope, committed revision and actual rendering bounds/settings.',
+      },
+    ],
+  },
+  {
+    key: 'nidofyStorage',
+    summary: 'Host owner of the quota client and write contexts; no in-memory map grants global capacity.',
+    description: 'Host owner of the quota client and write contexts; no in-memory map grants global capacity.',
+    methods: [
+      {
+        signature: 'readonly epoch: HostEpoch = brandString<HostEpoch>(randomUUID())',
+        description: 'Registration identity for this owner instance; process creation time proves its lifetime.',
+        parameters: [],
+      },
+      {
+        signature: 'async inspect(operationId: StorageOperationId): Promise<QuotaInspection>',
+        description: 'Query after a lost acknowledgement; unknown is never authorization to replay.',
+        parameters: [{ name: 'operationId', description: 'Retained operation identity.' }],
+        returns: 'Persisted reserved/settled observation or explicit unknown.',
+      },
+      {
+        signature: 'async status(): Promise<QuotaStatus>',
+        description: 'Observe cached measurement and outstanding charges without reclaiming or rescanning. Journal opening retains its sync/partial-tail repair rules and may register this Host.',
+        parameters: [],
+        returns: 'Ledger state without private authority; a current scan requires explicit recover.',
+      },
+      {
+        signature: 'async configure(limitBytes: number): Promise<Record<string, unknown>>',
+        description: 'Change admission capacity without revoking any existing ordinary or terminal grant.',
+        parameters: [{ name: 'limitBytes', description: 'New managed limit.' }],
+        returns: 'Sync-confirmed setting.',
+      },
+      {
+        signature: 'async recover(): Promise<QuotaStatus>',
+        description: 'Recover only when all recorded processes/writers are confirmed drained.',
+        parameters: [],
+        returns: 'The new measured total, or a retained charge/refusal when identity or scan is unknown.',
+      },
+      {
+        signature: 'async reserve(scope: string, maxWriteBytes: number, terminalBytes: number, operationId: StorageOperationId = brandString<StorageOperationId>(randomUUID())): Promise<QuotaLease>',
+        description: 'Reserve a write peak and a separate terminal allowance before starting side effects.',
+        parameters: [{ name: 'scope', description: 'Trusted writer/command kind.' }, { name: 'maxWriteBytes', description: 'Upper bound including temporary copies.' }, { name: 'terminalBytes', description: 'Independent allowance for terminal records.' }, { name: 'operationId', description: 'Caller-retained identity, generated before sending the request.' }],
+        returns: 'A process-owned capability whose release rescans only after writers drain.',
+      },
+      {
+        signature: 'async importRoot(): Promise<string>',
+        description: 'Resolve imports through the native physical root, including an explicitly adopted home.',
+        parameters: [],
+        returns: 'Original distribution imports path; no import destination is created.',
+      },
+      {
+        signature: 'async importOperation(action: \'inspect\' | \'review\' | \'recover\' | \'adopt\', operationId: StorageOperationId): Promise<Record<string, unknown>>',
+        description: 'Inspect or explicitly reconcile/adopt a persisted import; never replays its content writer.',
+        parameters: [{ name: 'action', description: 'Inspect reads ledger state; review verifies the committed directory and receipt. Recover/adopt are mutations.' }, { name: 'operationId', description: 'Caller-retained import and quota identity.' }],
+        returns: 'Persisted phase and original physical-root paths, without a capability.',
+      },
+      {
+        signature: 'async beginImport(operationId: StorageOperationId, fingerprint: string, maxWriteBytes: number): Promise<ImportLease>',
+        description: 'Admit one fresh isolated import with a cumulative physical-write ceiling.',
+        parameters: [{ name: 'operationId', description: 'Durable import/quota identity; an existing identity refuses replay.' }, { name: 'fingerprint', description: 'Validated source preview fingerprint.' }, { name: 'maxWriteBytes', description: 'Explicit ceiling covering copies, successors and metadata temporaries.' }],
+        returns: 'Private writer/publication authority bound by native to the exact staging identity.',
+      },
+      {
+        signature: 'async write<T>(path: string, bytes: number, work: () => Promise<T>): Promise<T>',
+        description: 'Run a bounded Node write inside an existing lease or acquire a new one.',
+        parameters: [{ name: 'path', description: 'Owned path inside the home, never a project or runtime target.' }, { name: 'bytes', description: 'Complete additional write peak.' }, { name: 'work', description: 'Actual writer completion promise.' }],
+        returns: 'Writer result; a settlement failure retains charges and does not undo its commit.',
+      },
+      {
+        signature: 'async validatePath(path: string): Promise<void>',
+        description: 'Refuse unmeasured destinations and existing linked ancestors before admission.',
+        parameters: [{ name: 'path', description: 'Managed home destination, including a not-yet-created file.' }],
+      },
+      {
+        signature: 'async native(command: Record<string, unknown>): Promise<Record<string, unknown>>',
+        description: 'Execute native commands using capabilities absent from UI/model JSON.',
+        parameters: [{ name: 'command', description: 'Trusted protection dispatcher command.' }],
+        returns: 'Helper result after its actual process exits; unknown work retains the reservation.',
+      },
+      {
+        signature: 'async close(): Promise<void>',
+        description: 'Stop admission and await all acquired child/writer completions; unknown leases remain persisted.',
+        parameters: [],
+      },
+    ],
+  },
+  {
     key: 'officeToPdf',
     summary: 'A provider lifetime owns all converters, queued calls, and temporary files.',
     description: 'A provider lifetime owns all converters, queued calls, and temporary files.',
@@ -1593,6 +1730,24 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Create an independent byte-bounded Session-log channel. Authorization and redaction precede reporting; the consumer owns shutdown and its outer deadline.',
         parameters: [{ name: 'options', description: 'transport, scope, resource, queue, and diagnostic settings selected by the consumer.' }],
         returns: 'the caller-owned channel, preserving complete accepted events within the request byte ceiling.',
+      },
+    ],
+  },
+  {
+    key: 'outboundHttp',
+    summary: 'Application provider consumed by model adapters, discovery and MCP HTTP.',
+    description: 'Application provider consumed by model adapters, discovery and MCP HTTP.',
+    methods: [
+      {
+        signature: 'prepare(url: string): Promise<HttpEgressLease>',
+        description: 'Capture the allowed endpoint and immutable authorization revision.',
+        parameters: [{ name: 'url', description: 'Provider\'s resolved HTTP endpoint without credentials, query or fragment.' }],
+        returns: 'Authorization captured before authentication or payload preparation.',
+      },
+      {
+        signature: 'close?(): Promise<void>',
+        description: 'Abort and drain owned transports when the supplying application closes.',
+        parameters: [],
       },
     ],
   },
@@ -2131,6 +2286,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         throws: ['{AggregateError} naming each session whose flush failed; the remaining handles still flush.'],
       },
       {
+        signature: 'observeDurable(_id: SessionId, _options?: SessionPersistenceOpenOptions): Promise<SessionDurableObservation>',
+        description: 'Observe a confirmed raw prefix without relying on best-effort read visibility. Providers without this capability refuse explicitly; ordinary read is never a fallback.',
+        parameters: [{ name: '_id', description: 'stored session to observe.' }, { name: '_options', description: 'cancellation for observation work.' }],
+        returns: 'detached metadata and raw events paired with their physical generation and durable cut.',
+      },
+      {
+        signature: 'withGeneration<T>(_id: SessionId, _generation: SessionPersistenceGeneration, _publish: () => Promise<T>, _options?: SessionPersistenceOpenOptions): Promise<T>',
+        description: 'Execute a derived-state publication while excluding generation replacement and migration. The callback must not mutate this session or recursively acquire this protection. Providers refuse if the expected generation is no longer selected or exclusion cannot be obtained. The protection remains held across asynchronous admission and ends after callback settlement.',
+        parameters: [{ name: '_id', description: 'session whose physical generation must remain selected.' }, { name: '_generation', description: 'identity captured by observeDurable.' }, { name: '_publish', description: 'derived-state publication, including its admission and commit point.' }, { name: '_options', description: 'cancellation before invoking the callback.' }],
+        returns: 'the callback result; an already committed result must not be undone by later logging.',
+      },
+      {
         signature: 'abstract stat(id: SessionId, options?: SessionPersistenceStatOptions): Promise<SessionPersistenceSnapshot | undefined>',
         description: 'Observe one stored session without reading its event log or taking ownership.\n\nThe snapshot\'s `revision` is an opaque change token comparable only against revisions from the same service instance and session id: equal revisions may be treated as an unchanged log; unequal revisions promise nothing. Write-ownership churn does not change a revision. It exists for derived read-model caches keyed off `stat`/`list`; it plays no part in open, read, or resume.',
         parameters: [{ name: 'id', description: 'the stored session to observe.' }, { name: 'options', description: 'optional cancellation.' }],
@@ -2613,6 +2780,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Apply implementation-owned defaults and caps to a request before execution.',
         parameters: [{ name: 'request', description: 'the caller\'s request; omitted fields get this implementation\'s defaults, capped fields are clamped.' }],
         returns: 'the fully-specified spec to hand to {@link execute}.',
+      },
+      {
+        signature: 'verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null>',
+        description: 'Observe provider-owned executable paths and current settings without preparing or starting a process.',
+        parameters: [{ name: '_spec', description: 'Actual resolved execution settings selected for the run.' }],
+        returns: 'Null when the provider cannot enumerate its own execution inputs; verification coverage must then remain unknown.',
       },
       {
         signature: 'abstract execute(spec: ShellExecSpec): Promise<ShellExecution>',
@@ -5396,6 +5569,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface HostConnectionRpc {\n    handle(channel: string, handler: ConnectionRpcHandler): () => Promise<void>;\n    intercept(channel: \'/api\', matches: ConnectionRpcEndpointMatcher, handler: ConnectionRpcHandler): () => Promise<void>;\n}',
   },
   {
+    name: 'HostEpoch',
+    declaration: 'export type HostEpoch = Branded<\'nidofy.StorageHostEpoch\'>;',
+  },
+  {
+    name: 'HttpEgressLease',
+    declaration: 'export interface HttpEgressLease {\n    readonly restricted: boolean;\n    readonly revision: Readonly<{\n        distribution: string;\n        profile: number;\n    }>;\n    checkConfiguration(): Promise<void>;\n    check(sessionId?: SessionId): Promise<void>;\n    fetchFor(sessionId?: SessionId): typeof globalThis.fetch;\n}',
+  },
+  {
     name: 'ImageAttachmentAccess',
     declaration: 'export interface ImageAttachmentAccess {\n    readonlyPath: string;\n}',
   },
@@ -5422,6 +5603,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ImageVariantId',
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
+  },
+  {
+    name: 'ImportLease',
+    declaration: 'export interface ImportLease extends QuotaLease {\n    write<T>(path: string, bytes: number, work: () => Promise<T>): Promise<T>;\n    publish(): Promise<Record<string, unknown>>;\n    abort(): Promise<Record<string, unknown>>;\n}',
   },
   {
     name: 'IncompatiblePlugin',
@@ -5764,6 +5949,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface LspRange {\n    readonly start: LspPosition;\n    readonly end: LspPosition;\n}',
   },
   {
+    name: 'ManagedRootId',
+    declaration: 'export type ManagedRootId = Branded<\'nidofy.ManagedRootId\'>;',
+  },
+  {
     name: 'ManagementError',
     declaration: 'export interface ManagementError {\n    code: ReadOnlyReason | \'unknown-plugin\' | \'invalid-spec\' | \'ambiguous-install\' | \'not-bundle\' | \'not-removable\' | \'stop-profile\' | \'bundle-in-use\' | \'stale-approval\' | \'incompatible-version\' | \'operation-error\';\n    diagnostic?: string;\n    incompatible?: IncompatiblePlugin[];\n}',
   },
@@ -5924,8 +6113,24 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface Notebook {\n    schemaVersion: 1;\n    sessionId: string;\n    revision: number;\n    sourceThrough: number;\n    entries: Note[];\n}',
   },
   {
+    name: 'NotebookCursors',
+    declaration: 'export interface NotebookCursors {\n    evidenceThrough: number;\n    commitThrough: number;\n}',
+  },
+  {
     name: 'NotebookLimits',
     declaration: 'export interface NotebookLimits {\n    maxEntries: number;\n    maxBytes: number;\n}',
+  },
+  {
+    name: 'NotebookScope',
+    declaration: 'export interface NotebookScope {\n    sessionId: string;\n    generation: SessionPersistenceGeneration;\n}',
+  },
+  {
+    name: 'NotebookSynchronization',
+    declaration: 'export interface NotebookSynchronization {\n    phase: \'idle\' | \'organizing\' | \'ready\' | \'failed\';\n    synchronizedThrough: number;\n    diagnostic?: string;\n}',
+  },
+  {
+    name: 'NotebookV2',
+    declaration: 'export interface NotebookV2 {\n    schemaVersion: 2;\n    scope: NotebookScope;\n    revision: number;\n    cursors: NotebookCursors;\n    active: readonly Note[];\n    historyRevision: number;\n}',
   },
   {
     name: 'NotFutureError',
@@ -6009,7 +6214,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PiAiAdapterOptions',
-    declaration: 'export interface PiAiAdapterOptions {\n    preparePayload?: (scope: PiAiPayloadScope) => SimpleStreamOptions[\'onPayload\'];\n    profiles: () => ReadonlyMap<string, ResolvedPiAiProviderProfile>;\n    resolveApiKey: (provider: string, profile: ResolvedPiAiProviderProfile) => Promise<string | undefined>;\n    auth: PiAiAuthInjection;\n    resolveAttachments?: () => AttachmentStore | undefined;\n    resolveImageAccess?: (attachments: AttachmentStore, ref: ImageAttachmentRef) => ImageAttachmentAccess | undefined;\n    onReplayDegrade?: (detail: {\n        provider: string;\n        model: string;\n        reason: string;\n    }) => void;\n}',
+    declaration: 'export interface PiAiAdapterOptions {\n    prepareHttp?: (url: string) => Promise<HttpEgressLease | undefined>;\n    preparePayload?: (scope: PiAiPayloadScope) => SimpleStreamOptions[\'onPayload\'];\n    profiles: () => ReadonlyMap<string, ResolvedPiAiProviderProfile>;\n    resolveApiKey: (provider: string, profile: ResolvedPiAiProviderProfile) => Promise<string | undefined>;\n    auth: PiAiAuthInjection;\n    resolveAttachments?: () => AttachmentStore | undefined;\n    resolveImageAccess?: (attachments: AttachmentStore, ref: ImageAttachmentRef) => ImageAttachmentAccess | undefined;\n    onReplayDegrade?: (detail: {\n        provider: string;\n        model: string;\n        reason: string;\n    }) => void;\n}',
   },
   {
     name: 'PiAiAuthInjection',
@@ -6274,6 +6479,26 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'QueueAction',
     declaration: 'export type QueueAction = {\n    readonly kind: \'edit\';\n    readonly content: readonly TextBlock[];\n} | {\n    readonly kind: \'remove\';\n} | {\n    readonly kind: \'steer\';\n};',
+  },
+  {
+    name: 'QuotaInspection',
+    declaration: 'export type QuotaInspection = {\n    status: \'unknown\';\n} | (QuotaMetadata & {\n    status: \'reserved\' | \'settled\';\n    phase: string;\n});',
+  },
+  {
+    name: 'QuotaLease',
+    declaration: 'export interface QuotaLease extends QuotaMetadata {\n    run<T>(work: () => Promise<T>): Promise<T>;\n    terminal<T>(work: () => Promise<T>): Promise<T>;\n    release(): Promise<QuotaInspection>;\n}',
+  },
+  {
+    name: 'QuotaLeaseId',
+    declaration: 'export type QuotaLeaseId = Branded<\'nidofy.QuotaLeaseId\'>;',
+  },
+  {
+    name: 'QuotaMetadata',
+    declaration: 'export interface QuotaMetadata {\n    readonly id: QuotaLeaseId;\n    readonly operationId: StorageOperationId;\n    readonly rootId: ManagedRootId;\n    readonly reservedBytes: number;\n    readonly terminalBytes: number;\n}',
+  },
+  {
+    name: 'QuotaStatus',
+    declaration: 'export interface QuotaStatus {\n    rootId: ManagedRootId;\n    drained: boolean | null;\n    measuredBytes: number | null;\n    observedBytes: number;\n    reservedBytes: number;\n    ordinaryBytes: number;\n    terminalBytes: number;\n    limitBytes: number;\n    safetyBytes: number;\n    pendingOperations: number;\n    scan: \'not-run\' | \'complete\' | \'incomplete\';\n    ledgerBytes: number;\n    ledgerLimitBytes: number;\n}',
   },
   {
     name: 'ReadFileLine',
@@ -6644,6 +6869,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SessionCreateValue {\n    readonly sessionId: SessionId;\n    readonly agentPreset?: string;\n}',
   },
   {
+    name: 'SessionDurableObservation',
+    declaration: 'export interface SessionDurableObservation extends SessionInspection {\n    readonly generation: SessionPersistenceGeneration;\n    readonly durableThrough: number;\n}',
+  },
+  {
     name: 'SessionEvent',
     declaration: 'export type SessionEvent<T extends SessionEventType = SessionEventType> = {\n    [K in SessionEventType]: {\n        type: K;\n        seq: SessionSeq;\n        time: number;\n        data: SessionEventMap[K];\n        ignorable?: true;\n    } & (K extends SurfaceEventType ? SurfaceIntent<K> : {\n        surfaceOp?: never;\n        sourceEventSeqs?: never;\n    });\n}[T];',
   },
@@ -6854,6 +7083,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionPersistenceCreateOptions',
     declaration: 'export interface SessionPersistenceCreateOptions {\n    readonly signal?: AbortSignal;\n    readonly inheritedEventCount?: SessionLogOffset;\n}',
+  },
+  {
+    name: 'SessionPersistenceGeneration',
+    declaration: 'export type SessionPersistenceGeneration = Branded<\'SessionPersistenceGeneration\'>;',
   },
   {
     name: 'SessionPersistenceListOptions',
@@ -7172,6 +7405,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ShellSandboxInfo {\n    mode: SandboxMode;\n    denied: boolean;\n    enforcement?: SandboxEnforcement;\n    runnerFailed?: boolean;\n}',
   },
   {
+    name: 'ShellVerificationInputs',
+    declaration: 'export interface ShellVerificationInputs {\n    executablePaths: readonly string[];\n    configuration: object;\n}',
+  },
+  {
     name: 'SignInAttemptId',
     declaration: 'export type SignInAttemptId = Branded<\'SignInAttemptId\'>;',
   },
@@ -7354,6 +7591,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'StorageForms',
     declaration: 'export interface StorageForms {\n}',
+  },
+  {
+    name: 'StorageOperationId',
+    declaration: 'export type StorageOperationId = Branded<\'nidofy.StorageOperationId\'>;',
   },
   {
     name: 'StoredImageAttachment',

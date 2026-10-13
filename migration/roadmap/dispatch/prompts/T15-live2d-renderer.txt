@@ -1,32 +1,18 @@
 T15｜固定单模型 Live2D 渲染插件
-推荐模型：Claude Sonnet 5.5；设置建议：Thinking
-推荐复核：GPT-6.1-Sol；资源生命周期 Opus 抽查
-阶段：S4；前置依赖：T14
-建议拆分：2 个交付单元：可运行原型→生命周期与打包
-模型由我在客户端中选择，本提示词不代表自动切换或调用其他模型。
+默认模型：GPT-6.1-Sol / Codex
+设置：按实际复杂度，通常 high
 
-你正在完成一个人工分派的 DSH Electron 开发任务。请在授权范围内直接实施、验证并提交可审查结果，不只给计划。T00 是基线/设计任务，T25 只做独立验收，T26 只做文档，其余按下文实现。不要扩展到其他任务，不自行启动子代理、聊天或后台自动化。
-
-本任务工作目录：D:/Documents/FeiyangChen/devApps/dshWinUi/electron/.build/dispatch/worktrees/T15
-执行依据：当前任务目录中的实际代码、配置、接口和测试状态，包括已有未提交改动；不要求填写或反复校验 Git SHA。
-请先确认该 worktree 已由调度者准备，检查实际文件和前置能力是否就绪；续做时读取已有实现与交接，保留未提交改动。提交记录仅用于可选追溯，不因提交号缺失或变化而阻塞。禁止在主 checkout 或其他任务目录代替执行。
-
-共同前提：
-- 所有开发写入、worktree、报告与测试数据都在 D:/Documents/FeiyangChen/devApps/dshWinUi/electron 内。用户目录、真实应用 home、真实凭据和工程不作为测试对象；运行时如需 OS 临时/平台存储，使用隔离测试身份并记录。
-- 先阅读当前 worktree 的 AGENTS.md、适用下级 AGENTS.md、migration/roadmap/dispatch/SCOPE.md；改 packages 前读 docs/architecture.md，生命周期/并发/原生工作前读 docs/defensive-patterns.md。按适用规则更新 README/JSDoc、数据格式确认与升级指南；用户任务范围优先，不擅改全仓规范。
-- 除 T00 外，阅读已经集成的 migration/roadmap/contracts-v1.md 和本任务前置 handoff。前置接口或必需实现实际缺失时报告 DEPENDENCY_BLOCKED，不虚构接口并开展依赖实现；独立的源码调查和测试设计可以继续。
-- 保持官方 Agent Loop、Session、Shell、重试、权限与压缩事务所有权。任何模型可见输入都有真实可重建日志。观察者和角色不能制造执行成功事实。
-- 本任务文件归属以 T00 台账为准。跨 owner 变更提出最小接线说明，不私改他人文件；单一行为变更所需的接口消费者更新不可遗漏，由集成人员统一接线。新增依赖/锁文件/根 tsconfig/bundle/API 聚合接线归集成人员，不并行重装依赖。
-- 每个 worktree 独立 node_modules、lib、测试 home、日志、端口与原生输出目录，不把主 checkout 的可变目录用链接共享。使用锁定工具链，不无意升级依赖。
-- 写行为测试并按仓库要求补真实 Loader/Session 集成、可见行为快照；不删失败测试、不把异常吞成成功、不用桩证明端到端完工。只报告实际运行命令。现有依赖正常时可直接用 node node_modules/vitest/vitest.mjs 运行选定测试；首次独立 worktree 的依赖准备由 T00/调度者安排，不能假设现成。
-- 在途失败、取消和未知结果不得自动重放有副作用操作。连续两轮修复仍出现同一根因时输出最小复现和两轮证据，交回集成审查，避免持续扩大补丁。
-- 不 push、merge 到主线、发布、签名分发、迁移真实数据或调用真实计费服务。允许在自己的任务分支形成局部提交；不使用 git reset --hard、git clean 或覆盖用户已有修改。
+执行模式：读取 Electron 主目录 migration/roadmap/dispatch/CONTINUOUS.md 与 NEXT_HANDOFF.md，使用 SOL_CONTINUE.txt（Astra 用 ASTRA_CONTINUE.txt）持续推进。本任务是功能切片，不要求独立 review、R integration 或新 worktree；当前 Sol/Astra 有权完成本任务及必要的共享接线、消费者、测试、配置和后继任务。旧“交 R”均指当前代码作者。
+默认工作目录：D:/Documents/FeiyangChen/devApps/dshWinUi/electron
+按实际代码、配置和未提交改动判断，不校验 SHA。历史来源工作树仅用于接收已有成果，不重新初始化。前置能力：T14；旧阶段 S4 只作范围参考。
 
 任务目标：
 为已有角色业务加入离线 Live2D 表现，失败可退回立绘。
 
+素材现状：读取 migration/assets/live2d/README.md 和 bluewhale/model-v0.1.0/README.md。新增 runtime/bluewhale.model3.json、真实 moc3、2048 纹理、cdi3 和 Idle motion3，已在官方 Viewer 加载与播放；源工程为 source/bluewhale.cmo3，导出目标 SDK 5.3。仅 ParamBodySway 实际绑定，默认参数表不代表眨眼、口型或物理能力。深色背景拆层接缝待修，技术接入可继续，最终视觉验收不能标通过。不要再因“无 moc3”记录 ASSET_BLOCKED；仍须检查实际文件、Core 兼容性与发行条件。详见素材目录内 T15_HANDOFF_PROMPT.txt。
+
 允许的主要修改范围：
-companion-live2d 包、固定资源清单和测试；配套 bundle 接线交集成人员。
+companion-live2d 包、固定资源清单和测试；配套 bundle 接线由当棒完成。
 
 必须完成：
 1. 使用实际可取得且授权明确的固定模型，锁定 Framework/Core/模型/纹理来源和摘要；缺资产时交付适配器与静态回退但标 ASSET_BLOCKED，不冒称可运行完成。
@@ -42,9 +28,4 @@ companion-live2d 包、固定资源清单和测试；配套 bundle 接线交集�
 本任务测试重点：
 真实资产 smoke、生命周期及 context loss、离线打包资源闭包、100 次启停、性能记录。
 
-交付要求：
-1. 每个可独立审查的交付单元提交一次；报告实际代码状态、依赖能力与变更文件范围，提交前核对实际变更路径；提交号仅可选记录，不作为开工或验收门槛。
-2. 在 migration/roadmap/handoffs/T15.md 交付：范围和实际行为、文件列表、接口变化、迁移/回退、测试命令/退出码/结果/实际受测代码状态、未执行验证、风险、需要集成人员接线的最小清单。
-3. 大日志和截图放当前 worktree 的 .build/dispatch/evidence/T15/；handoff 保存精简可复核的证据与摘要，且说明可重跑步骤。禁止记录 Key 或真实敏感数据。
-4. 用 READY_FOR_REVIEW、DEPENDENCY_BLOCKED、ENVIRONMENT_BLOCKED 或 PARTIAL 标记作者状态；只有独立审查与集成验收后才是 INTEGRATED/QUALIFIED。
-5. 最后给出一段可直接交给复核模型的摘要。不要把“代码已写”或“单元通过”表述成最终安装包已验收。
+交付：完成当前行为与必要验证后继续下一个可实施单元；仅满足 CONTINUOUS 的转交条件或真实外部/会话限制才结束。结束时更新 NEXT_HANDOFF.md、NEXT_PROMPT.txt 和一份简短 relay 记录，最终贴出下一棒 prompt。不把 PARTIAL/NOT_RUN 写成通过。

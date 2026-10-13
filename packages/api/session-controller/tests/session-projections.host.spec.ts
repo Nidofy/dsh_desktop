@@ -215,7 +215,7 @@ describe('session.history projections block', () => {
     })
 
     session.append('request/header', {
-      header: { config: selected }, reason: 'initial',
+      header: { config: { ...selected, provider: 'revision-route', providerIdentity: selected.provider } }, reason: 'initial',
     })
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
       lastUsed: selected,

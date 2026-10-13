@@ -94,6 +94,7 @@ function mount(
     openSection: vi.fn(),
     useSessions: unusedHook,
     useSessionStatus,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: unusedHook,
     controller,

@@ -103,3 +103,5 @@ These limits define when the application frame appears and how far per-region re
 None.
 
 </details>
+
+Failed root and entry rendering exposes locale-owned recovery copy and an explicit interface reload. Reloading does not restart the Host or replay an agent request; error reporting and entry isolation remain active.

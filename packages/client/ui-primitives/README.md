@@ -213,3 +213,5 @@ None.
 </details>
 
 **Runtime invariant:** No companion is published. Pure props-in React atoms with no Cordis API — no events, no services, no mutable cross-plugin state; rendering contracts are asserted directly by this package's component specs.
+
+Markdown fences bound their vertical viewport while preserving the complete selectable and copyable source. Incremental highlighting keeps stable nodes; this does not virtualize the conversation or alter its scroll anchoring.

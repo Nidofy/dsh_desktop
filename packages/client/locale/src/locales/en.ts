@@ -2,6 +2,8 @@ import type { CommonKey } from './zh.ts'
 
 /** en base dictionary for the common namespace, checked complete against the zh key set. */
 export const en = {
+  'ui.failed': 'This part of the interface could not be displayed. Reload the interface to reconnect; this does not restart the Host or repeat a task.',
+  'ui.reload': 'Reload interface',
   'ok': 'OK',
   'cancel': 'Cancel',
   'close': 'Close',

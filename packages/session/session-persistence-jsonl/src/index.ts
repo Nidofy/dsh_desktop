@@ -20,7 +20,8 @@ import { performance } from 'node:perf_hooks'
 import { scheduler } from 'node:timers/promises'
 import { createHash, randomBytes } from 'node:crypto'
 import {
-  SessionPersistence, SessionPersistenceRevision, SessionFormatUnsupportedError,
+  SessionPersistence, SessionPersistenceRevision, SessionPersistenceGeneration, SessionFormatUnsupportedError,
+  type SessionDurableObservation,
   SessionPersistenceCorruptionError,
   SessionAlreadyExistsError, SessionPersistenceNotFoundError,
   assertStoredId, materializeCreateHeader, sessionFormatVersionRefusal, validateStoredEvents,
@@ -49,6 +50,7 @@ import { prepareCatalogFacts } from './catalog-migration.ts'
 import {
   JsonlGenerationSourceChangedError,
   JsonlGenerationUnsupportedMigrationError,
+  JsonlGenerationWriteLimitError,
   prepareJsonlMigration,
   readStableJsonlFile,
   type JsonlGenerationFormatAdapter,
@@ -57,6 +59,19 @@ import {
 } from './generation.ts'
 
 export type { JsonlCompression } from './format.ts'
+
+/** Trusted composition admission for one historical successor, before any migration file is opened.
+ * The callback must await publication and all its cleanup; the backend enforces the measured byte limit.
+ * @param path - Absolute current-generation destination beside the retained source.
+ * @param maxWriteBytes - Actual encoded physical bytes; source and other caller metadata are excluded.
+ * @param publish - Bounded publication; cancellation before commit drains the stage and verifier.
+ * @returns The physical identity of the published generation.
+ */
+export type JsonlMigrationWriter = (
+  path: string,
+  maxWriteBytes: number,
+  publish: () => Promise<JsonlPhysicalIdentity>,
+) => Promise<JsonlPhysicalIdentity>
 
 /**
  * Internal handoff-reuse policy, not deployment configuration: a cold
@@ -267,7 +282,7 @@ class JsonlSessionPersistence extends SessionPersistence {
   /** One joinable decode/migration operation per selected historical Session file revision. */
   private readonly migrationPreparations = new Map<SessionId, MigrationPreparation>()
 
-  constructor(ctx: Context, public config: Config) {
+  constructor(ctx: Context, public config: Config, private readonly migrationWriter?: JsonlMigrationWriter) {
     super(ctx)
     /* v8 ignore next 5 -- generated catalog and Session source share one build-time version owner. */
     if (sessionFormatCatalog.currentVersion !== SESSION_FORMAT_VERSION) {
@@ -338,6 +353,8 @@ class JsonlSessionPersistence extends SessionPersistence {
    * @param access - `read` (no ownership) or `write` (atomic in-process claim).
    * @param options - optional cancellation.
    * @returns the open handle.
+   * Historical migration stops before exclusive publication on cancellation. Once publication
+   * starts, late cancellation does not reject a successful committed open; close the returned handle.
    */
   async open(id: SessionId, access: SessionAccess, options?: SessionPersistenceOpenOptions): Promise<SessionHandle> {
     options?.signal?.throwIfAborted()
@@ -384,11 +401,12 @@ class JsonlSessionPersistence extends SessionPersistence {
       options?.signal?.throwIfAborted()
       let stored: CurrentStoredLog
       if (prepared.status === 'prepared') {
-        stored = await this.publishStoredMigration(id, prepared)
+        stored = await this.publishStoredMigration(id, prepared, options?.signal)
       } else {
         stored = prepared
       }
-      options?.signal?.throwIfAborted()
+      // Migration has committed; a late cancellation must not report that publication never happened.
+      if (prepared.status !== 'prepared') options?.signal?.throwIfAborted()
       return this.tracker.adopt(new JsonlSessionHandle(this, id, stored.meta, 'write', {
         cursor: stored.events.length,
         materialized: true,
@@ -425,6 +443,75 @@ class JsonlSessionPersistence extends SessionPersistence {
    */
   flush(): Promise<void> {
     return this.tracker.flushAll()
+  }
+
+  /** @inheritdoc */
+  override observeDurable(id: SessionId, options?: SessionPersistenceOpenOptions): Promise<SessionDurableObservation> {
+    return this.protectSelected(id, async () => {
+      const signal = options?.signal
+      const selected = await this.findLog(id, signal)
+      if (!selected) throw new SessionPersistenceNotFoundError(id)
+      // The writer queue and kernel lease exclude a concurrent append/successor. Confirm the
+      // selected bytes even after a crashed writer; recovered incomplete frames remain excluded.
+      const file = await open(selected.sourcePath, 'r+')
+      try { await file.sync() } finally { await file.close() }
+      const generation = await this.physicalGeneration(selected.sourcePath)
+      const stored = await this.requireStoredLog(id, signal)
+      const count = stored.events.length - stored.recoveredTail.length
+      signal?.throwIfAborted()
+      return { meta: structuredClone(stored.meta), inheritedEventCount: stored.inheritedEventCount,
+        generation, durableThrough: count - 1, events: structuredClone(stored.events.slice(0, count)) }
+    }, options?.signal)
+  }
+
+  /** @inheritdoc */
+  override withGeneration<T>(id: SessionId, generation: SessionPersistenceGeneration, publish: () => Promise<T>,
+    options?: SessionPersistenceOpenOptions): Promise<T> {
+    return this.protectSelected(id, async () => {
+      const selected = await this.findLog(id, options?.signal)
+      if (!selected || await this.physicalGeneration(selected.sourcePath) !== generation) {
+        throw new Error('SESSION_GENERATION_CONFLICT')
+      }
+      // Historical conversion may depend on related source artifacts. Publish the verified
+      // current successor before derived state can commit against its fixed event coordinates.
+      if (selected.sourceVersion !== SESSION_FORMAT_VERSION) throw new Error('SESSION_GENERATION_MIGRATION_REQUIRED')
+      options?.signal?.throwIfAborted()
+      return publish()
+    }, options?.signal)
+  }
+
+  /** Physical file identity excludes size/timestamps changed by append and the logical format number. */
+  private async physicalGeneration(path: string): Promise<SessionPersistenceGeneration> {
+    const identity = await stat(path, { bigint: true })
+    if (identity.ino === 0n || identity.birthtimeNs === 0n) throw new Error('SESSION_PHYSICAL_IDENTITY_UNAVAILABLE')
+    return SessionPersistenceGeneration(`jsonl-file-v1:${identity.dev}:${identity.ino}:${identity.birthtimeNs}`)
+  }
+
+  /** Reuse a local writer's exclusion or acquire the same kernel lease without migrating the source. */
+  private async protectSelected<T>(id: SessionId, operation: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+    signal?.throwIfAborted()
+    await this.ensureRootEncoding()
+    const writer = this.tracker.writerOf(id)
+    if (writer) return writer.protectGeneration(async () => { signal?.throwIfAborted(); return operation() })
+    this.tracker.claimWrite(id)
+    let lease: SessionWriteLease | undefined
+    let settled = false
+    try {
+      const selected = await this.findLog(id, signal)
+      if (!selected) throw new SessionPersistenceNotFoundError(id)
+      lease = await this.acquireLease(id, undefined, dirname(selected.sourcePath))
+      signal?.throwIfAborted()
+      const result = await operation()
+      settled = true
+      return result
+    } finally {
+      try { await lease?.release() }
+      catch (error) {
+        if (!settled) throw error
+        try { this.ctx.logger.warn(`session "${id}": generation protection completed but lease release failed: ${String(error)}`) }
+        catch (diagnosticError) { /* The callback's commit remains successful even if diagnostics also fail. */ void diagnosticError }
+      } finally { this.tracker.releaseClaim(id) }
+    }
   }
 
   /**
@@ -689,15 +776,28 @@ class JsonlSessionPersistence extends SessionPersistence {
   }
 
   /** Publish a prepared historical log before granting write access. */
-  private async publishStoredMigration(id: SessionId, stored: PreparedStoredLog): Promise<CurrentStoredLog> {
+  private async publishStoredMigration(id: SessionId, stored: PreparedStoredLog, signal?: AbortSignal): Promise<CurrentStoredLog> {
     const migration = stored.publication
     let identity: JsonlPhysicalIdentity
+    const publish = (maxWriteBytes?: number): Promise<JsonlPhysicalIdentity> =>
+      migration.value.publish({ ...(maxWriteBytes === undefined ? {} : { maxWriteBytes }),
+        ...(signal === undefined ? {} : { signal }) }).catch((error: unknown) => {
+        if (signal?.aborted && error === signal.reason) throw error
+        throw this.generationFailure(id, migration.source, error)
+      })
     try {
-      identity = await migration.value.publish()
+      if (this.migrationWriter) {
+        const bytes = await migration.value.measure(signal)
+        signal?.throwIfAborted()
+        identity = await this.migrationWriter(migration.source.currentPath, bytes,
+          () => publish(bytes))
+      } else {
+        identity = await publish()
+      }
     } catch (error: unknown) {
       /* v8 ignore else -- a newer preparation may have replaced this stale cache entry. */
       if (this.coldLogMemo.get(id) === stored) this.coldLogMemo.delete(id)
-      throw this.generationFailure(id, migration.source, error)
+      throw error
     }
     const published: CurrentStoredLog = {
       status: 'current',
@@ -726,6 +826,7 @@ class JsonlSessionPersistence extends SessionPersistence {
       )
     }
     if (error instanceof JsonlGenerationSourceChangedError) return error
+    if (error instanceof JsonlGenerationWriteLimitError) return error
     if (error instanceof SessionFormatUnsupportedError
       || error instanceof SessionPersistenceCorruptionError
       || isErrnoException(error)

@@ -20,7 +20,9 @@ export function registerDeepSeekProvider<C extends DeepSeekConnectionOptions>(
   'options' | 'resolveAuth' | 'providerName' | 'discoverModels'>): void {
   ctx.inject(['settings'], (child) => { child.effect(() => child.settings.configure({ auto: false }, ctx.fiber)) })
   let userId: AnonymousUserId | undefined
+  const outboundHttp = ctx.get('outboundHttp')
   const adapter = new DeepSeekAdapter({
+    prepareHttp: url => outboundHttp?.prepare(url) ?? Promise.resolve(undefined),
     ...dependencies,
     resolveUserId: () => userId ??= getOrCreateAnonymousUserId(),
     onReplayDegrade: ({ provider, model, reason }) => {

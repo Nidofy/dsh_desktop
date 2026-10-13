@@ -14,6 +14,8 @@ describe('callConfigEquals', () => {
   it('compares every field, including the stop list element-wise', () => {
     const base = { provider: 'p', model: 'm' }
     expect(callConfigEquals(base, base)).toBe(true)
+    expect(callConfigEquals(base, { ...base, providerIdentity: 'stable' })).toBe(false)
+    expect(callConfigEquals({ ...base, providerIdentity: 'stable' }, { ...base, providerIdentity: 'stable' })).toBe(true)
     expect(callConfigEquals(base, { provider: 'x', model: 'm' })).toBe(false)
     expect(callConfigEquals(base, { provider: 'p', model: 'x' })).toBe(false)
     expect(callConfigEquals({ ...base, reasoningEffort: ReasoningEffortId('high') }, base)).toBe(false)

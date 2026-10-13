@@ -1,5 +1,6 @@
-; Electron user data and updater downloads leave with the application; the Harness home is never touched.
+; Private distributions retain all data roots; upstream cleans Electron data and preserves the Harness home.
 !include FileFunc.nsh
+!ifndef DSH_KEEP_DISTRIBUTION_DATA
 Var UnTarget
 Var UnHome
 
@@ -8,8 +9,13 @@ Var UnHome
 Function un.RemoveData
   System::Call '$PLUGINSDIR\window-frame.dll::UninstallRemoveData(w "$UnTarget", w "$INSTDIR", w "$UnHome") ?c'
 FunctionEnd
+!endif
 
 Function un.CleanData
+  !ifdef DSH_KEEP_DISTRIBUTION_DATA
+    ; DSH_HOME set by Main is not inherited by an OS-launched uninstaller. Keep private profiles and caches intact.
+    Return
+  !else
   ${If} ${isUpdated}
     Return
   ${EndIf}
@@ -33,4 +39,5 @@ Function un.CleanData
   !endif
   StrCpy $UnTarget "$LOCALAPPDATA\${DSH_UPDATER_CACHE_NAME}"
   Call un.RemoveData
+  !endif
 FunctionEnd

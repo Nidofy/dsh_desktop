@@ -223,6 +223,102 @@ const byteVerifier: PrepareJsonlMigrationOptions['verifyCurrentFile'] = async (p
   }
 }
 
+describe('bounded migration publication', () => {
+  it.each(['none', 'zstd'] as const)('measures actual %s output without opening a stage, then accepts the exact byte limit', async (compression) => {
+    const root = await tempRoot(), request = options(root, compression)
+    const source = compression === 'none' ? Buffer.from(line(header(0)) + line(event0)) : await encodeZstd(0, [event0])
+    await writeFile(request.sourcePath, source)
+    const prepared = await prepareJsonlMigration({ ...request, verifyCurrentFile: byteVerifier })
+    const before = await readdir(root), bytes = await prepared.measure()
+    expect(await readdir(root)).toEqual(before)
+    await prepared.publish({ maxWriteBytes: bytes })
+    expect((await readFile(request.currentPath)).length).toBe(bytes)
+    expect(await readFile(request.sourcePath)).toEqual(source)
+  })
+
+  it.each(['none', 'zstd'] as const)('refuses a one-byte-short %s grant and drains the stage', async (compression) => {
+    const root = await tempRoot(), request = options(root, compression)
+    const source = compression === 'none' ? Buffer.from(line(header(0)) + line(event0)) : await encodeZstd(0, [event0])
+    await writeFile(request.sourcePath, source)
+    const prepared = await prepareJsonlMigration({ ...request, verifyCurrentFile: byteVerifier })
+    const publication = prepared.publish({ maxWriteBytes: await prepared.measure() - 1 })
+    await expect(publication).rejects.toThrow('SESSION_MIGRATION_WRITE_LIMIT')
+    expect(prepared.publish()).toBe(publication)
+    expect(await readdir(root)).toEqual([basename(request.sourcePath)])
+    expect(await readFile(request.sourcePath)).toEqual(source)
+  })
+
+  it('measures converted multibyte rows rather than the smaller source and refuses later expansion', async () => {
+    let text = '中文'.repeat(2000)
+    const format = adapter({ encodeEvent: event => ({ ...event, text }) })
+    const root = await tempRoot(), request = options(root, 'none', format)
+    const source = line(header(0)) + line(event0)
+    await writeFile(request.sourcePath, source)
+    const prepared = await prepareJsonlMigration({ ...request, verifyCurrentFile: byteVerifier })
+    const bytes = await prepared.measure()
+    expect(bytes).toBeGreaterThan(Buffer.byteLength(source) + 10000)
+    text += '界'
+    await expect(prepared.publish({ maxWriteBytes: bytes })).rejects.toThrow('SESSION_MIGRATION_WRITE_LIMIT')
+    expect(await readdir(root)).toEqual([basename(request.sourcePath)])
+  })
+
+  it('awaits the stage handle close and cleanup before rejecting cancellation', async () => {
+    const root = await tempRoot(), request = options(root), controller = new AbortController(), reason = Error('stop migration')
+    await writeFile(request.sourcePath, line(header(0)) + line(event0))
+    const closing = Promise.withResolvers<undefined>(), drain = Promise.withResolvers<undefined>()
+    const runtime = createJsonlGenerationTestRuntime({ fs: {
+      open: async (path, flags, mode) => {
+        const handle = await open(path, flags, mode)
+        if (flags === 'wx') {
+          const write = handle.writeFile.bind(handle), close = handle.close.bind(handle)
+          vi.spyOn(handle, 'writeFile').mockImplementation(async (data, options) => {
+            await write(data, options); controller.abort(reason)
+          })
+          vi.spyOn(handle, 'close').mockImplementation(async () => {
+            closing.resolve(undefined); await drain.promise; await close()
+          })
+        }
+        return handle
+      },
+    } })
+    const prepared = await runtime.prepare({ ...request, verifyCurrentFile: byteVerifier })
+    let settled = false
+    const publication = prepared.publish({ signal: controller.signal })
+    void publication.finally(() => { settled = true }).catch(() => {})
+    await closing.promise
+    expect(settled).toBe(false)
+    drain.resolve(undefined)
+    await expect(publication).rejects.toBe(reason)
+    expect(await readdir(root)).toEqual([basename(request.sourcePath)])
+  })
+
+  it('passes publication cancellation to the verifier and refuses a cancelled precommit barrier', async () => {
+    const root = await tempRoot(), request = options(root), controller = new AbortController(), reason = Error('cancel before commit')
+    await writeFile(request.sourcePath, line(header(0)) + line(event0))
+    let verifierSignal: AbortSignal | undefined
+    const runtime = createJsonlGenerationTestRuntime({ barrier: (phase) => {
+      if (phase === 'before-source-check') controller.abort(reason)
+    } })
+    const prepared = await runtime.prepare({ ...request, verifyCurrentFile: async (path, compression, id, count, prefix, signal) => {
+      verifierSignal = signal
+      return byteVerifier(path, compression, id, count, prefix, signal)
+    } })
+    await expect(prepared.publish({ signal: controller.signal })).rejects.toBe(reason)
+    expect(verifierSignal).toBe(controller.signal)
+    expect(await readdir(root)).toEqual([basename(request.sourcePath)])
+  })
+
+  it('returns the committed identity after cancellation in the postpublication barrier', async () => {
+    const root = await tempRoot(), request = options(root), controller = new AbortController()
+    await writeFile(request.sourcePath, line(header(0)) + line(event0))
+    const runtime = createJsonlGenerationTestRuntime({ barrier: (phase) => {
+      if (phase === 'after-publication') controller.abort(Error('late cancellation'))
+    } })
+    const prepared = await runtime.prepare({ ...request, verifyCurrentFile: byteVerifier })
+    expect((await prepared.publish({ signal: controller.signal })).size).toBeGreaterThan(0n)
+  })
+})
+
 function generationPath(root: string, version: number, compression: JsonlCompression): string {
   const suffix = compression === 'zstd' ? '.jsonl.zstd' : '.jsonl'
   return join(root, version === 0 ? `session${suffix}` : `session.v${version}${suffix}`)

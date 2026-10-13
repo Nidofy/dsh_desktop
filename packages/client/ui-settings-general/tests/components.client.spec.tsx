@@ -40,6 +40,7 @@ const noAttention: AttentionSnapshot = new Map()
 const useSessionStatus: TriggerContentProps['useSessionStatus'] = selector => selector(noAttention)
 const kit = {
   useSessions: unusedHook, useSessionStatus,
+  useMainSelection: () => { throw new Error('Fixture does not read main selection') },
   usePanelInfo, useSessionRetainInfo: () => undefined, useResource, useWorkspaces: unusedHook,
 }
 

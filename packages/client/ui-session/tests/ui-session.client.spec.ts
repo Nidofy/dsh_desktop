@@ -194,7 +194,7 @@ afterEach(async () => {
 })
 
 describe('UiSession bindings', () => {
-  it('tracks the main-view source and moves its retention watcher between Sessions', () => {
+  it('uses only the exact navigation reference while other main-labelled references coexist', () => {
     const ctx = new Context()
     const bench = createSessionsBench(ctx)
     const first = bench.reference(bench.binding(sessionId('s1')))
@@ -208,6 +208,8 @@ describe('UiSession bindings', () => {
 
     expect(current.getSnapshot().key).toBeUndefined()
     bench.setMainView(first.sessionId, 1)
+    expect(current.getSnapshot().key).toBeUndefined()
+    service.selectMain(first)
     expect(current.getSnapshot()).toBe(firstSource.getSnapshot())
     const missing = sessionId('missing')
     bench.list.update((draft) => { draft.byId[missing] = undefined as never })
@@ -216,7 +218,7 @@ describe('UiSession bindings', () => {
 
     bench.retainInfo.mockClear()
     bench.setRetainInfo(first.sessionId, 2)
-    expect(bench.retainInfo).toHaveBeenCalledOnce()
+    expect(bench.retainInfo).not.toHaveBeenCalled()
     expect(current.getSnapshot()).toBe(firstSource.getSnapshot())
 
     bench.setRetainInfo(second.sessionId, 1)
@@ -228,6 +230,8 @@ describe('UiSession bindings', () => {
       }
     })
     bench.setRetainInfo(first.sessionId, 0)
+    expect(current.getSnapshot()).toBe(firstSource.getSnapshot())
+    service.selectMain(second)
     expect(current.getSnapshot()).toBe(secondSource.getSnapshot())
 
     bench.retainInfo.mockClear()
@@ -237,6 +241,7 @@ describe('UiSession bindings', () => {
       draft.byId[second.sessionId] = { ...draft.byId[second.sessionId]!, retainedBy: {} }
     })
     bench.setRetainInfo(second.sessionId, 0)
+    service.selectMain(undefined)
     expect(current.getSnapshot().key).toBeUndefined()
 
     bench.retainInfo.mockClear()
@@ -381,6 +386,7 @@ describe('UiSession bindings', () => {
     })
     await fiber.await()
     if (service === undefined) throw new Error('UiSession did not start')
+    service.selectMain(reference)
     const source = service.bindingSource(reference)
     expect(service.adapter.current.getSnapshot().key).toBe(binding.sessionId)
     expect(bindStoreScope).toHaveBeenCalledOnce()
@@ -561,20 +567,24 @@ describe('UiSession status', () => {
     bench.list.update((draft) => { draft.byId[id]!.running = false })
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(true)
     bench.setMainView(id, 1)
+    service.selectMain(bench.reference(bench.sessions.binding(id)!))
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(false)
     bench.setMainView(id, 0)
+    service.selectMain(undefined)
 
     bench.emitStatus(id, true)
     bench.emitStatus(id, false)
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(true)
 
     bench.setMainView(id, 1)
+    service.selectMain(bench.reference(bench.sessions.binding(id)!))
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(false)
     bench.emitStatus(id, true)
     bench.emitStatus(id, false)
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(false)
 
     bench.setMainView(id, 0)
+    service.selectMain(undefined)
     bench.emitStatus(id, false)
     expect(service.sessionStatus.getSnapshot().get(id)?.completionUnread).toBe(false)
     bench.emitStatus(id, true)
@@ -726,6 +736,7 @@ describe('ui-session apply', () => {
     expect(slots.provideRoot).toHaveBeenCalledWith({
       hooks: {
         sessions: bench.sessions.list,
+        mainSelection: ctx.uiSession.mainSelection,
         sessionStatus: ctx.uiSession.sessionStatus,
       },
       keyedHooks: { sessionRetainInfo: retainInfoMatcher },

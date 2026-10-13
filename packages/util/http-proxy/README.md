@@ -57,6 +57,8 @@ A proxy value the package cannot use — a SOCKS or PAC URL, an unparseable stri
 
 -----
 
+The type-only [HTTP authorization interfaces](src/egress.ts) let an application supply `HttpEgressPolicy` before profile entries connect. Models, discovery and MCP capture a lease and use its origin-bound fetch; the application owns scope, revisions and disposal. Proxy routing remains independent. The [Desktop policy reference](../../../apps/desktop-host/src/connections/README.md) defines its provider and exclusions.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 

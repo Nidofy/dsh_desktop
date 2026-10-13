@@ -9,6 +9,8 @@ kind: "package-reference"
 
 ## 概述
 
+工作区快捷键从 uiSession.mainSelection 解析会话，与 retain 计数独立。会话内鼠标控件继续使用显式 Provider 身份。
+
 本包提供 open-in-app 功能的浏览器表面。会话头部的分体按钮在记住的应用中打开当前会话的 workspace 目录（会话摘要的 `cwd`），下拉箭头列出主机探测到已安装的全部 catalog 应用；可用性、图标与启动均来自 [`dsh-host-open-in-app`](../../host/open-in-app/README.zh.md) 的主机路由，所以两个包要一起挂载。在右侧 Sidebar 的文档预览里，一个「打开」分体按钮和一个空态按钮经由 Session Remote 用默认应用打开当前文件或显示其位置。主机没有这项能力时，这些控件一个都不渲染。
 
 ## 目录

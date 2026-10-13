@@ -1,0 +1,5 @@
+# Source Client Loader composition; external Remote/HTTP and Electron capabilities are isolated in the spec.
+- name: '@nidofy/dsh-desktop-extras'
+- name: '@nidofy/dsh-working-notebook'
+- name: '@deepseek-ai/dsh-client-ui-chat'
+- name: '@deepseek-ai/dsh-api-remotes'

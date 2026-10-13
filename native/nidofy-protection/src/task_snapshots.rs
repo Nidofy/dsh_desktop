@@ -336,6 +336,8 @@ fn inspect(root: &Path, path: &str) -> Result<(State, Vec<u8>)> {
     }
 }
 fn write_new(path: &Path, data: &[u8]) -> Result<()> {
+    let terminal = path.file_name().and_then(|v| v.to_str()).is_some_and(|v| v.starts_with("end") || v.starts_with("result-"));
+    crate::quota::before_write(data.len(), terminal)?;
     let mut file =
         file_open(path, true, true).map_err(|_| "无法创建快照记录（已有记录不会覆盖）")?;
     file.write_all(data)
@@ -1199,6 +1201,7 @@ impl Store {
                     return Err("恢复状态无效".into());
                 };
                 let disposition = FILE_DISPOSITION_INFO { DeleteFile: true };
+                crate::quota::before_write(0, false)?;
                 if unsafe {
                     SetFileInformationByHandle(
                         file.as_raw_handle(),
@@ -1263,6 +1266,7 @@ impl Store {
     }
 }
 fn overwrite(file: &mut File, data: &[u8]) -> Result<()> {
+    crate::quota::before_write(data.len(), false)?;
     #[cfg(test)]
     if FAIL_AFTER_PARTIAL_WRITE.with(|fail| fail.replace(false)) {
         file.seek(SeekFrom::Start(0))
@@ -1301,6 +1305,8 @@ pub enum Request {
     },
     ImportArchive {
         directory: PathBuf,
+        #[serde(rename = "expectedRevision")]
+        expected_revision: String,
     },
     Scopes,
     Arm {
@@ -1328,10 +1334,18 @@ pub enum Request {
     },
 }
 impl Request {
+    pub fn storage_scope(&self) -> &'static str { match self {
+        Self::Arm{..}|Self::Disarm{..} => "native:scope",
+        Self::Capture{..} => "native:capture", Self::Restore{..} => "native:restore",
+        Self::Seal{..} => "native:seal", Self::ImportArchive{..} => "native:import",
+        Self::Export{..} => "native:export", _ => "native:read",
+    }}
     pub fn storage_reservation(&self)->Option<u64>{match self {
-        Self::Capture{..}|Self::Restore{..}=>Some(MAX_CAPTURE as u64+512*1024),
+        Self::Capture{..}|Self::Restore{..}=>Some(MAX_CAPTURE as u64+2*1024*1024),
+        Self::Arm{..}|Self::Disarm{..}=>Some(512*1024),
         Self::Seal{..}=>Some(512*1024),
         Self::ImportArchive{..}=>Some(MAX_STORE),
+        Self::Export{..}=>Some(MAX_STORE),
         _=>None,
     }}
 }
@@ -1363,7 +1377,7 @@ pub fn dispatch(home: &Path, request: Request) -> Result<serde_json::Value> {
     match request {
         Request::Browse {..} | Request::VerifyArchive {..} => unreachable!(),
         Request::Export { id, destination } => return store.export_archive(&id, &destination),
-        Request::ImportArchive { directory } => return store.import_archive(&directory),
+        Request::ImportArchive { directory, expected_revision } => return store.import_archive(&directory, &expected_revision),
         Request::Scopes | Request::Arm {..} | Request::Disarm {..} => unreachable!(),
         Request::List => {
             let items = store.list()?;

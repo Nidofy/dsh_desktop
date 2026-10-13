@@ -12,6 +12,28 @@ const MAX_CONFIG = 128 * 1024;
 const MAX_LOG = 1024 * 1024;
 const digest = value => createHash('sha256').update(value).digest('hex');
 const within = (root, path) => { const rel = relative(root, path); return rel === '' || (!rel.startsWith('..' + (process.platform === 'win32' ? '\\' : '/')) && rel !== '..' && !isAbsolute(rel)); };
+function verificationSpec(value) {
+  if (value === undefined) return undefined;
+  if (!value || value.schemaVersion !== 1 || !['complete','unknown'].includes(value.coverage)
+    || ![null,'node-tap-13/1'].includes(value.parser)) fail('INVALID_CONFIG','验证范围版本、覆盖声明或解析器无效');
+  const paths = (items, external) => {
+    if (!Array.isArray(items) || items.length > 64 || items.some(p => typeof p !== 'string' || !p || p.length > 4096
+      || p.includes('\0') || (!external && p !== '.' && !validArtifact(p)) || p.split(/[\\/]/).includes('..')))
+      fail('INVALID_CONFIG','验证输入必须为明确的文件或目录；工具链可使用绝对路径');
+    return [...new Set(items)].sort();
+  };
+  const parameters = {};
+  if (value.parameters !== undefined && (!value.parameters || typeof value.parameters !== 'object' || Array.isArray(value.parameters)))
+    fail('INVALID_CONFIG','验证算例与容差必须为标量对象');
+  for (const [key,val] of Object.entries(value.parameters ?? {}).sort(([a],[b])=>a.localeCompare(b))) {
+    if (!ID.test(key) || !(typeof val === 'string' && val.length <= 1024 || typeof val === 'number' && Number.isFinite(val)
+      || typeof val === 'boolean' || val === null)) fail('INVALID_CONFIG','验证算例与容差无效');
+    parameters[key] = val;
+  }
+  if (Object.keys(parameters).length > 64) fail('INVALID_CONFIG','验证参数过多');
+  return {schemaVersion:1, intent:string(value.intent,1024,'验证意图'), parser:value.parser, coverage:value.coverage,
+    sources:paths(value.sources,false), inputs:paths(value.inputs,false), toolchain:paths(value.toolchain,true), parameters};
+}
 export class ActionError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
@@ -42,7 +64,8 @@ export function validateActionConfig(value) {
     const commands=action.commands === undefined ? undefined : Object.fromEntries(Object.entries(action.commands).map(([key,value])=>[key,string(value,16000,'平台命令')]));
     const command=commands?.[process.platform] ?? (commands === undefined ? action.command : undefined);
     if(command === undefined) fail('PLATFORM_UNSUPPORTED','当前平台没有配置命令');
-    return {id: action.id, label: string(action.label, 120, '名称'), command: string(command, 16000, '命令'), ...(commands ? {commands} : {}), cwd: string(cwd, 1024, '工作目录'), timeoutMs, env, ...(action.artifacts?.length ? {artifacts:[...new Set(action.artifacts)]} : {})};
+    const verification = verificationSpec(action.verification);
+    return {id: action.id, label: string(action.label, 120, '名称'), command: string(command, 16000, '命令'), ...(commands ? {commands} : {}), cwd: string(cwd, 1024, '工作目录'), timeoutMs, env, ...(action.artifacts?.length ? {artifacts:[...new Set(action.artifacts)]} : {}), ...(verification ? {verification} : {})};
   });
   const config = {schemaVersion: 1, actions};
   if (Buffer.byteLength(JSON.stringify(config)) > MAX_CONFIG) fail('INVALID_CONFIG', '操作配置过大');
@@ -72,9 +95,10 @@ export async function writeAtomic(path, value) {
 
 /** Host-owned configuration/trust and bounded action journal. No provider requests. */
 export class ProjectActions {
-  constructor(home, execute) {
+  constructor(home, execute, hooks) {
     this.home = join(home, 'desktop-actions');
     this.execute = execute;
+    this.hooks = hooks;
     this.states = new Map();
     this.jobs = new Map();
     this.closed = false;
@@ -95,7 +119,7 @@ export class ProjectActions {
   async load(root, key) {
     const dir = join(this.home, key);
     await mkdir(join(dir, 'runs'), {recursive: true});
-    const info=await lstat(root), identity=[info.dev,info.ino].join(':');
+    const info=await lstat(root,{bigint:true}), identity=[info.dev,info.ino].join(':');
     const state = {root, identity, key, dir, rows: new Map(), tail: Promise.resolve(), writes: Promise.resolve(), cleanup: Promise.resolve(), warnings: []};
     const files = (await readdir(join(dir, 'runs'))).filter(name => RUN_ID.test(name.replace(/\.json$/, '')) && name.endsWith('.json'));
     for (const file of files) {
@@ -112,7 +136,7 @@ export class ProjectActions {
     return state;
   }
   async config(state) {
-    const info=await lstat(state.root);
+    const info=await lstat(state.root,{bigint:true});
     if(info.isSymbolicLink() || !info.isDirectory() || [info.dev,info.ino].join(':')!==state.identity) fail('WORKSPACE_CHANGED','工作区身份已变化，请重新打开并审阅信任');
     const saved = await optionalJson(join(state.dir, 'config.json'));
     let value = saved, source = 'desktop';
@@ -127,11 +151,12 @@ export class ProjectActions {
     const config = validateActionConfig(value ?? {schemaVersion: 1, actions: []});
     const fingerprint = digest(JSON.stringify({config,identity:state.identity,root:state.root}));
     const trust = await optionalJson(join(state.dir, 'trust.json'));
-    return {config, fingerprint, source, trusted: trust?.fingerprint === fingerprint};
+    const configRevision = this.hooks ? await this.hooks.revision(state.dir, fingerprint) : undefined;
+    return {config, fingerprint, source, trusted: trust?.fingerprint === fingerprint, ...(configRevision === undefined ? {} : {configRevision})};
   }
   async inspect(path) {
     const state = await this.workspace(path);
-    return {workspace: state.root, ...await this.config(state), runs: [...state.rows.values()].sort((a,b) => b.createdAt.localeCompare(a.createdAt)), warnings: state.warnings};
+    return {workspace: state.root, ...await this.config(state), runs: [...state.rows.values()].map(row=>({...row,canCancel:this.jobs.has(row.id)})).sort((a,b) => b.createdAt.localeCompare(a.createdAt)), warnings: state.warnings};
   }
   async save(path, value) {
     const state = await this.workspace(path), config = validateActionConfig(value);
@@ -169,7 +194,8 @@ export class ProjectActions {
     if (!action) fail('ACTION_NOT_FOUND', '操作不存在');
     if ([...state.rows.values()].filter(row => ACTIVE.has(row.status)).length >= 16) fail('LIMIT', '当前工作区已有 16 个待完成操作');
     signal?.throwIfAborted();
-    const storageLease=await storageAdmission.acquire(join(state.dir,'runs'),3*1024*1024,{signal});
+    const storageLease=await storageAdmission.acquire(join(state.dir,'runs'),this.hooks ? 5*1024*1024 : 3*1024*1024,
+      {signal, ...(this.hooks ? {terminalBytes:3*1024*1024} : {})});
     if(this.closed||signal?.aborted||[...state.rows.values()].filter(row=>ACTIVE.has(row.status)).length>=16){await storageLease.release().catch(()=>{});fail('STOPPING','存储准备期间操作已取消、引擎停止或队列已满');}
     const row = {schemaVersion: 1, id: randomUUID(), actionId, label: action.label, fingerprint: current.fingerprint, status: 'QUEUED', source, createdAt: new Date().toISOString()};
     if (action.artifacts?.length) row.artifacts = [...action.artifacts];
@@ -184,7 +210,9 @@ export class ProjectActions {
     const job = {state, row, controller};
     this.jobs.set(row.id, job);
     // Reserve the lane before awaiting disk writes, so concurrent UI/model calls cannot overlap.
-    const initialWrite = storageLease.run(()=>this.persist(state, row));
+    const initialWrite = storageLease.run(async()=>{await this.persist(state, row);
+      await this.hooks?.queued(state.root, row, action, current.configRevision,
+        context?.agent ? {sessionId:String(context.agent.session.id)} : null);});
     job.done = storageLease.run(()=>initialWrite.then(() => Promise.race([prior, cancelled])).then(async () => {
       if (controller.signal.aborted) { row.status = 'CANCELLED'; return; }
       const latest = await this.config(state);
@@ -195,7 +223,8 @@ export class ProjectActions {
       row.status = 'RUNNING'; row.startedAt = new Date().toISOString();
       await this.persist(state, row);
       controller.signal.throwIfAborted();
-      const result = await this.execute({...action, cwd, workspace: state.root, signal: controller.signal, context});
+      const result = await this.execute({...action, runId:row.id, cwd, workspace: state.root, signal: controller.signal, context,
+        ...(this.hooks ? {recordExecution:settings=>this.hooks.prepare(state.root,row,action,settings)} : {})});
       const log = Buffer.from(`STDOUT\n${result.stdout?.text ?? ''}\nSTDERR\n${result.stderr?.text ?? ''}`);
       row.logTruncated = log.length > MAX_LOG || result.stdout?.truncated === true || result.stderr?.truncated === true;
       await writeAtomic(join(state.dir, 'runs', row.id + '.log'), log.subarray(0, MAX_LOG));
@@ -209,16 +238,21 @@ export class ProjectActions {
     }).catch(error => {
       row.status = controller.signal.aborted ? 'CANCELLED' : row.status === 'RUNNING' ? 'UNKNOWN' : 'NOT_STARTED';
       row.message = error instanceof ActionError ? error.message : row.status === 'UNKNOWN' ? '执行或记录结果失败，副作用未知。请查看工作区。' : '操作未完成，请检查引擎状态和本地存储。';
+      const diagnostic = error?.code ?? (error instanceof Error ? error.message : undefined);
+      if (typeof diagnostic === 'string' && /^[A-Z][A-Z0-9_]{1,95}$/.test(diagnostic)) row.message += ` (${diagnostic})`;
     }).then(async () => {
       row.finishedAt = new Date().toISOString();
       row.durationMs = row.startedAt ? Date.parse(row.finishedAt) - Date.parse(row.startedAt) : 0;
-      try { await this.persist(state, row); await this.prune(state); } catch { row.persistenceFailed = true; }
+      try { await storageLease.terminal(async()=>{await this.persist(state, row);
+        try { await this.hooks?.settled(state.root, {...row}); }
+        catch (error) { row.verificationCommit = 'UNKNOWN'; }
+        await this.prune(state);}); } catch { row.persistenceFailed = true; }
       return {...row};
-    }).finally(async () => {
+    })).finally(async () => {
       signal?.removeEventListener('abort', abort); controller.signal.removeEventListener('abort', wake);
       this.jobs.delete(row.id);
       await storageLease.release().catch(()=>{row.quotaReleasePending=true;});
-    }));
+    });
     state.tail = Promise.allSettled([prior, job.done]).then(() => {});
     if (signal?.aborted || this.closed) controller.abort();
     await initialWrite;

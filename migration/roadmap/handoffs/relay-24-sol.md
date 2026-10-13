@@ -1,0 +1,55 @@
+# Relay 24 Sol：实际输入／缓存提示及官方响应模型观察
+
+## 当前交付与交接原因
+
+D:/Documents/FeiyangChen/devApps/dshWinUi/electron，codex/roadmap-integration。本棒因会话上下文容量交 GPT-6.1-Sol 同模型续做，没有新的 Astra 裁决；真实工程任务 runner／独立预算权限／隔离副本与实际 Agent→T11 因果链仍需实施。T17/T18/T19/T20/T23 仍 PARTIAL。用户数据、全部原改动、来源 worktree、Live2D、历史与本棒证据保留，没有计费、Codex 聊天／代理／定时器、push／合并／发布。
+
+## 已发布与保留语义
+
+- NotebookV2Service.input 提供原 renderer 的完整 committed 文本／scope／修订／设置与限额，不 flush／同步／转换／写源。显式可选源预览与发送前复验接独立 task owner；普通 Agent 组装路径恢复原行为，不因 T20 捕获耦合设置切换。未确认预览读取消费 caller HTTP 取消，零任务预留／发送；已提交任务仍独立取消。
+- 原 task intent／terminal／Session／T11／T19／records／诊断格式保持；两个可选独立 v1 sidecar 留完整 Notebook 输入和实际应用 cache hint／可用偏好修订。早期缺偏好修订按 null 读，不用当前偏好补历史，不改原文件。读取及准入拒绝未知／未来／损坏／冲突；旧无 sidecar 日志仍可读。
+- 复用官方 finish replay v2 responseModel，匹配 route/model 且 task 冷流重验。唯一 T11 selecting step 逐尝试读取该标识；不推广为准确不可变版本、wire 请求数、完整任务或工程验收。exactModelVersion 仍 null，原比較／选择记录语义不改。
+- cache callback 自带 Symbol 观察身份供独立 index/cache bundles 共享，不保留 HMAC key。提示不等于 provider 缓存开关或命中。原一次请求预算／配额／writer／cut／取消排空与未知不重放保持；三分钟实钟未验证。
+- 仅 T20 registry 对象和 ownership 一行更新，其他对象／顶层／周围原字节／tasks.json／原锁断言保持。官方 generator 只写2个 owning compaction region 和1个 NotebookV2 API 对象；共享消费者已编译／bundle。
+
+## 精确证据与不足
+
+.build/dispatch/evidence/relay-24/summary.json、commands.json 和各 command/log 保存。源码一次3文件41项（21/6/14），补验1/4/3及最后取消fixture1重叠不相加；2个双语 owner-local 快照。source0计费/0Agent，lineage fixture执行7个已审阅隔离Node TAP动作且 tool/result 日志为合成，不证明模型触发工程任务。
+
+最终当前 factors-lifetime-current-built 为1文件1项，.build\dispatch\evidence\relay-24\full-profile\host-GhlQtU，root=C:\Users\enxi1\AppData\Local\Temp\dsh-experiments-host-G5zxcq。完整支持profile／原nativequota，实际Notebook／产品cachehook跨bundle／官方响应标识，4个本机合成providerHTTP完成／取消／失败／进程丢失，冷重启原sidecar字节和无补发，0计费／0Agent／0工程动作；仅Node-mode Host，renderer／安装／准确不可变版本／provider缓存／T11工程任务A/B未认证。本棒6built根与所有失败保留；176已索引合成根。若干独立desktop-lineage新根未索引但retainRoot=true，不猜身份；代次测试替换自己的新源身份并保存original-source.bytes，不称旧代次保留。
+
+当前Host／生成API消费者strict类型、4测试入口strict类型、Host／extras／tool-cordis bundle、14文件lint、16源码/27顶层JSDoc/0unknown AST、3MJS语法、5pair、指定文档链接／单行段落与窄diff验证通过；全仓预算/doc-sync/依赖和原32/5/15缺口不改资格。
+
+失败链保留：证据tsconfig引用未继承、native拒绝未知fixture namespace、实际PiAi拼接、test-only插件需在profile依赖闭包加载、官方_no-cwd分桶、this/unbound/缩进/重复null条件、runner多余node参数。raw-response观察草稿未执行，最终复用官方流；无新增依赖，旧锁字节保持。两次默认sandbox setup-refresh和一次补丁匹配失败在进程／写入前；准确时间未记、不补造。普通失败已修复，不触发新的Astra。
+
+## 下一项
+
+独立真实工程任务预算／权限与隔离副本 runner，官方全输入／同代次发送，真实 Agent 工具执行→T11 关联及完整任务计数，然后单因素／预算矩阵。不要把单次分析、合成工具记录或响应标识升级为验收或准确版本。
+
+## 发出的完整后继 prompt
+
+```text
+请使用 GPT-6.1-Sol 继续 DSH Electron 持续开发，接 Relay 24 Sol。这是同模型会话上下文容量续做，没有新的 Astra 裁决。不要重开 Relay05/08、W04/T05、T10 adoption 或 Relay13 单 Conversation root 决定。
+
+工作目录 D:/Documents/FeiyangChen/devApps/dshWinUi/electron，沿用 codex/roadmap-integration 和主目录。保留全部未提交修改、来源 worktree、Live2D、用户数据及原日志／报告／输入／历史证据。不校验 SHA、不初始化、不重复接收 T02/T04、不重审完成单元。Relay24 只更新 registry 的 T20 对象和 ownership 对应行；其他对象、顶层、周围原字节、dispatch/tasks.json 及原锁文件按本棒 baseline 断言保持。T17/T18/T19/T20/T23 总资格仍 PARTIAL。
+
+完整读 AGENTS.md、适用下级规则、packages/AGENTS.md、packages/client/AGENTS.md、docs/AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、migration/roadmap/dispatch/CONTINUOUS.md、NEXT_HANDOFF.md、handoffs/relay-24-sol.md、contracts-v1.md、dispatch/prompts/T20-ab-experiments.txt、probes/T20-owner-map.md，以及 .build/dispatch/evidence/relay-24/summary.json、commands.json。Client 工作先读 docs/subsystems/web-client.md、slots.md、conversation.md；更旧记录仅按需要补细节，以当前源码、配置、测试和未提交修改为准。
+
+第一项动作：实现独立真实工程任务 runner 的预算／权限、隔离工程副本及完整官方输入截点，再把实际 Agent 任务和 T11 回执建立因果关联；先单因素 Notebook／缓存，后有预算矩阵，每轮归档。先读 experiments/README.md、task-requests.ts、task-inputs.ts、task-notebook-input.ts、model-lineage.ts、comparison.ts、records.ts、owner.ts、task-ui.ts、ui.ts，connections/request-observations.ts，workbench/verification.ts、verification-input.ts、legacy/project-actions.mjs，官方 Agent／Session／prepared-call／usage／Shell／FS／tool scope，以及 desktop-extras/context-v2.ts、notebook-input.ts、notebook-evidence.ts、cache.ts、index.ts 和 working-notebook 实际输入／设置 owner。普通缺 owner 由 Sol 补，不因 NOT_STARTED 或未发布接口停工；只有新的具体公共持久语义或权限冲突才准备 Astra。不把只读分析或合成工具结果关联升级成真实工程任务验收。
+
+Relay24 已接显式 Notebook 源完整预览、物理 scope、笔记／设置修订及限额捕获；发送前重验，代次或修订变化拒绝。捕获不 flush／同步／转换／写源，不创建 Agent 或额外请求；普通 Agent 原组装路径保持。原 single-task intent／terminal、官方 Session、T11、T19、records-v1 和旧诊断格式不改。可选独立 schemaVersion 1 notebook-input.json／execution-observation.json 保留完整源与实际已应用 Desktop cache hint／偏好修订；观察不保留缓存键或凭据，缺 transform 或偏好修订保持 null／未知，不从当前设置补历史。Native／removed／session-key 仅是路由提示，不证明提供方缓存启用或命中。读取保留原字节，旧日志无 sidecar 仍可读；未来、损坏、未知 root 残留及不匹配观察拒绝，不自动修复。
+
+响应模型来自官方 finish.replayState 的受支持 PiAi v2 responseModel，匹配原请求 route／model，并与冷读完整流一致；缺失／不支持／不匹配不填 alias。选择 T11 step 也逐尝试读取同一事实：原 executionSource 只限制 Session，唯一非继承 run_project_action 官方 tool/result、callId 和准确 receipt 才确定 turn／step。桌面／PTC／继承／缺失／歧义保持 UNKNOWN。报告标识不认证不可变准确版本，exactModelVersion=null；旧日志无 dispatch cut，loggedInput 仍是完整结算前前缀，dispatchInput=null，settledAttempts 不是网络调用或完整任务。原 4096 事件／2MiB 扫描、64KiB 完整响应、真实消息解释器、observeDurable／generation 保护保持；读取峰值内存未认证。原比较表计数仍 null，已知差异／STALE／同次执行含 Windows 别名拒绝直接比较，双验收仅 BOTH_ACCEPTED，efficiencyEligible=false。
+
+独立 single-task 仍恰好 1 请求／0 provider retry、1..8192 输出 tokens／3 分钟；完整任务文本 16KiB，流 2048 chunks／24KiB，完整响应 64KiB 拒绝不裁剪；每 root 256KiB 含峰值、20 root／10 未终结／80 项、目录 22×256KiB+4KiB 含锁，原 native 普通 2MiB／终态 1MiB 覆盖完整 writer。完整 header／文本含独立笔记块 append／flush，冷读重建，在同一 withGeneration 提交 cut 并调用官方 registration-bound prepared-call。preparedInput 独立；dispatchInput 与计数须有已提交终态，进程丢失不补造。截点位于 Harness prepared-call 入口、adapter／wire 投影之前，providerWireRequests=null。官方 usage 缺失 null、明确 0 保留，PiAi cache-read 零可能省略，input/cache 分离，不从 wire prompt 总数补数。取消／Host 卸载排空；读可见终态等待 provider／quota 排空。关页取消未确认预览读取，已提交任务只中止页面 HTTP，未知启动保留 id 只查询，不补写／重发。TIMEOUT 与 CANCELLED 分开，但真实三分钟钟表未验证。
+
+Relay24 精确证据：一次源码 3 文件／41 项（task21／lineage6／UI14），另补旧 writer1、Notebook4、缺偏好修订3，有重叠不相加；2 个 owner-local 双语快照。source 0 计费／0 Agent，lineage fixture 共 7 个已审阅隔离 Node TAP 动作，工具结果日志是合成，尚不证明实际模型触发工程任务。最终 factors-lifetime-current-built：1 文件／1 项，完整受支持 base/Web/Nidofy Desktop Host、原 native quota、四端点认证及双语页面、实际 Notebook owner／产品 cache hook 跨 bundle／官方 responseModel、4 次本机合成 provider HTTP（完成／取消／失败／进程丢失）、冷重启 sidecar 原字节及无补发；0 计费／0 Agent／0 工程动作，仅 Node-mode Host。当前 root 和 profile 身份见 summary.json，不加各 fixture wire 数为任务计数。6 个 built 根与失败日志保留；input-roots 索引 176 个本棒合成根。独立 desktop-lineage fixture 的若干根未建索引，但 retainRoot=true 且日志保留，不事后猜身份；后续 fixture 应补本次新根索引。代次拒绝测试仅替换它新建源文件的物理身份，原字节保存在 original-source.bytes，不冒称旧代次仍可选。
+
+当前 Host 与生成 API 消费方 strict 类型、4 测试入口和共享 fixture strict 类型、Host／extras／tool-cordis bundles、同次14文件 type-aware lint、16指定源码／27顶层 JSDoc／0unknown AST、3MJS语法、5双语 pair、指定链接／单行段落及窄原字节断言通过。只生成2个 compaction region 和1个 NotebookV2 runtime API 对象，其余 catalog 原字节保持。全仓 doc-sync／预算／依赖等未资格化，原32/5/15及文档缺口保持。全部失败链保留：缺project references、native未知fixture namespace、PiAi文本拼接、profile插件依赖解析、fixture_no-cwd分桶、this／unbound／缩进／重复null条件、证据runner参数；未以失败重试真实模型。两次 setup-refresh 失败和一次补丁匹配失败在进程／写入前，准确时间未记录，不补造。
+
+后续真正工程任务要自己的预算／权限／日志／计数，不能复用 T19 固定票据或单次分析身份；完整官方输入 writer append／flush／observeDurable 和同一 generation 的实际发送，不以摘要／哈希替代。写文件只在隔离工程副本，外部 runner 只走受支持 dsh profile，原保护 Shell／native quota 不放宽，不执行模型生成命令，不自动重试／故障转移。失败／未知／缺计数不补发；取消阻止后续并排空。T19／connection-capacity／Windows 开发载体及独立 Node 原限定资格保留，旧 Probe／cache/start／诊断不猜关联、不升级、不作为未完整记录输入的发送路径。
+
+T23 涉及发送先读 connections/README.md、egress.ts、runtime.ts、store.ts、ConfigEditor.registerValidator、probes/T23-egress-coverage.md、docs/subsystems/boot.md。消费实际 HttpEgressPolicy／HttpEgressLease／DesktopEgressPolicy 和 Loader 前 outboundHttp；checkConfiguration 不授发送权，ConnectionStore.policyRevision 不是 T23 lease 修订。真实 distribution/profile、准确 Workspace／attachment／provider、策略变化撤销、fetch 前同步重验、origin 变化和所有 redirect 拒绝；合成标签不能扩大 Workspace 权限。HTTP 资格不等于 Shell／Git／socket／worker／web-search/fetch／插件／登录／包管理器／MCP stdio 全局零外联。T02 仍显式 overlay，不改默认 credentials；禁止 safe-export 例外、--fix、pnpm exec 或下载 Electron 替代资格。
+
+保留真实用户数据，只用隔离合成输入；不创建真实用户会话或计费，不创建 Codex 聊天／代理／定时器，不 push／合并／发布。承担全部当前消费者、共享配置／构建、必要双语文档及验证。每单元验证后继续，只有 CONTINUOUS 真正交接条件或会话硬限制才结束；同模型容量续做。结束前更新 NEXT_HANDOFF.md、NEXT_PROMPT.txt，保存下一个未用 relay-NN-sol.md，最终贴出同一完整 prompt 和具体原因。
+```

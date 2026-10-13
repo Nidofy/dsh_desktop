@@ -167,6 +167,7 @@ function mount(
     useCatalog: select => select(snapshot),
     useSessions: select => select(sessions),
     useWorkspaces: select => select(workspaces),
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo: select => select({ activePanelId: null }),
     useSessionStatus: select => select(new Map()),
     useSessionRetainInfo: () => undefined,
@@ -1593,7 +1594,7 @@ describe('Task manager details', () => {
     return render(<TaskManagerIcon
       size={size}
       active={false}
-      usePanelInfo={unread}
+      useMainSelection={() => { throw new Error('Fixture does not read main selection') }} usePanelInfo={unread}
       useSessions={unread}
       useWorkspaces={unread}
       useResource={unread}

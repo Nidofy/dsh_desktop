@@ -62,6 +62,12 @@ export interface Win32Bindings extends Win32ProcessBindings {
   setEntriesInAclW(count: number, entries: Buffer, oldAcl: NativePtr | null, newAcl: NativePtr): number
   initializeAcl(acl: NativePtr, length: number, revision: number): number
   addMandatoryAce(acl: NativePtr, revision: number, aceFlags: number, policy: number, sid: NativePtr): number
+  ntSetSecurityObject(handle: NativePtr, information: number, descriptor: Buffer): number
+  ntOpenFile(handle: NativePtr, access: number, attributes: Buffer, status: Buffer, share: number, options: number): number
+  rtlNtStatusToDosError(status: number): number
+  getFileInformationByHandle(handle: NativePtr, information: Buffer): number
+  getSecurityInfo(handle: NativePtr, objectType: number, information: number, owner: NativePtr, group: NativePtr,
+    dacl: NativePtr, sacl: NativePtr, descriptor: NativePtr): number
   setNamedSecurityInfoW(
     path: string,
     objectType: number,
@@ -82,6 +88,7 @@ export interface Win32Bindings extends Win32ProcessBindings {
     descriptor: NativePtr,
   ): number
   getTempPathW(length: number, buffer: Buffer): number
+  shGetFolderPathW(window: null, folder: number, token: null, flags: number, path: Buffer): number
   setEnvironmentVariableW(name: string, value: string): number
   setConsoleCtrlHandler(handler: null, add: number): number
   createFileW(
@@ -134,7 +141,7 @@ export function encodeUint32(slot: NativePtr, value: number): void {
  * @param ptr - native pointer.
  * @returns pointer address.
  */
-export function ptrAddress(ptr: NativePtr): bigint {
+export function ptrAddress(ptr: NativePtr | Buffer): bigint {
   return requireKoffi().address(ptr)
 }
 
@@ -198,6 +205,15 @@ export function decodeUint32At(ptr: NativePtr, offset: number): number {
   return requireKoffi().decode(ptr, offset, 'uint32') as number
 }
 
+/** Copy native bytes without retaining their owning allocation.
+ * @param ptr - readable native allocation.
+ * @param length - checked byte count.
+ * @returns an independently owned copy.
+ */
+export function copyNativeBytes(ptr: NativePtr, length: number): Buffer {
+  return Buffer.from(requireKoffi().decode(ptr, 'uint8', length) as number[])
+}
+
 /**
  * Compare two in-memory SID records without allocating strings.
  * @param left - first native buffer.
@@ -234,6 +250,8 @@ function bindings(): Win32Bindings {
   if (cached !== undefined) return cached
   const koffi = requireKoffi()
   const { PVOID, PPVOID } = ffiTypes()
+  const ntdll = koffi.load('ntdll.dll')
+  const shell32 = koffi.load('shell32.dll')
   cached = extendWin32ProcessBindings(({ kernel32, advapi32, bind }) => ({
     openProcess: bind(kernel32, 'OpenProcess', PVOID, ['uint32', 'int', 'uint32']),
     openProcessToken: bind(advapi32, 'OpenProcessToken', 'int', [PVOID, 'uint32', PPVOID]),
@@ -256,6 +274,11 @@ function bindings(): Win32Bindings {
     setEntriesInAclW: bind(advapi32, 'SetEntriesInAclW', 'uint32', ['uint32', PVOID, PVOID, PPVOID]),
     initializeAcl: bind(advapi32, 'InitializeAcl', 'int', [PVOID, 'uint32', 'uint32']),
     addMandatoryAce: bind(advapi32, 'AddMandatoryAce', 'int', [PVOID, 'uint32', 'uint32', 'uint32', PVOID]),
+    ntSetSecurityObject: bind(ntdll, 'NtSetSecurityObject', 'int32', [PVOID, 'uint32', PVOID]),
+    ntOpenFile: bind(ntdll, 'NtOpenFile', 'int32', [PPVOID, 'uint32', PVOID, PVOID, 'uint32', 'uint32']),
+    rtlNtStatusToDosError: bind(ntdll, 'RtlNtStatusToDosError', 'uint32', ['int32']),
+    getFileInformationByHandle: bind(kernel32, 'GetFileInformationByHandle', 'int', [PVOID, PVOID]),
+    getSecurityInfo: bind(advapi32, 'GetSecurityInfo', 'uint32', [PVOID, 'int', 'uint32', PPVOID, PPVOID, PPVOID, PPVOID, PPVOID]),
     setNamedSecurityInfoW: bind(advapi32, 'SetNamedSecurityInfoW', 'uint32', [
       'str16', 'int', 'uint32', PVOID, PVOID, PVOID, PVOID,
     ]),
@@ -263,6 +286,7 @@ function bindings(): Win32Bindings {
       'str16', 'int', 'uint32', PPVOID, PPVOID, PPVOID, PPVOID, PPVOID,
     ]),
     getTempPathW: bind(kernel32, 'GetTempPathW', 'uint32', ['uint32', PVOID]),
+    shGetFolderPathW: bind(shell32, 'SHGetFolderPathW', 'int32', [PVOID, 'int', PVOID, 'uint32', PVOID]),
     setEnvironmentVariableW: bind(kernel32, 'SetEnvironmentVariableW', 'int', ['str16', 'str16']),
     setConsoleCtrlHandler: bind(kernel32, 'SetConsoleCtrlHandler', 'int', [PVOID, 'int']),
     createFileW: bind(kernel32, 'CreateFileW', PVOID, [

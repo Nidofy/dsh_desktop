@@ -27,6 +27,20 @@ const experimental = {
   },
 } satisfies WorkspaceManifest
 
+it('requires private distribution metadata without exempting ordinary official release packages', () => {
+  const dir = 'packages/nidofy/secure-credentials'
+  const manifest = { name: '@nidofy/dsh-secure-credentials', private: true }
+  expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
+  expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, private: false } }))
+    .toEqual([expect.stringContaining('derived package must set "private": true')])
+  expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, publishConfig: { access: 'public' } } }))
+    .toEqual([expect.stringContaining('derived package must omit publishConfig')])
+  expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, name: '@other/secure-credentials' } }))
+    .toEqual([expect.stringContaining('derived package name must be @nidofy/dsh-secure-credentials')])
+  expect(checkWorkspaceManifest({ dir: 'packages/util/unlisted-private', manifest }))
+    .toContainEqual(expect.stringContaining('release member must not set "private": true'))
+})
+
 describe('workspace dependency ranges', () => {
   const dependency = { dir: 'packages/core/runtime', manifest: { name: '@deepseek-ai/dsh-runtime' } }
   const cli = { dir: 'apps/cli', manifest: { name: '@deepseek-ai/dsh' } }

@@ -9,11 +9,11 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { SessionEvent, SessionHeader, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 import type { SessionHandle, SessionAccess } from './handle.ts'
-import type { SessionPersistenceRevision } from './revision.ts'
+import type { SessionPersistenceRevision, SessionPersistenceGeneration } from './revision.ts'
 
 // Re-export the metadata vocabulary so Consumers import it from the Service Definition.
 export type { SessionHeader } from '@deepseek-ai/dsh-session'
-export { SessionPersistenceRevision } from './revision.ts'
+export { SessionPersistenceRevision, SessionPersistenceGeneration } from './revision.ts'
 export type {
   SessionAccess,
   SessionHandle,
@@ -86,6 +86,18 @@ export interface SessionStorageMetadata {
 export interface SessionInspection extends SessionStorageMetadata {
   /** Contiguous validated events from seq 0. */
   readonly events: readonly SessionEvent[]
+}
+
+/** One durability-confirmed raw logical prefix and its physical source, observed together.
+ * Historical decoding retains the source generation; publishing a migrated successor changes it.
+ * Events exclude query/lifecycle repair and unacknowledged buffered appends. A copied/restored
+ * physical incarnation has a different identity; consumers must explicitly reconcile old cursors.
+ */
+export interface SessionDurableObservation extends SessionInspection {
+  /** Stable physical identity, comparable across instances and cold starts of the same store. */
+  readonly generation: SessionPersistenceGeneration
+  /** Last confirmed logical seq, or -1 for an empty durable log; events contain exactly 0..this value. */
+  readonly durableThrough: number
 }
 
 /** Options for {@link SessionPersistence.open}. */
@@ -176,6 +188,31 @@ export abstract class SessionPersistence extends Service {
    *   remaining handles still flush.
    */
   abstract flush(): Promise<void>
+
+  /** Observe a confirmed raw prefix without relying on best-effort read visibility.
+   * Providers without this capability refuse explicitly; ordinary read is never a fallback.
+   * @param _id - stored session to observe.
+   * @param _options - cancellation for observation work.
+   * @returns detached metadata and raw events paired with their physical generation and durable cut.
+   */
+  observeDurable(_id: SessionId, _options?: SessionPersistenceOpenOptions): Promise<SessionDurableObservation> {
+    return Promise.reject(new Error('SESSION_DURABLE_OBSERVATION_UNSUPPORTED'))
+  }
+
+  /** Execute a derived-state publication while excluding generation replacement and migration.
+   * The callback must not mutate this session or recursively acquire this protection. Providers
+   * refuse if the expected generation is no longer selected or exclusion cannot be obtained.
+   * The protection remains held across asynchronous admission and ends after callback settlement.
+   * @param _id - session whose physical generation must remain selected.
+   * @param _generation - identity captured by observeDurable.
+   * @param _publish - derived-state publication, including its admission and commit point.
+   * @param _options - cancellation before invoking the callback.
+   * @returns the callback result; an already committed result must not be undone by later logging.
+   */
+  withGeneration<T>(_id: SessionId, _generation: SessionPersistenceGeneration, _publish: () => Promise<T>,
+    _options?: SessionPersistenceOpenOptions): Promise<T> {
+    return Promise.reject(new Error('SESSION_GENERATION_PROTECTION_UNSUPPORTED'))
+  }
 
   /**
    * Observe one stored session without reading its event log or taking

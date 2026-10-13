@@ -3,15 +3,22 @@ import { ipcMain, dialog, shell, net, Notification } from 'electron'
 import type { IpcMainInvokeEvent } from 'electron'
 import { lstat, open } from 'node:fs/promises'
 import { basename } from 'node:path'
+import { WorkbenchNoticeConsumer } from './workbench-notifications.ts'
+import type { SystemNotice } from './workbench-notifications.ts'
+import type { DesktopMessages } from './locale.ts'
 /** Register derived-desktop file actions on the existing authenticated Host.
  * @param admit - Existing top-frame app sender check.
  * @param backend - Current Host URL and private cookie, never exposed to the renderer.
+ * @param messages - Current shell-owned localized notice copy.
+ * @param openSource - Explicit notification-click locator; never grants execution or acceptance.
+ * @param openSession - Navigate an existing main conversation without resuming its agent.
  * @returns Disposer for the IPC handlers.
  */
 export function installWorkbenchDesktop(admit: (event: IpcMainInvokeEvent) => void, backend: () => {
   url: string
   cookie: string
-}): () => void {
+}, messages: () => DesktopMessages,
+openSource: (notice: SystemNotice) => Promise<void>, openSession: (id: string) => void): () => Promise<void> {
   const fetchHost = (path: string, init?: RequestInit): Promise<Response> => {
     const host = backend(), url = new URL(path, host.url)
     const headers = new Headers(init?.headers)
@@ -69,55 +76,64 @@ export function installWorkbenchDesktop(admit: (event: IpcMainInvokeEvent) => vo
     }
     return { saved: true, bytes }
   })
-  let lastNotification = 0
-  let notificationsEnabled = false, polling = false
-  let notificationEpoch = 0
-  const seen = new Set<string>()
-  ipcMain.handle('nidofy:notifications', async (event, enabled: unknown) => {
+  const request = async (method: string, input: object = {}): Promise<unknown> => {
+    const response = await fetchHost('/api/nidofy/workbench/' + method, { method: 'POST',
+      headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) })
+    const value: unknown = await response.json()
+    if (!response.ok) throw Error('NOTIFICATION_REQUEST_REFUSED')
+    return value
+  }
+  let stopping = false
+  const displayed = new Set<Notification>()
+  const consumer = new WorkbenchNoticeConsumer(request, async (notice) => {
+    if (stopping) return 'suppressed'
+    if (!Notification.isSupported()) return 'failed'
+    const t = messages(), notification = new Notification({ title: notice.sourceType === 'job' ? t.jobNoticeTitle : notice.sourceType === 'session' ? t.sessionNoticeTitle : t.verificationNoticeTitle,
+      body: notice.sourceType === 'job' ? notice.kind === 'completed' ? t.jobNoticeCompleted : notice.kind === 'cancelled' ? t.jobNoticeCancelled : t.jobNoticeFailed
+        : notice.sourceType === 'session' ? notice.kind === 'completed' ? t.sessionNoticeCompleted
+          : notice.kind === 'cancelled' ? t.sessionNoticeCancelled : notice.kind === 'blocked' ? t.sessionNoticeBlocked
+            : notice.kind === 'limit-reached' ? t.sessionNoticeLimit : notice.kind === 'interrupted' ? t.sessionNoticeInterrupted : t.sessionNoticeFailed
+          : notice.kind === 'failed' ? t.verificationNoticeFailed : notice.kind === 'cancelled'
+            ? t.verificationNoticeCancelled : t.verificationNoticeAcceptance })
+    displayed.add(notification)
+    notification.once('click', () => {
+      if (stopping) return
+      void openSource(notice).then(() => request('notifications/handle', { id: notice.id }))
+        .catch(() => { /* A failed locator leaves the notice unhandled. */ })
+    })
+    notification.once('close', () => { displayed.delete(notification) })
+    return new Promise((resolve) => {
+      const finish = (outcome: 'sent' | 'failed' | 'unknown'): void => {
+        clearTimeout(deadline); notification.removeListener('show', shown); notification.removeListener('failed', failed)
+        notification.removeListener('close', closed)
+        resolve(outcome)
+      }
+      const shown = (): void => { finish('sent') }, failed = (): void => { finish('failed') }
+      const closed = (): void => { finish('unknown') }
+      const deadline = setTimeout(() => { finish('unknown') }, 60000)
+      notification.once('show', shown); notification.once('failed', failed); notification.once('close', closed)
+      try { notification.show() } catch (error) { void error; finish('failed') }
+    })
+  })
+  ipcMain.handle('nidofy:notifications', (event) => { admit(event); return request('notifications/preferences') })
+  ipcMain.handle('nidofy:open-session', async (event, id: unknown) => {
     admit(event)
-    if (typeof enabled !== 'boolean') throw Error('NOTIFICATION_INVALID')
-    notificationsEnabled = false
-    const epoch = ++notificationEpoch
-    seen.clear()
-    if (!enabled) return
-    const response = await fetchHost('/api/nidofy/workbench/notifications', { method: 'POST', body: '{}' })
-    const rows: unknown = await response.json()
-    if (!response.ok || !Array.isArray(rows)) throw Error('NOTIFICATION_UNAVAILABLE')
-    for (const row of rows as unknown[]) if (typeof row === 'object' && row !== null && 'id' in row && typeof row.id === 'string') seen.add(row.id)
-    if (epoch === notificationEpoch) notificationsEnabled = true
+    if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw Error('SESSION_ID_INVALID')
+    await request('recovery', { sessionId: id })
+    openSession(id)
   })
   const timer = setInterval(() => {
-    if (!notificationsEnabled || polling) return
-    polling = true
-    const epoch = notificationEpoch
-    void (async () => {
-      const response = await fetchHost('/api/nidofy/workbench/notifications', { method: 'POST', body: '{}' })
-      const rows: unknown = await response.json()
-      if (!response.ok || !Array.isArray(rows) || epoch !== notificationEpoch) return
-      for (const row of rows as unknown[]) {
-        if (typeof row !== 'object' || row === null || !('id' in row) || typeof row.id !== 'string' || seen.has(row.id)) continue
-        seen.add(row.id)
-        if ('sessionId' in row && typeof row.sessionId === 'string' && 'reason' in row && typeof row.reason === 'string' && Notification.isSupported()) {
-          new Notification({ title: 'DSH · Session', body: `${row.sessionId.slice(0, 100)} · ${row.reason.slice(0, 60)}` }).show()
-        }
-      }
-      if (seen.size > 300) {
-        const retained = [...seen].slice(-100)
-        seen.clear()
-        for (const id of retained) seen.add(id)
-      }
-    })().catch(() => { /* A disconnected Host cannot establish a new completion. */ }).finally(() => { polling = false })
+    if (stopping) return
+    try {
+      const host = backend()
+      void consumer.tick(host.url + '\0' + host.cookie).catch(() => { /* Reconnection establishes a fresh durable baseline. */ })
+    } catch (error) { /* The Host is not ready; no notice can be consumed. */ void error }
   }, 3000)
   timer.unref()
-  ipcMain.handle('nidofy:notify', (event, title: unknown, body: unknown) => {
-    admit(event)
-    if (typeof title !== 'string' || typeof body !== 'string' || title.length > 120 || body.length > 300)
-      throw Error('NOTIFICATION_INVALID')
-    if (Date.now() - lastNotification < 1000)
-      return
-    lastNotification = Date.now()
-    if (Notification.isSupported())
-      new Notification({ title, body }).show()
-  })
-  return () => { clearInterval(timer); notificationsEnabled = false; notificationEpoch++; ipcMain.removeHandler('nidofy:artifact'); ipcMain.removeHandler('nidofy:notify'); ipcMain.removeHandler('nidofy:notifications') }
+  return async () => {
+    stopping = true; clearInterval(timer)
+    ipcMain.removeHandler('nidofy:artifact'); ipcMain.removeHandler('nidofy:notifications'); ipcMain.removeHandler('nidofy:open-session')
+    for (const notification of displayed) { notification.removeAllListeners('click'); notification.close() }
+    displayed.clear(); await consumer.close()
+  }
 }

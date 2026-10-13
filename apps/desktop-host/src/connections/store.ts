@@ -3,6 +3,7 @@ import { randomUUID, createHash } from 'node:crypto'
 import { mkdir, readFile, unlink, lstat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { writeFileAtomic, withFileLock } from '@deepseek-ai/dsh-atomic-write'
+import type { StorageService } from '@nidofy/dsh-desktop-extras/storage'
 import { Config, resolveProfiles } from '@deepseek-ai/dsh-llm-pi-ai'
 import type { PiAiProviderProfile } from '@deepseek-ai/dsh-llm-pi-ai'
 import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
@@ -28,6 +29,8 @@ export interface Revision {
   createdAt: number
   profile: PiAiProviderProfile
   credential: string
+  /** Opaque cache account generation; absent legacy records remain isolated by their revision ID. */
+  credentialPartition?: string
   policyRevision: number
   transportLease: 'host-network-v1'
 }
@@ -139,7 +142,9 @@ export class ConnectionStore {
   constructor(readonly directory: string, private readonly secrets: SecretStore,
     private readonly publish: (state: ConnectionState) => void,
     readonly retentionMs = 60_000,
-    private readonly fault: (point: string) => Promise<void> = () => Promise.resolve()) {}
+    private readonly fault: (point: string) => Promise<void> = () => Promise.resolve(),
+    private readonly storage?: StorageService,
+    private readonly validateProfile?: (profile: PiAiProviderProfile, connection: string) => Promise<() => Promise<void>>) {}
 
   private desired: ConnectionState = empty()
   private tail: Promise<void> = Promise.resolve()
@@ -191,8 +196,10 @@ export class ConnectionStore {
       if (typeof row.id !== 'string' || !uuid.test(row.id) || typeof row.connection !== 'string' || !idPattern.test(row.connection)
         || typeof row.credential !== 'string' || row.credential !== `NIDOFY_REV_${row.id.replaceAll('-', '_')}`
         || typeof row.createdAt !== 'number' || !Number.isSafeInteger(row.policyRevision)
+        || (row.credentialPartition !== undefined && (typeof row.credentialPartition !== 'string' || !uuid.test(row.credentialPartition)))
         || row.transportLease !== 'host-network-v1') throw new Error('INVALID_CONNECTION_REVISION')
       return { id: brandString<RevisionId>(row.id), connection: row.connection, credential: row.credential,
+        ...(typeof row.credentialPartition === 'string' ? { credentialPartition: row.credentialPartition } : {}),
         createdAt: row.createdAt, policyRevision: Number(row.policyRevision),
         transportLease: 'host-network-v1' as const, profile: profileFrom(row.profile) }
     })
@@ -219,7 +226,7 @@ export class ConnectionStore {
       try { await unlink(path) } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
       return
     }
-    await writeFileAtomic(path, JSON.stringify({ schemaVersion: 1, refs } satisfies CleanupLedger), { mode: 0o600 })
+    await this.write(path, JSON.stringify({ schemaVersion: 1, refs } satisfies CleanupLedger))
   }
 
   /** Retry pending unsets idempotently; a reference the committed state still owns is dropped, a failing unset stays recorded. */
@@ -319,9 +326,20 @@ export class ConnectionStore {
   }
 
   private exclusive<T>(work: () => Promise<T>): Promise<T> {
-    const pending = this.tail.then(() => withFileLock(join(this.directory, 'owner'), work))
+    const pending = this.tail.then(() => withFileLock(join(this.directory, 'owner'), async () => {
+      if (!this.storage) return work()
+      // Recovery may rewrite both bounded 4-MiB documents and the cleanup ledger.
+      const lease = await this.storage.reserve('connections:transaction', 24 * 1024 * 1024, 8 * 1024 * 1024)
+      try { return await lease.run(work) }
+      finally { await lease.release().catch((error: unknown) => { /* Retained quota is reconciled after writers drain. */ void error }) }
+    }))
     this.tail = pending.then(() => {}, () => {})
     return pending
+  }
+
+  private write(path: string, bytes: string): Promise<void> {
+    const work = () => writeFileAtomic(path, bytes, { mode: 0o600 })
+    return this.storage ? this.storage.write(path, Buffer.byteLength(bytes) * 2, work) : work()
   }
 
   /** Re-resolve the value a keep edit copies; keep requires this connection's current revision to read back from the backend.
@@ -362,26 +380,33 @@ export class ConnectionStore {
       next.operations = [...next.operations.slice(-255), operationId]
       let row: Revision | undefined
       let value = ''
+      let checkPublication: (() => Promise<void>) | undefined
       if (request.action === 'revoke') {
         if (!next.current[connection]) throw new Error('CONNECTION_NOT_FOUND')
         for (const item of next.revisions) if (item.connection === connection && !next.revoked.includes(item.id)) next.revoked.push(item.id)
         const { [connection]: _removed, ...current } = next.current
         next.current = current
       } else if (request.action === 'save') {
+        const profile = profileFrom(request.profile)
+        checkPublication = await this.validateProfile?.(profile, connection)
+        await checkPublication?.()
         const edit = credentialEditOf(request)
         value = edit.mode === 'replace' ? edit.value : await this.keptValue(connection)
         const id = brandString<RevisionId>(randomUUID())
-        row = { id, connection, createdAt: Date.now(), profile: profileFrom(request.profile),
+        const previous = next.revisions.find(item => item.id === next.current[connection])
+        row = { id, connection, createdAt: Date.now(), profile,
+          credentialPartition: edit.mode === 'keep' && previous ? previous.credentialPartition ?? previous.id : id,
           credential: `NIDOFY_REV_${id.replaceAll('-', '_')}`, policyRevision: next.revision, transportLease: 'host-network-v1' }
         next.revisions.push(row); next.current[connection] = id
       } else throw new Error('INVALID_CONNECTION_ACTION')
       if (Object.keys(next.current).length > 64 || next.revisions.length > 512
         || Buffer.byteLength(JSON.stringify(next)) > 4 * 1024 * 1024) throw new Error('CONNECTION_CAPACITY')
-      await writeFileAtomic(join(this.directory, 'journal.json'), JSON.stringify(next), { mode: 0o600 })
+      await this.write(join(this.directory, 'journal.json'), JSON.stringify(next))
       await this.fault('prepared')
       if (row) await this.secrets.set(row.credential, value)
       await this.fault('credential-staged')
-      await writeFileAtomic(join(this.directory, 'state.json'), JSON.stringify(next), { mode: 0o600 })
+      await checkPublication?.()
+      await this.write(join(this.directory, 'state.json'), JSON.stringify(next))
       await this.fault('committed')
       this.desired = next
       await this.apply(next)
@@ -466,8 +491,8 @@ export class ConnectionStore {
           const next = { ...this.desired, revisions: this.desired.revisions.filter(row => !retired.includes(row)),
             revoked: this.desired.revoked.filter(id => !retired.some(row => row.id === id)) }
           // Journal retains retired refs so an interrupted deletion is repeated at startup.
-          await writeFileAtomic(join(this.directory, 'journal.json'), JSON.stringify(this.desired), { mode: 0o600 })
-          await writeFileAtomic(join(this.directory, 'state.json'), JSON.stringify(next), { mode: 0o600 })
+          await this.write(join(this.directory, 'journal.json'), JSON.stringify(this.desired))
+          await this.write(join(this.directory, 'state.json'), JSON.stringify(next))
           this.desired = next
           await this.apply(next)
         }

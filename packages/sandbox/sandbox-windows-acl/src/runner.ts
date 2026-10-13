@@ -4,21 +4,21 @@
  * WRITE_RESTRICTED token with the workspace write-SID allowlist, spawns the
  * wrapped argv under it with the CALLER'S stdio inherited (bytes flow
  * straight through), mirrors the child's exit code, and revokes its temp
- * grant on exit (workspace ACEs stay standing as the reuse cache).
+ * grant and process workspace lease after the child job closes.
  *
  * Stable argv contract (the seam builds it; a native-exe replacement would
  * keep the same contract):
  *   [node, runner.js, '--workspace', <dir>, '--temp', <dir>,
  *    '--mode', <read-only|workspace-write>,
  *    ['--write-sid', <S-1-4-…>,
- *     '--temp-write-sid', <S-1-4-…>], '--', <argv...>]
+ *     '--temp-write-sid', <S-1-4-…>, '--workspace-lease', <owner>], '--', <argv...>]
  *
  * Modes:
  *  - workspace-write: the workspace and temp directories carry distinct
  *    capability-SID Write grants; other ACL-addressable writes are denied
  *    except for the documented Everyone and hard-link boundaries.
  *  - read-only: no capability-SID grants; the restricting list carries no
- *    capability SID, so a standing grant ACE from an earlier
+ *    capability SID, so a grant ACE held by another live
  *    workspace-write period stays inert. BOTH modes drop Authenticated Users
  *    (CIM unavailable — documented in README) and INTERACTIVE/LOCAL (the
  *    Public tree writes are denied); the two lists share the keep-alive group
@@ -26,8 +26,9 @@
  *
  * `--write-sid` + `--temp-write-sid`: the seam's grant contract — the
  * CALLER has already materialized distinct workspace and private-temp ACEs
- * and owns their revocation, so the runner neither grants nor revokes
- * (`manageDacls: false`). Both values are checked against their owning paths.
+ * and supplies a live --workspace-lease owner. The runner joins that owner
+ * before spawning and releases its child lease after the job closes. Released
+ * owners cannot revive authorization. Both SIDs are checked against their paths.
  * Without the pair (standalone/agentless use), workspace-write treats
  * `--temp` as a ROOT, creates a random private child directory, derives its
  * own temp SID, and removes that directory after the child exits. In both
@@ -51,6 +52,7 @@ import { join } from 'node:path'
 import { win32 } from './ffi.ts'
 import { AclSandbox, assertTempRootOutsideWorkspace } from './index.ts'
 import { tempWriteSid, workspaceWriteSid } from './workspace-sid.ts'
+import { WorkspaceGrantLease } from './recovery.ts'
 
 const RUNNER_SIGNATURE = 'windows-acl-run'
 const RUNNER_FAILURE_EXIT = 127
@@ -69,6 +71,7 @@ interface ParsedArgs {
   mode: 'read-only' | 'workspace-write'
   writeSid: string | undefined
   tempWriteSid: string | undefined
+  workspaceLease: string | undefined
   command: string
   args: string[]
 }
@@ -79,6 +82,7 @@ function parseArgs(raw: string[]): ParsedArgs {
   let mode: string | undefined
   let writeSid: string | undefined
   let parsedTempWriteSid: string | undefined
+  let workspaceLease: string | undefined
   let index = 0
   for (; index < raw.length; index++) {
     const token = raw[index]
@@ -95,6 +99,7 @@ function parseArgs(raw: string[]): ParsedArgs {
       case '--mode': mode = value; break
       case '--write-sid': writeSid = value; break
       case '--temp-write-sid': parsedTempWriteSid = value; break
+      case '--workspace-lease': workspaceLease = value; break
       default: fail(`unknown argument: ${token}`)
     }
   }
@@ -104,7 +109,7 @@ function parseArgs(raw: string[]): ParsedArgs {
   const argv = raw.slice(index)
   const command = argv[0]
   if (command === undefined) fail('missing command after --')
-  return { workspace, temp, mode, writeSid, tempWriteSid: parsedTempWriteSid, command, args: argv.slice(1) }
+  return { workspace, temp, mode, writeSid, tempWriteSid: parsedTempWriteSid, workspaceLease, command, args: argv.slice(1) }
 }
 
 function requireDirectory(label: string, path: string): void {
@@ -121,6 +126,7 @@ async function main(): Promise<number> {
   requireDirectory('--temp', parsed.temp)
 
   const seamManaged = parsed.writeSid !== undefined || parsed.tempWriteSid !== undefined
+  if (seamManaged !== (parsed.workspaceLease !== undefined)) fail('managed workspace requires a live --workspace-lease authorization')
   if (parsed.mode === 'read-only' && seamManaged) {
     fail('read-only does not accept --write-sid or --temp-write-sid')
   }
@@ -142,6 +148,7 @@ async function main(): Promise<number> {
   let ownedTempDir: string | undefined
   let sandbox: AclSandbox | undefined
   let initialized = false
+  let workspaceLease: WorkspaceGrantLease | undefined
   try {
     let privateTempDir: string | null = null
     let writeSid: string | undefined
@@ -153,6 +160,7 @@ async function main(): Promise<number> {
         privateTempDir = parsed.temp
         privateTempSid = tempWriteSid(privateTempDir)
         if (parsed.tempWriteSid !== privateTempSid) fail('--temp-write-sid does not match --temp')
+        workspaceLease = WorkspaceGrantLease.acquire(api, parsed.workspace, writeSid, parsed.workspaceLease)
       } else {
         ownedTempDir = mkdtempSync(join(parsed.temp, 'dsh-'))
         privateTempDir = ownedTempDir
@@ -203,6 +211,9 @@ async function main(): Promise<number> {
       } catch (error) {
         process.stderr.write(`${RUNNER_SIGNATURE}: cleanup: ${error instanceof Error ? error.message : String(error)}\n`)
       }
+    }
+    try { workspaceLease?.dispose() } catch (error) {
+      process.stderr.write(`${RUNNER_SIGNATURE}: workspace recovery: ${error instanceof Error ? error.message : String(error)}\n`)
     }
   }
 }

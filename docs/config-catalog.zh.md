@@ -2606,7 +2606,7 @@ export type SessionLogCompressionLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 ## `@deepseek-ai/dsh-session-persistence-jsonl`
 
-- `source`: [`packages/session/session-persistence-jsonl/src/index.ts:90`](../packages/session/session-persistence-jsonl/src/index.ts)
+- `source`: [`packages/session/session-persistence-jsonl/src/index.ts:91`](../packages/session/session-persistence-jsonl/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config for the JSONL backend's root and physical encoding. */
@@ -4345,23 +4345,63 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@nidofy/dsh-desktop-extras -->
 
+<!-- BEGIN GENERATED config-catalog:@nidofy/dsh-secure-credentials -->
+<a id="nidofydsh-secure-credentials"></a>
+
+## `@nidofy/dsh-secure-credentials`
+
+- `source`: [`packages/nidofy/secure-credentials/src/types.ts:8`](../packages/nidofy/secure-credentials/src/types.ts)
+
+```ts config-catalog
+/** Explicit deployment choices; no ambient application or home identity is inferred. */
+export interface Config {
+  /** Application identifier, separate from official distributions. */
+  applicationId: string
+  /** Profile identifier within the application. */
+  profileId: string
+  /** Absolute, existing or creatable Harness home. */
+  dshHome: string
+  /** Maximum UTF-8 bytes of the complete decrypted document, including records and metadata. */
+  maxPlaintextBytes: number
+  /** Maximum lifetime of one Windows encryption helper, in milliseconds. */
+  backendTimeoutMs: number
+  /** Maximum cross-process writer lock acquisition wait, in milliseconds. */
+  lockWaitMs: number
+  /** External change observation interval in milliseconds; zero disables polling. */
+  refreshIntervalMs: number
+}
+```
+<!-- END GENERATED config-catalog:@nidofy/dsh-secure-credentials -->
+
 <!-- BEGIN GENERATED config-catalog:@nidofy/dsh-working-notebook -->
 <a id="nidofydsh-working-notebook"></a>
 
 ## `@nidofy/dsh-working-notebook`
 
-- `inject`: `connection` · `tools` · `sessionQuery` · `sessions` · `systemPrompt`
+- `inject`: `connection` · `tools` · `sessionQuery` · `sessionPersistence` · `sessions` · `systemPrompt` · `llm`
 - `source`: [`packages/nidofy/working-notebook/src/index.ts:14`](../packages/nidofy/working-notebook/src/index.ts)
 
 ```ts config-catalog
 /** Notebook bounds and the initial enhancement choice before a saved preference exists. */
 export interface Config {
-  /** Maximum note entries, including retired entries. */
-  maxEntries: number
-  /** Maximum serialized note snapshot and summary appendix bytes. */
-  maxBytes: number
+  /** Maximum active notes; retired notes remain in history. */
+  maxActiveEntries: number
+  /** Maximum complete active injection bytes, including instructions. */
+  maxActiveBytes: number
+  /** Maximum candidate delta bytes. */
+  maxDeltaBytes: number
+  /** Maximum complete evidence appendix bytes. */
+  maxEvidenceBytes: number
+  /** Maximum on-disk history namespace bytes, including publication temporaries. */
+  maxHistoryBytes: number
   /** Initial profile-wide enhancement choice before the first saved UI preference. */
   autoOrganize: boolean
+  /** Maximum retained per-session synchronization metadata entries; in-flight entries remain pinned. */
+  maxCachedSessions: number
+  /** Maximum original source rows returned for the recent-source picker. */
+  recentEventLimit: number
+  /** Maximum raw events examined for one recent-source request. */
+  recentScanEvents: number
 }
 ```
 <!-- END GENERATED config-catalog:@nidofy/dsh-working-notebook -->

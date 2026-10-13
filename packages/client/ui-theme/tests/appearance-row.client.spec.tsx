@@ -48,6 +48,7 @@ function mount(preference: ThemePreference = 'system') {
   const props: AppearanceRowComponentProps = {
     useSessions: emptySessions(),
     useSessionStatus,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: emptyWorkspaces(),
     useStore: bindSnapshotSelector(store),

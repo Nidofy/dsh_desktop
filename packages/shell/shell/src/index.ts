@@ -32,6 +32,11 @@ declare module '@deepseek-ai/cordis' {
     shell: ShellExecutor
   }
 }
+/** Provider-owned executable/configuration observations; callers hash bytes and include the command's declared dependencies. */
+export interface ShellVerificationInputs {
+  executablePaths: readonly string[]
+  configuration: object
+}
 
 /**
  * Abstract bash execution service. Subclass, implement the abstract methods,
@@ -82,6 +87,12 @@ export abstract class ShellExecutor extends Service {
    * @returns the fully-specified spec to hand to {@link execute}.
    */
   abstract resolve(request: ShellExecRequest): ShellExecSpec
+
+  /** Observe provider-owned executable paths and current settings without preparing or starting a process.
+   * @param _spec - Actual resolved execution settings selected for the run.
+   * @returns Null when the provider cannot enumerate its own execution inputs; verification coverage must then remain unknown.
+   */
+  verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null> { return Promise.resolve(null) }
 
   /**
    * Prepare and spawn the command under its resolved deadline.

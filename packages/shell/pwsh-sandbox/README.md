@@ -59,6 +59,8 @@ On Windows, mount the ACL restricted-token provider; on Linux and macOS, mount t
 
 A denied command is reported as a fact: the result carries `sandbox: { mode, denied: true }`, and the tool layer converts it into the standard permission-denied surface — the same one the bash tool uses. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself.
 
+`verificationInputs` returns null because the confinement provider exposes no complete read-only enumeration of its runner and prepared runtime inputs. Parsed command/test output remains usable as execution evidence, but the inherited local PowerShell observation cannot establish complete verification coverage for this composition.
+
 ### Failures and recovery
 
 If no runner can enforce a confined mode, the foreground call fails with `SANDBOX_UNAVAILABLE` and a background process records a runner-failure fact — never a silent unconfined run. A provider rejection is attributed to the confinement runner only when its `ENOENT`/`EACCES` path or syscall independently names `argv[0]`; otherwise it keeps the local executor's stage-neutral provider-failure semantics.

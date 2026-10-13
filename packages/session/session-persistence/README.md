@@ -66,6 +66,8 @@ A stored log the current build cannot faithfully interpret is refused with a dir
 
 -----
 
+`observeDurable()` returns one confirmed raw prefix with its persistent physical generation and `durableThrough`. Ordinary handle reads can include best-effort appends and are not durability evidence. `withGeneration()` protects a derived publication through asynchronous admission and commit; providers without these capabilities reject explicitly. Cache revisions and format versions cannot substitute for the generation.
+
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 

@@ -1,6 +1,6 @@
 import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
 /** Synchronizes Windows context menus and caption colors with the application document. */
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, webFrame } from 'electron'
 import { DESKTOP_IPC } from './ipc.ts'
 import { installWindowsMenu } from './preload-menu.ts'
 
@@ -10,12 +10,13 @@ export function syncWindowsAppearance(): void {
   const mark = (): void => {
     const root = document.documentElement
     root.dataset.windowsTitlebar = ''
-    root.style.setProperty('--dsh-windows-titlebar-height', `${WINDOWS_TITLEBAR_HEIGHT}px`)
+    root.style.setProperty('--dsh-windows-titlebar-height', `${WINDOWS_TITLEBAR_HEIGHT / webFrame.getZoomFactor()}px`)
   }
   // The root can be absent before the HTML parser creates it.
   if ((document.documentElement as HTMLElement | null) !== null) mark()
   const install = (): void => {
     mark()
+    window.addEventListener('resize', mark)
     const root = document.documentElement
     const menu = installWindowsMenu()
     const probe = document.createElement('span')
@@ -50,6 +51,7 @@ export function syncWindowsAppearance(): void {
     observer.observe(document.head, { childList: true, subtree: true, characterData: true })
     document.head.addEventListener('load', send, true)
     window.addEventListener('pagehide', () => {
+      window.removeEventListener('resize', mark)
       observer.disconnect()
       menu.dispose()
       probe.remove()

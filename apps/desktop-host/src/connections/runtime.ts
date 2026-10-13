@@ -8,8 +8,10 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-fs'
 import type {} from '@nidofy/dsh-desktop-extras'
+import { withDesktopCacheRouting } from '@nidofy/dsh-desktop-extras/cache'
 import { ConnectionStore } from './store.ts'
 import type { ConnectionState, RevisionId } from './store.ts'
+import { observedPayload } from './request-observations.ts'
 
 const routeOf = (connection: string): string => `nidofy-${connection}`
 const revisionRoute = (id: string, connection: string): string => `nidofy-rev-${id}--${connection}`
@@ -19,6 +21,18 @@ const connectionOf = (route: string): string | undefined => {
 }
 
 class ManagedAdapter extends LlmAdapter {
+  private readonly profiles = new Map<string, ReturnType<typeof resolveProfiles>>()
+  prune(ids: ReadonlySet<string>): void { for (const id of this.profiles.keys()) if (!ids.has(id)) this.profiles.delete(id) }
+  private profilesFor(id: string) {
+    const row = this.store.state.revisions.find(item => item.id === id)
+    if (!row) throw new Error('CONNECTION_RETIRED')
+    let profiles = this.profiles.get(id)
+    if (!profiles) {
+      profiles = resolveProfiles({ [revisionRoute(id, row.connection)]: { ...row.profile, apiKeyEnv: row.credential } })
+      this.profiles.set(id, profiles)
+    }
+    return profiles
+  }
   constructor(private readonly ctx: Context, private readonly store: ConnectionStore) { super() }
   private id(provider: string): RevisionId {
     const direct = /^nidofy-rev-([a-f0-9-]{36})--/.exec(provider)?.[1]
@@ -29,16 +43,18 @@ class ManagedAdapter extends LlmAdapter {
   private delegate(id: string, key: () => string, check: () => void): PiAiAdapter {
     const row = this.store.state.revisions.find(item => item.id === id)
     if (!row) throw new Error('CONNECTION_RETIRED')
-    const profile = { ...row.profile, apiKeyEnv: row.credential }
-    const profiles = resolveProfiles({ [revisionRoute(id, row.connection)]: profile })
+    const profiles = this.profilesFor(id)
     return new PiAiAdapter({ profiles: () => profiles, resolveApiKey: () => { check(); return Promise.resolve(key()) },
+      prepareHttp: url => this.ctx.get('outboundHttp')?.prepare(url) ?? Promise.resolve(undefined),
       auth: { credentials: credentialStoreFrom(this.ctx), authContext: authContextFrom(this.ctx) },
       resolveAttachments: () => this.ctx.get('attachments'),
       resolveImageAccess: (attachments, ref) => resolveImageAttachmentAccess(attachments,
         path => this.ctx.get('fs')?.processPathFromHostPath(path), ref),
       preparePayload: (scope) => {
-        const transform = this.ctx.bail('llm-pi-ai/prepare-payload', scope)
-        return async (payload, model) => { check(); return transform ? await transform(payload, model) : payload }
+        const transform = this.ctx.bail('llm-pi-ai/prepare-payload', withDesktopCacheRouting(scope, {
+          provider: routeOf(row.connection), credentialPartition: row.credentialPartition ?? row.id,
+        }))
+        return observedPayload(scope, transform, check)
       },
     })
   }
@@ -49,7 +65,7 @@ class ManagedAdapter extends LlmAdapter {
   override providerRetryPolicy(provider: string) {
     const id = this.id(provider), row = this.store.state.revisions.find(item => item.id === id)
     if (!row) return undefined
-    return this.delegate(id, () => '', () => {}).providerRetryPolicy(revisionRoute(id, row.connection))
+    return this.profilesFor(id).get(revisionRoute(id, row.connection))?.retryPolicy
   }
   override async listModels(provider: string) {
     if (provider.startsWith('nidofy-rev-')) return []
@@ -95,20 +111,39 @@ class ManagedAdapter extends LlmAdapter {
  */
 export async function installConnections(ctx: Context, directory: string): Promise<ConnectionStore> {
   let registration: AdapterRegistrationHandle | undefined
+  let heldRoutes = new Set<string>()
+  const knownRoutes = new Set<string>()
   const publish = (state: ConnectionState): void => {
+    adapter.prune(new Set(state.revisions.map(row => row.id)))
     const routes = [...Object.keys(state.current).map(routeOf), ...state.revisions.map(row => revisionRoute(row.id, row.connection))]
-    if (routes.length === 0) { registration?.(); registration = undefined; return }
+    if (routes.length === 0) { registration?.(); registration = undefined; heldRoutes.clear(); return }
     if (registration) registration.replace(routes)
     else registration = ctx.llm.registerAdapter(routes, adapter)
+    heldRoutes = new Set(routes)
+    for (const route of routes) knownRoutes.add(route)
   }
   const store = new ConnectionStore(directory, {
     get: async ref => (await ctx.credentials.resolve(credentialRef(ref)))?.value,
     set: (ref, key) => ctx.credentials.set(credentialRef(ref), key),
     unset: ref => ctx.credentials.unset(credentialRef(ref)),
-  }, publish)
+  }, publish, undefined, undefined, ctx.get('nidofyStorage'), async (profile, connection) => {
+    const checkRoute = (): void => {
+      const route = routeOf(connection)
+      if (!heldRoutes.has(route) && ctx.llm.listProviders().some(row => row.id === route)) throw Error('CONNECTION_ROUTE_CONFLICT')
+    }
+    checkRoute()
+    const policy = ctx.get('outboundHttp')
+    if (!policy) return () => { checkRoute(); return Promise.resolve() }
+    const resolved = resolveProfiles({ 'nidofy-validation': { ...profile, apiKeyEnv: 'NIDOFY_VALIDATION' } }).get('nidofy-validation')
+    const models = resolved?.piProvider?.getModels() ?? []
+    if (models.length === 0) throw Error('EGRESS_TARGET_UNRESOLVED')
+    const leases = await Promise.all(models.map(model => policy.prepare(model.baseUrl)))
+    return async () => { checkRoute(); for (const lease of leases) await lease.checkConfiguration(); checkRoute() }
+  })
   const adapter = new ManagedAdapter(ctx, store)
   await store.open()
   ctx.on('nidofy/connection-route', (provider) => {
+    if (!knownRoutes.has(provider)) return undefined
     const connection = connectionOf(provider)
     if (!connection) return undefined
     if (provider.startsWith('nidofy-rev-')) return provider
@@ -125,7 +160,7 @@ export async function installConnections(ctx: Context, directory: string): Promi
   }>()
   ctx.on('agent/request', async (payload, next) => {
     const proposed = await next(), connection = connectionOf(proposed.provider)
-    if (!connection) return proposed
+    if (!connection || !knownRoutes.has(proposed.provider)) return proposed
     const address = `${payload.agent.session.id}:${payload.turn}:${payload.step}`
     const prior = leases.get(address)
     if (prior) { prior.check(); return prior.config }
@@ -133,7 +168,7 @@ export async function installConnections(ctx: Context, directory: string): Promi
     if (!id) throw new Error('CONNECTION_REVOKED_OR_MISSING')
     const lease = store.acquire(id)
     const release = (): void => { lease.release(); leases.delete(address); payload.signal.removeEventListener('abort', release) }
-    const config = { ...proposed, provider: revisionRoute(id, connection) }
+    const config = { ...proposed, provider: revisionRoute(id, connection), providerIdentity: routeOf(connection) }
     leases.set(address, { session: String(payload.agent.session.id), turn: payload.turn, release, config, check: () =>{  lease.check() } })
     payload.signal.addEventListener('abort', release, { once: true })
     if (payload.signal.aborted) { release(); payload.signal.throwIfAborted() }

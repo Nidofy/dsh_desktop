@@ -55,10 +55,12 @@ const status = (
 ): SessionStatus => ({ running: undefined, pendingInteraction, completionUnread: false, ...overrides })
 const archived = (...ids: string[]): readonly SessionId[] => ids.map(sid)
 const rowState = (options: {
+  current?: SessionId
   pinned?: readonly string[]
   archived?: readonly string[]
   archivedFilter?: ArchivedFilter
 } = {}) => ({
+  currentSessionId: options.current,
   pinnedSessionIds: (options.pinned ?? []).map(sid),
   archivedSessionIds: (options.archived ?? []).map(sid),
   archivedFilter: options.archivedFilter ?? 'default' as const,
@@ -81,7 +83,7 @@ describe('Session ordering', () => {
       { ...summary('blank', 0), blank: true },
     ), sid('blank'))
     const order = pinCurrentBlank(sessions.ids, sid('blank'))
-    const state = rowState({ pinned: ['pin'] })
+    const state = rowState({ pinned: ['pin'], current: sid('blank') })
     const rows = mode === 'flat'
       ? deriveFlat(sessions, order, state, noAttention)
       : deriveGroups(
@@ -283,7 +285,7 @@ describe('deriveGroups', () => {
     const sessions = list(real, currentBlank, staleBlank)
     const groups = deriveGroups(
       sessions, [workspace('first', ['shown', 'current-blank', 'stale-blank'])],
-      noRows, noAttention, view(['first']),
+      rowState({ current: currentBlank.id }), noAttention, view(['first']),
     )
     expect(groups[0]!.sessions.map(session => session.id)).toEqual([currentBlank.id, real.id])
     const blankNode = groups[0]!.sessions.find(session => session.id === currentBlank.id)!
@@ -511,11 +513,11 @@ describe('deriveGroups', () => {
     const loose = summary('loose', 2)
     const ws = workspace('project', ['owned'])
     const ownedGroups = deriveGroups(
-      withMain(list(owned, loose), owned.id), [ws], noRows, noAttention, view(),
+      withMain(list(owned, loose), owned.id), [ws], rowState({ current: owned.id }), noAttention, view(),
     )
     expect(ownedGroups.find(group => group.key === 'project')!.containsCurrent).toBe(true)
     const looseGroups = deriveGroups(
-      withMain(list(owned, loose), loose.id), [ws], noRows, noAttention, view(),
+      withMain(list(owned, loose), loose.id), [ws], rowState({ current: loose.id }), noAttention, view(),
     )
     expect(looseGroups.find(group => group.key === UNGROUPED_KEY)!.containsCurrent).toBe(true)
   })
@@ -548,7 +550,7 @@ describe('deriveFlat', () => {
     const currentBlank = { ...summary('current-blank', 9), blank: true, retainedBy: { mainView: 1 } }
     const staleBlank = { ...summary('stale-blank', 8), blank: true }
     const sessions = list(currentBlank, summary('real', 1), staleBlank)
-    const rows = deriveFlat(sessions, visibleSessionIds(sessions, noArchive, 'default'), noRows, noAttention)
+    const rows = deriveFlat(sessions, visibleSessionIds(sessions, noArchive, 'default', currentBlank.id), rowState({ current: currentBlank.id }), noAttention)
     expect(rows.map(row => row.id)).toEqual([currentBlank.id, sid('real')])
     expect(rows.map(row => row.title)).toEqual(['', 'real'])
     expect(rows.map(row => row.blank)).toEqual([true, false])

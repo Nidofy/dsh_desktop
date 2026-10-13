@@ -94,6 +94,7 @@ function mountFrame(windowWidth = frameWidth) {
       actions={instance.actions}
       renderSlot={renderSlot}
       useSessions={useSessions}
+      useMainSelection={selector => selector({ sessionId: selectedSession ?? null, revision: 0 })}
       usePanelInfo={usePanelInfo}
       useSessionStatus={useSessionStatus}
       useSessionRetainInfo={() => undefined}

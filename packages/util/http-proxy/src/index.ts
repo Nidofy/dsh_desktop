@@ -21,3 +21,5 @@ export {
   proxyRouteFor,
   type ProxyRoute,
 } from './install.ts'
+
+export type { HttpEgressLease, HttpEgressPolicy } from './egress.ts'

@@ -318,6 +318,7 @@ describe('ImageGallery', () => {
       sessionId: 'message-images-test' as MessageImagesProps['sessionId'],
       useSession,
       useSessions,
+      useMainSelection: () => { throw new Error('Fixture does not read main selection') },
       usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
       useSessionStatus,
       useWorkspaces,

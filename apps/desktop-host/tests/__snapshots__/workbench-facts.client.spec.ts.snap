@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`separates command success and explicit test-log parsing in Chinese=false 1`] = `"Local command · Command exited 0 Cancel Log Read execution evidence Verification receiptExecution facts · Exit code: 0 · Cancelled: false · Timed out: falseRead the receipt for separately recorded tests, current inputs and user acceptance.Timed command · TIMEOUT Cancel Log Read execution evidence Verification receiptExecution facts · Exit code: 0 · Cancelled: false · Timed out: trueRead the receipt for separately recorded tests, current inputs and user acceptance."`;
+
+exports[`separates command success and explicit test-log parsing in Chinese=true 1`] = `"Local command · 命令以 0 退出 取消 日志 读取执行证据 验证回执执行事实 · 退出码: 0 · 已取消: false · 已超时: false请读取回执，分别检查已记录的测试、当前输入和用户验收。Timed command · TIMEOUT 取消 日志 读取执行证据 验证回执执行事实 · 退出码: 0 · 已取消: false · 已超时: true请读取回执，分别检查已记录的测试、当前输入和用户验收。"`;

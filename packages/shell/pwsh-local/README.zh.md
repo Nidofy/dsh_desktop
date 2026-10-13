@@ -65,6 +65,8 @@ const result = await execution.result()
 if (result.timedOut) console.log('timed out after', result.timeoutMs)
 ```
 
+`verificationInputs` 在不 spawn 的情况下报告当前解析出的绝对 PowerShell 可执行文件、收集器／宽限设置、环境覆盖值与 UTF-8 preamble。裸可执行文件名称返回 null。验证调用方读取并生成所报告文件字节的指纹；此方法不推测命令的其他依赖。改变 argv 或增加准备工作的子类必须重写观察方法，或返回 null。
+
 ### 后台进程
 
 以 `onExpiry: 'none'` 解析并等待 `execute` 返回句柄即可在后台运行命令；不布置任何 deadline。取消或准备失败会在发布句柄前拒绝调用。`readOutput()` 把流增量合并为一次消费式读取，并在 `[stderr]` 分段下标记 stderr；`kill()` 终止提供方管理的 range；`done` 在直接命令关闭时结算且绝不 reject。job id、所有权、轮询与通知属于通用 `ctx.jobs` 运行时，工具层会把句柄注册进去。

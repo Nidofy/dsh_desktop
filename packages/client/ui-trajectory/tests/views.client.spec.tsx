@@ -226,6 +226,7 @@ function standaloneProps(
     sessionId: SID,
     useChat: bindSnapshotSelector(createSnapshotStore(EMPTY_CHAT_SNAPSHOT)),
     useSessions: emptySessions(),
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useResource,
     useSessionStatus: bindSnapshotSelector(
       createSnapshotStore<SessionStatusSnapshot>(new Map()),
@@ -277,7 +278,10 @@ async function bench(snapshot = historySnapshot(NODES)) {
     trajectory: trajectoryStore,
     'tool-todo-history': createSnapshotStore<ConversationViewSnapshotMap['tool-todo-history'] | undefined>(undefined),
   }
+  const selectedView = createSnapshotStore<string | null>(null)
   const binding: ConversationBinding = {
+    selectedView,
+    select: (target) => { selectedView.set(target) },
     snapshot: conversationStore,
     openTurn: createSnapshotStore<number | undefined>(undefined),
     activate: () => {},
@@ -358,6 +362,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
     useConversation,
     useConversationViews,
     useSessions,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useResource,
     useSessionStatus,
     useSessionRetainInfo: () => undefined,

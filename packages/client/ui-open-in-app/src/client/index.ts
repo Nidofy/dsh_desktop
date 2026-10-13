@@ -40,7 +40,7 @@ export type { OpenPathActionProps, OpenPathInjected } from './OpenPathAction.tsx
 export type { OpenPathEmptyActionProps } from './OpenPathEmptyAction.tsx'
 
 /** Required services: sessions, layout selection, the slot registry, copy, Remote calls, and shortcuts. */
-export const inject = ['sessions', 'slots', 'locale', 'remote', 'remote.session', 'shortcuts', 'layout']
+export const inject = ['sessions', 'uiSession', 'slots', 'locale', 'remote', 'remote.session', 'shortcuts', 'layout']
 
 /**
  * Client plugin body: register dictionaries, workspace directory controls, and
@@ -55,8 +55,8 @@ export function apply(ctx: ClientContext): void {
   const t = ctx.locale.bind(NS)
   const target = () => {
     if (ctx.layout.panelInfo.getSnapshot().activePanelId !== null) return undefined
-    const session = Object.values(ctx.sessions.list.getSnapshot().byId)
-      .find(row => (row.retainedBy.mainView ?? 0) > 0)
+    const id = ctx.uiSession.mainSelection.getSnapshot().sessionId
+    const session = id === null ? undefined : ctx.sessions.list.getSnapshot().byId[id]
     const appId = controller.currentApp()
     return session?.cwd && appId !== undefined ? { appId, path: session.cwd } : undefined
   }

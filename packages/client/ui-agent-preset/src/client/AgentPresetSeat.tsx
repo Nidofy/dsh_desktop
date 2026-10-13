@@ -77,12 +77,11 @@ export type AgentPresetSeatProps =
  * or before the roster provides a preset choice.
  */
 export function AgentPresetSeat({
-  sessionId, useSessionRetainInfo, load, select, introduced, useAgentPresetSeat, useDeveloperTools, t,
+  sessionId, useMainSelection, load, select, introduced, useAgentPresetSeat, useDeveloperTools, t,
 }: AgentPresetSeatProps) {
   const developerTools = useDeveloperTools(value => value)
   const state = useAgentPresetSeat(snapshot => snapshot)
-  const main = useSessionRetainInfo(info => sessionId === undefined
-    || (info?.retainedBy.mainView ?? 0) > 0)
+  const main = useMainSelection(selection => sessionId === undefined || selection.sessionId === sessionId)
   const [open, setOpen] = useState(false)
   // The seq keys the banner, so picking the same broken preset twice replays
   // it rather than leaving the first one silently in place.

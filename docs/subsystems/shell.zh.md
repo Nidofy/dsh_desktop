@@ -230,6 +230,11 @@ interface ShellProcessRead {
 }
 ```
 
+<a id="verification-inputs"></a>
+## 验证输入
+
+`ShellExecutor.verificationInputs(spec)` 返回带提供方管理的 `executablePaths` 与 `configuration` 的 `ShellVerificationInputs`；如果提供方不能在不准备运行时的情况下枚举执行输入，则返回 null。调用不会启动进程。消费方对实际可执行文件字节生成指纹，并独立覆盖命令源码、配置与声明依赖；null 不能确立完整覆盖。本地 PowerShell 报告解析出的可执行文件和收集器设置。沙箱 PowerShell 显式返回 null，因为其隔离提供方没有完整的只读 runner／运行时枚举。改变执行输入的执行器子类必须重写此观察方法，或返回 null。
+
 ## 服务
 
 `ShellExecutor` 拥有 `resolve`、前台 `run`、后台进程 `start` 以及 `sandboxMode` 能力事实。`dsh-bash-local` 拥有命令默认值补全、超时/中止分类、终端环境以及后台读取合并；managed-range 终止、有界收集器、spill 文件、凭据清除与 dispose（资源释放）后完全停稳归[子进程服务](subprocess.zh.md)所有。`dsh-tool-bash` 拥有面向模型的渲染，并将后台句柄适配到[通用任务运行时](jobs.zh.md)。`dsh-shell` 拥有 shell 工具共享的退出状态约定：导出的 `parseExitStatus`/`ParsedExitStatus` 是 `dsh-tool-bash` 的 `renderResult` 与 `dsh-tool-pwsh` 的 `renderPwshResult` 所追加的 `[exit code: N]` / `[killed by signal: X]` 标记的逆解析，两个工具的 `presentResult` 都用它把渲染文本拆分为 terminal 卡的输出正文与退出状态 pill。
@@ -267,6 +272,12 @@ Implementations must honor these semantics:
  */
 abstract resolve(request: ShellExecRequest): ShellExecSpec
 
+/** Observe provider-owned executable paths and current settings without preparing or starting a process.
+ * @param _spec - Actual resolved execution settings selected for the run.
+ * @returns Null when the provider cannot enumerate its own execution inputs; verification coverage must then remain unknown.
+ */
+verificationInputs(_spec: ShellExecSpec): Promise<ShellVerificationInputs | null>
+
 /**
  * Prepare and spawn the command under its resolved deadline.
  * @param spec - a resolved spec from {@link resolve}, never a raw request.
@@ -276,6 +287,8 @@ abstract resolve(request: ShellExecRequest): ShellExecSpec
  */
 abstract execute(spec: ShellExecSpec): Promise<ShellExecution>
 ```
+
+Types: [ShellVerificationInputs](shell.zh.md#verification-inputs)
 
 Source: [`packages/shell/shell/src/index.ts`](../../packages/shell/shell/src/index.ts)
 

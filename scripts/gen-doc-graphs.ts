@@ -108,12 +108,21 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'nidofyStorage', pkg: 'desktop-extras', title: 'Desktop managed storage quota', mode: 'service',
+    consumers: ['desktop-extras', 'working-notebook'], note: 'Reserves managed writes through the shared native distribution ledger and retains unknown outcomes until writer quiescence and a complete scan.',
+  },
+  {
     key: 'nidofyContextPaths', pkg: 'desktop-extras', title: 'Desktop context storage paths', mode: 'service',
     consumers: ['session-query-sqlite'], note: 'Resolves the derived search index under the active Harness home before the query provider starts.',
   },
   {
     key: 'nidofyNotebook', pkg: 'desktop-extras', title: 'Desktop working notes', mode: 'service',
     consumers: ['desktop-extras'], note: 'Exposes validated, versioned notes to the optional compaction summary hook; the owning plugin serializes writes and retains source anchors.',
+  },
+  {
+    key: 'nidofyNotebookV2', pkg: 'desktop-extras', title: 'Generation-bound working notes', mode: 'service',
+    consumers: ['working-notebook'],
+    note: 'Reads committed v2 notes under the selected Session physical generation and recovers acknowledged compaction before tool or prompt use.',
   },
   {
     key: 'hmr',

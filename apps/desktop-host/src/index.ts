@@ -1,6 +1,8 @@
 /** Launch the Desktop profile through the Web application and report its URL to Electron. */
 
 import { delimiter, join } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { DesktopEgressPolicy, distributionEgress } from './connections/egress.ts'
 import { inspect } from 'node:util'
 import { loadLayeredEnv, loadProfileDirectory, reportSkippedBundles } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '@deepseek-ai/dsh/profile-boot'
@@ -23,8 +25,17 @@ async function main(): Promise<void> {
   const installAnchor = join(runtimeDir, 'node_modules', '@deepseek-ai', 'dsh', 'package.json')
   const profile = loadProfileDirectory('dsh', projectDir, installAnchor)
   reportSkippedBundles('dsh', profile)
+  let packagedEgress: unknown
+  const egressPath = process.env.DSH_DESKTOP_EGRESS_DISTRIBUTION
+  if (egressPath !== undefined) {
+    try { packagedEgress = JSON.parse(await readFile(egressPath, 'utf8')) }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+  }
+  const egress = process.env.DSH_DESKTOP_DISTRIBUTION_PATCH === undefined ? undefined
+    : new DesktopEgressPolicy(resolveDshHome(), distributionEgress(packagedEgress, process.env.DSH_DESKTOP_DISTRIBUTION_KIND !== 'personal'))
   const application = runProfile({
     environment: loadLayeredEnv('dsh'),
+    ...egress === undefined ? {} : { outboundHttp: egress },
     profile: 'desktop',
     resolvedProfile: { profile, installAnchor },
     patchFiles: process.env.DSH_DESKTOP_DISTRIBUTION_PATCH === undefined ? [] : [process.env.DSH_DESKTOP_DISTRIBUTION_PATCH],
@@ -53,7 +64,7 @@ async function main(): Promise<void> {
   const stop = (): Promise<void> => stopping ??= (async () => {
     // Startup failure is reported by main; shutdown only owns a tree that booted.
     const running = await application.catch(() => undefined)
-    await running?.shutdown.shutdown(0)
+    await running?.shutdown.shutdown(process.exitCode === 1 ? 1 : 0)
     await send({ type: 'shutdown-complete' })
     if (process.connected) process.disconnect()
   })()
@@ -91,12 +102,16 @@ async function main(): Promise<void> {
   })
   process.once('disconnect', () => { void stop() })
   const { ctx } = await application
-  if (process.env.DSH_DESKTOP_DISTRIBUTION_PATCH !== undefined) await installConnectionApi(ctx, resolveDshHome())
+  egress?.bind(ctx)
+  const primaryRuntime = process.argv[4] ?? join(runtimeDir, '..', 'runtime', 'primary-runtime')
+  if (process.env.DSH_DESKTOP_DISTRIBUTION_PATCH !== undefined) {
+    await installConnectionApi(ctx, resolveDshHome(), egress, desktopOffice.desktopNodeExecutable(primaryRuntime))
+  }
   control.updateTasks = installDesktopUpdateTaskControl(ctx)
   control.quitInspection = installDesktopQuitInspection(ctx)
   await ctx.plugin(desktopOffice, {
     runtimeDir,
-    source: process.argv[4] ?? join(runtimeDir, '..', 'runtime', 'primary-runtime'),
+    source: primaryRuntime,
     root: join(resolveDshHome(), 'dsh-runtimes', 'dsh-primary-runtime'),
   })
   installPlatformSessionPublisher(ctx, (session) => {

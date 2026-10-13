@@ -101,6 +101,7 @@ function mount({
     useStore: bindSnapshotSelector(shell), actions: shell.actions,
     useShortcuts: select => select(shortcuts),
     useSessions: select => select(sessions),
+    useMainSelection: select => select({ sessionId: mainView ? activeId : null, revision: 0 }),
     useSessionStatus,
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: unusedHook,
@@ -267,9 +268,9 @@ describe('SettingsRoot trigger', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('keeps the reconnect indicator out of the collapsed rail', () => {
+  it('keeps reconnect available when the sidebar is collapsed', () => {
     mount({ wide: false, connectionState: 'disconnected' })
-    expect(screen.queryByRole('button', { name: 'Disconnected, reconnect now' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Disconnected, reconnect now' })).toBeTruthy()
   })
 })
 

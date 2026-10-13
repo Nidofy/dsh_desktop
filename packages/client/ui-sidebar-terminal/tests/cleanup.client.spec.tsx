@@ -13,7 +13,8 @@ afterEach(cleanup)
 type CleanupProps = Parameters<typeof TerminalCleanup>[0]
 const unusedHook = (): never => { throw new Error('Terminal cleanup does not consume global hooks') }
 const standard: Omit<CleanupProps, 'useCloseFailures' | 'retryClose' | 't'> = {
-  useSessions: unusedHook, useSessionStatus: unusedHook, useSessionRetainInfo: unusedHook, usePanelInfo: unusedHook,
+  useSessions: unusedHook, useSessionStatus: unusedHook, useSessionRetainInfo: unusedHook, useMainSelection: () => { throw new Error('Fixture does not read main selection') },
+  usePanelInfo: unusedHook,
   useWorkspaces: unusedHook, useResource: unusedHook,
 }
 

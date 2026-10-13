@@ -16,6 +16,7 @@ import type {
 } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type { RowToast } from './contract/slots.ts'
 import { pinOrderAccounts, pinOrderSource } from './pin-order.ts'
 import type { WorkspaceViewStoreActions } from './stores.ts'
@@ -156,6 +157,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
         this.lifetime.abort()
         const reference = this.mainReference
         this.mainReference = undefined
+        this.ctx.uiSession.selectMain(undefined)
         reference?.release()
       }
     }, 'ui-workspace: Workspace navigation policy')
@@ -367,6 +369,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
   private clearMain(): void {
     const previous = this.mainReference
     this.mainReference = undefined
+    this.ctx.uiSession.selectMain(undefined)
     this.selection.set({})
     previous?.release()
     this.ctx.layout.selectPanel(null)
@@ -400,6 +403,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
     }
     const previous = this.mainReference
     this.mainReference = reference
+    this.ctx.uiSession.selectMain(reference)
     previous?.release()
     if (panel === 'reveal') this.ctx.layout.selectPanel(null)
   }

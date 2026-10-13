@@ -16,6 +16,13 @@
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
+.projectRow:focus-visible,
+.sessionRow:focus-visible,
+.searchResultRow:focus-visible {
+  outline: 2px solid var(--dsw-alias-label-primary);
+  outline-offset: -2px;
+}
+
 .sessionRow.selected {
   background: var(--dsw-alias-interactive-bg-hover);
 }

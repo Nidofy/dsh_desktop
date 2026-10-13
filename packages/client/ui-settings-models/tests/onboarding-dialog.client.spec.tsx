@@ -150,6 +150,7 @@ function harness(options: {
     renderSlot: (_name, _props, options) => options?.fallback,
     useSessions: unusedHook,
     useSessionStatus,
+    useMainSelection: () => { throw new Error('Fixture does not read main selection') },
     usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: unusedHook,
     controller,

@@ -393,6 +393,7 @@ function renderCode(node: Md.Code, key: Key, context: MarkdownRenderContext): Re
   return (
     <CodeBlock
       key={key}
+      className="dsh-markdown-code-fence"
       // The replaced hast pipeline appended one synthetic newline that
       // CodeBlock's display trim removes; feeding the bare value would make
       // that trim eat a REAL trailing blank line inside the fence instead.

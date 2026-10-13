@@ -35,7 +35,13 @@ Connection 拥有请求 URL 解析、request correlation、`/api` carrier、trus
 
 ## Client models
 
+根 Session 选择是显式的。Workspace 导航 owner 在释放前任之前，通过 `uiSession.selectMain` 发布实际 `SessionReference`。`mainBinding`、`mainSelection` 和 `useMainSelection` 承载此选择，后台 retain 计数不参与选择。其他展示面可用 `bindingSource(reference)` 绑定显式引用。Desktop [Companion](../../packages/nidofy/desktop-extras/README.zh.md) 将该 binding 与实际 Host／window、Workspace 及 Conversation view／turn 观察结合，取消过期操作，并独立于 pets 和 Notebook 开关公开有界事实。
+
 每个 API controller 包都拥有配对的 Host face 与 Client face。Host 侧拥有权威 mutation 与 stream 生产；Client 侧基于相同的生成 wire type 维护 identity 稳定、与 React 无关的 model，并公开 observable snapshot 与 command。UI 包消费这些 Client service，不在 component store 中复制 transport state。
+
+Desktop 历史面板消费 `HistoryGroupView` 进行显式 Workspace 选择，并在项目结果上保留 `HistoryAuthority`。这些[共享类型](../../packages/nidofy/desktop-extras/src/shared/notebook-types.ts)绑定项目身份、准确的 Workspace ID／路径与不可变关联修订。[工作笔记参考](../../packages/nidofy/working-notebook/README.zh.md)负责持久化、来源授权和索引限制。
+
+Desktop 的 `CompanionFacts`、`CompanionNoticeFact`、`CompanionReceiptFact` 与 `HintPreferences` 是[共享证据类型](../../packages/nidofy/desktop-extras/src/shared/companion-facts.ts)；[Hint 与返回卡类型](../../packages/nidofy/desktop-extras/src/client/hints.ts)保留来源身份、scope 修订与条件失效语义。[Host 参考](../../apps/desktop-host/src/workbench/README.zh.md#companion-evidence-and-hint-choices)负责重验与独立持久偏好；[Client 参考](../../packages/nidofy/desktop-extras/README.zh.md)负责仅基于证据的规则与展示。renderer 组件消费同一 framework 绑定的 Companion 来源，不增加第二套订阅或持久绑定。
 
 ### Sessions
 
@@ -98,3 +104,5 @@ Web 和桌面端共享[代码工作工具偏好](../../packages/client/ui-settin
 - [API Gateway](../api-gateway.zh.md)：Host method、生成的 Remote contribution、stream 与 forwarded event。
 - [Web Client Slots](slots.zh.md)：component、hook、store、injection 与 placement。
 - [Conversation](conversation.zh.md)：持久 event correlation、target snapshot，以及 Chat 或 Trajectory view contribution。
+
+主会话 owner 提供 `data-conversation-surface="main"` 供可选外观消费方使用。`data-chat-phase` 保留加载／空白／就绪状态语义，不作为外观定位选择器。Settings 分类可注册异步导航守卫；关闭和切换分类等待所有存活守卫，卸载取消待处理决定。

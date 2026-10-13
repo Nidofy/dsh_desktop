@@ -1,6 +1,7 @@
 /** Direct Messages transport with one cancellable lifecycle per model request. */
 
 import { attributionHeaders, LlmAdapter, LlmError } from '@deepseek-ai/dsh-llm'
+import type { HttpEgressLease } from '@deepseek-ai/dsh-http-proxy'
 import type { GenerateOptions, ImageAttachmentAccessResolver, PreparedAdapterCall, StreamChunk } from '@deepseek-ai/dsh-llm'
 import type { DeepSeekLlmApiJson } from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
 import { idleWatchdog, timeoutOf } from '@deepseek-ai/dsh-timeout'
@@ -40,19 +41,22 @@ export class DeepSeekAdapter<C extends Connection = Connection> extends LlmAdapt
   override imageRequestPricing(_provider: string, model: string) {
     return imagePricing(this.dependencies.options(), model, this.imageAccess)
   }
-  override prepareCall(provider: string, model: string, _signal?: AbortSignal): Promise<PreparedAdapterCall> {
+  override async prepareCall(provider: string, model: string, _signal?: AbortSignal): Promise<PreparedAdapterCall> {
     const connection = this.dependencies.options()
-    return Promise.resolve({ model: modelInfo(connection, provider, model), stream: options => this.generate(options, connection) })
+    const http = await this.dependencies.prepareHttp?.(connection.baseURL)
+    return { model: modelInfo(connection, provider, model), stream: options => this.generate(options, connection, http) }
   }
   stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
-    return this.generate(options, this.dependencies.options())
+    return (async function* (adapter: DeepSeekAdapter<C>) {
+      yield* (await adapter.prepareCall(options.provider, options.model, options.signal)).stream(options)
+    })(this)
   }
 
-  private async * generate(options: GenerateOptions, connection: C): AsyncGenerator<StreamChunk> {
+  private async * generate(options: GenerateOptions, connection: C, http?: HttpEgressLease): AsyncGenerator<StreamChunk> {
     const consumer = new AbortController()
     const signal = options.signal === undefined ? consumer.signal : AbortSignal.any([consumer.signal, options.signal])
     using watchdog = idleWatchdog(signal, connection.streamIdleTimeoutMs, 'MESSAGES_IDLE')
-    const iterator = this.request(options, connection, watchdog.signal, () => { watchdog.pulse() })
+    const iterator = this.request(options, connection, watchdog.signal, () => { watchdog.pulse() }, http)
     try {
       while (true) {
         const next = await watchdog.next(iterator)
@@ -74,8 +78,10 @@ export class DeepSeekAdapter<C extends Connection = Connection> extends LlmAdapt
 
   private async * request(
     options: GenerateOptions, connection: C, signal: AbortSignal, activity: () => void,
+    http?: HttpEgressLease,
   ): AsyncGenerator<StreamChunk> {
     signal.throwIfAborted()
+    await http?.check(options.sessionId)
     const { messages, versions } = await prepareImages(
       options.messages, connection, options.model, this.dependencies.resolveAttachments?.(), this.imageAccess, signal,
     )
@@ -83,6 +89,7 @@ export class DeepSeekAdapter<C extends Connection = Connection> extends LlmAdapt
     try {
       const files = new RequestFiles(this.files, {
         baseURL: connection.baseURL, headers: auth.headers,
+        ...http === undefined ? {} : { fetch: http.fetchFor(options.sessionId) },
       },
       connection.filePolicy, connection.filesApiTimeoutMs, signal, activity)
       let inline = false
@@ -117,7 +124,7 @@ export class DeepSeekAdapter<C extends Connection = Connection> extends LlmAdapt
             ? [MESSAGES_TOOL_CHANGES_BETA]
             : [],
         ]
-        const response = await fetch(`${messagesApiRoot(connection.baseURL)}/messages`, {
+        const response = await (http?.fetchFor(options.sessionId) ?? globalThis.fetch)(`${messagesApiRoot(connection.baseURL)}/messages`, {
           method: 'POST', signal, body: extensions.payload, redirect: 'error',
           headers: {
             ...attributionHeaders(),

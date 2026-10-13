@@ -73,6 +73,10 @@ class Scratch {
 describe('bundleRoster on a scratch installation', () => {
   const scratch = new Scratch()
   afterAll(() => { rmSync(scratch.root, { recursive: true, force: true }) })
+  it('resolves a bundle own Host row without a self node_modules link', () => {
+    scratch.bundle('@t/self', "- insert:\n    - id: own-host\n      name: '@t/self'\n")
+    expect(scratch.roster(['@t/self'])).toEqual([])
+  })
 
   it('resolves a linked bundle dependency before an unrelated ancestor package', () => {
     const linked = new Scratch()

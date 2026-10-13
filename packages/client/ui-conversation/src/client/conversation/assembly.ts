@@ -28,6 +28,12 @@ import { ConversationGroupRegistry } from './group-registry.ts'
 /** Observable faces published for one Session's Conversation assembly. */
 export interface ConversationBinding {
   readonly snapshot: ObservableSnapshot<ConversationSnapshot>
+  /** Actual target selected by this Session's Conversation navigation; null without a registered target. */
+  readonly selectedView: ObservableSnapshot<string | null>
+  /** Select the visible target independently of background target activation.
+   * @param target - Actual registered slot target, or absence.
+   */
+  select(target: string | null): void
   /**
    * Identity-stable source of the latest turn number, undefined unless its start is loaded and it remains open.
    * Turn changes publish synchronously, including without an active View.
@@ -52,6 +58,7 @@ export interface ConversationBinding {
 
 class BoundConversation implements ConversationBinding {
   readonly snapshot: SnapshotStore<ConversationSnapshot>
+  readonly selectedView = createSnapshotStore<string | null>(null)
   readonly openTurn: SnapshotStore<number | undefined>
   private readonly viewStore: ConversationViewSnapshotStore
   private readonly targetSources = new Map<string, ObservableSnapshot<unknown>>()
@@ -94,6 +101,11 @@ class BoundConversation implements ConversationBinding {
   activate(target: string): void {
     if (this.assembler.activateTarget(target)) this.snapshot.set(this.currentSnapshot())
     this.openTurn.set(this.assembler.openTurn())
+  }
+
+  select(target: string | null): void {
+    if (target !== null) this.activate(target)
+    this.selectedView.set(target)
   }
 
   rebuild(): void { this.publish(this.assembler.rebuildRegistry()) }

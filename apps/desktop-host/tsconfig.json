@@ -8,6 +8,10 @@
     "src"
   ],
   "references": [
+    { "path": "../../packages/core/system-prompt" },
+    { "path": "../../packages/skill/skill-filesystem" },
+    { "path": "../../packages/util/http-proxy" },
+    { "path": "../../packages/llm/llm-deepseek" },
     {
       "path": "../../packages/deliverables/tool-present"
     },

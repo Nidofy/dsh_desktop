@@ -1,0 +1,53 @@
+# Relay 21 Sol：实际回执比较与独立有界选择记录
+
+## 当前交付与结束原因
+
+D:/Documents/FeiyangChen/devApps/dshWinUi/electron，codex/roadmap-integration，全部原未提交内容／worktree／Live2D／报告／输入／历史证据保留。本棒会话上下文容量续做点交 GPT-6.1-Sol；没有新的 Astra 裁决。T17/T18/T19/T20/T23 总资格仍 PARTIAL。
+
+## 实际实现
+
+- T20 TaskComparisonOwner 消费真实 T11 inspect，显式分组和准确 run，分别显示回执匹配／任务可比／独立验收／缺失值。源码／输入／配置／STALE／重复执行及 Windows 路径大小写别名拒绝；缺模型输入／版本／因素保持 UNKNOWN，双验收不证明质量相同。
+- 认证 API／双语页面／原回执直达链接；模型计数null，测试计数按侧独立。保存／读取／导入不启动命令或模型。独立v1记录、原 native quota、20份／64KiB与80项／完整字节及发布峰值，容量拒绝不删除。导入逐项重验当前本机 committed receipts；未知响应只查原id，冷读原字节不变，卸载先取消排空。
+- 只改 T20 registry 对象与 ownership 对应行；tasks及其余registry对象／顶层字段／周围原文断言保持。未改 Session、T11、T19格式、凭据默认、配额或权限；无安装／下载／safe-export例外。
+
+## 精确验证
+
+.build/dispatch/evidence/relay-21/commands.json、summary.json。最终源同次6文件37项，旧9/14/35/36／UI5/8重叠不相加。当前最终Host bundle的built1文件1项，full-profile/host-SOrs4p、root=C:/Users/enxi1/AppData/Local/Temp/dsh-experiments-host-tTvOiq；完整支持Desktop profile／原保护Shell／native quota／2真实隔离TAP动作／独立验收／认证双语HTTP页／cookie及origin拒绝／冷重启无补跑／原记录字节不变／输入变化拒绝／0模型发送／0Agent。Node-mode Host资格；新renderer／任务A/B／安装未资格化。
+
+Host类型／bundle、4测试文件严格类型、11文件lint、12源码20顶层JSDoc／0新unknown AST、2已有API unknown保留、1MJS语法、3pair、9文档链接／单行段落／窄diff通过；9文档未列预算。全仓相关门槛未重跑，原32/5/15和文档缺口保留。
+
+## 保留失败与限制
+
+setup refresh、branded／未支持lock signal、canonical检查点字段顺序、首built IPC超时、测试compiler库／依赖／nullable pipe／vendorface／TS6诊断／emit rewrite、lint、并行证据记录竞争、API baseline漏复制均有原日志或summary说明。竞争丢失时间保留null；现逐命令独立记录。API baseline只反向去除准确新增片段恢复，未冒称原始快照。所有失败root／记录及历史保持，未改ACL或转宽沙箱。
+
+## 下一步
+
+普通Sol继续实际任务与官方完整输入／计数关联、准确模型版本、Notebook/cache因素观察，再单因素runner／预算矩阵／隔离工程复制。T11 agent intent只有scope.sessionId，不猜turn/step关联；旧Probe发送和旧诊断不能补造证据。缺owner不是停点，只有新公共持久语义或权限冲突才准备Astra。完整后继prompt见NEXT_PROMPT.txt与本记录副本。
+
+## 发出的完整后继 prompt
+
+```text
+请使用 GPT-6.1-Sol 继续 DSH Electron 持续开发，接 Relay 21 Sol。这是同模型会话容量续做，没有新的 Astra 裁决；不要重开 Relay05/08、W04/T05、T10 adoption 或 Relay13 单 Conversation root 决定。
+
+工作目录 D:/Documents/FeiyangChen/devApps/dshWinUi/electron，沿用 codex/roadmap-integration 和主目录。保留全部未提交修改、来源 worktree、Live2D、原日志／报告／输入与历史证据。不校验 SHA、不初始化、不重复接收 T02/T04、不重审已完成单元。Relay21 只实质更新 registry 的 T20 对象及 ownership 对应一行；其他 registry 对象／顶层字段／周围原文和 dispatch/tasks.json 原文已断言保持。T17/T18/T19/T20/T23 总资格仍 PARTIAL。
+
+完整读 AGENTS.md、适用下级规则、packages/AGENTS.md、packages/client/AGENTS.md、docs/AGENTS.md、docs/architecture.md、docs/defensive-patterns.md、migration/roadmap/dispatch/CONTINUOUS.md、NEXT_HANDOFF.md、handoffs/relay-21-sol.md、contracts-v1.md、dispatch/prompts/T20-ab-experiments.txt、probes/T20-owner-map.md。Client 工作先读 docs/subsystems/web-client.md、slots.md、conversation.md。更旧记录仅按实际需要补细节，以当前源码、配置、测试和未提交修改为准。
+
+第一项动作：继续 T20 真实任务 run 与官方完整模型输入／调用和 token 计数的明确关联，以及准确模型版本与 Notebook／缓存因素观察。先读 apps/desktop-host/src/experiments/README.md、comparison.ts、records.ts、owner.ts、ui.ts，workbench/verification.ts、verification-input.ts、legacy/project-actions.mjs，selftest/provider.ts、inputs.ts、runner.ts，官方 Session／prepared-call／usage 与实际 Notebook/cache 输入 owner。T11 agent intent 当前只有 scope.sessionId，不能据此猜 turn／step／run 关联；sandbox runtime 枚举或模型版本不可观测时保持 UNKNOWN。普通缺 owner 由 Sol 补，不因 NOT_STARTED 或未发布接口停工。只有新的具体公共持久语义／权限冲突才准备 Astra。
+
+Relay21 已发布 Workbench-owned TaskComparisonOwner、认证 experiments/ui 与 compare／record／list／read／import、双语页面及原回执直达链接。显式 experiment/case/A/B run 分组是用户选择，不证明同一任务或因素已改变。实际 VerificationOwner.inspect 提供 receipt、源码／输入／配置／日志、新鲜度与独立验收；已知差异／STALE／同一次执行（含 Windows 大小写别名）拒绝直接比较。可用测试计数按侧独立保留；模型调用／token／cache-read 全为 null，缺失侧数二。两次手动验收仅 BOTH_ACCEPTED，不证明质量相同，efficiencyEligible 始终 false。任务级可比没有 PASS；runner／矩阵／隔离工程复制器／完整任务输入关联仍未实现。
+
+独立 schemaVersion 1 receipt-task-comparison 选择记录在 nidofy-extras/experiments/records-v1，不改 T11／官方 Session／T19 v1/v2／旧诊断格式。每完整比较／记录 64KiB，最多20记录，目录80项与22×64KiB+4KiB总字节计入锁／临时残留及发布峰值；原 native quota 包括锁元数据和独占同步发布，拒绝缺 owner、容量、损坏、未来、链接／hardlink，不自动裁剪。读取显示历史检查点与当前事实／changedSinceRecord，原字节不变。导出为含工作区路径／回执身份的私密选择 JSON，不是脱敏诊断报告；导入严格 schema／大小／来源分类／字段／身份，并逐项重验两个当前本机 committed receipt，标签或 source 字符串不授予真实性。未知写响应保留 id，重载不补写，只显式查询；卸载先取消排空 T20，再关闭 T11。旧 Probe／诊断归档不猜关联、不自动升级、不使用未完整记录 model-visible 输入的 cache/start 发送路径。
+
+Relay21 精确证据 .build/dispatch/evidence/relay-21/commands.json、summary.json。最终 comparison-windows-identity-source 同次6文件37项，旧9/14/35/36及UI5/8均有重叠，不相加。最终 comparison-windows-final-built 为当前最终 Host bundle，1文件1项；full-profile/host-SOrs4p，root=C:/Users/enxi1/AppData/Local/Temp/dsh-experiments-host-tTvOiq 保留。完整支持的 base/Web/Nidofy Desktop Host profile、独立合成工程、原 protection/Shell/native quota、既有系统 PowerShell与复制当前 Node，2真实TAP动作／独立T11验收／认证双语HTTP页／cookie与origin拒绝／冷重启原记录不变／输入变化拒绝／0模型发送／0Agent。它是 Node-mode Host资格，不是新的实际 Electron renderer 或任务 A/B 资格。
+
+最终Host types/bundle、4新测试文件严格类型、11文件 type-aware lint、12源码／20顶层导出JSDoc／0新unknown AST、2已有API unknown断言原样保留、1MJS语法、3双语pair、9指定文档链接／单行段落和窄diff通过。9文档未列入预算，未冒称全仓预算。保留全部失败：setup refresh、初始 branded／lock signal 类型错误、检查点属性顺序导致误判、首个built观察完成后IPC未关闭超时、严格测试库／源码依赖／nullable pipe／vendor编译face错误与TypeScript6诊断崩溃及emit-only扩展重写错误、lint失败／修复、并行证据汇总丢两条元数据（原日志／tool退出码保留，丢失时间为null、不猜时间，现逐命令独立.command.json）、初始API baseline漏复制（仅反向移除本棒准确新增import/GET恢复，明确不是原始字节快照）。原全仓32/5/15与文档缺口保留，未重跑全仓doc-sync／依赖政策／Summary／unknown。
+
+Relay19/20 的既有 T19、connection-capacity、前缀与真实 Windows 开发载体资格保持，原根／完整输入／日志不删不改，不重跑已完成单元。独立 Node 资源仍由 apps/desktop-host/src/office.ts 的 desktopNodeExecutable 接 index.ts→connections/api.ts→WorkbenchOwner→ElectronLocalChecks，Main/Host仍Electron，缺失／链接Node在工作区分配前拒绝，原Shell/native保护与配额不放宽。本机0模型／0Agent、连接5正常+1取消合成SSE／完整官方输入冷读等证据仍只属于 Relay20 原限定范围；T20 新页面 renderer、安装／现场／真实付费缓存／loop准入／turn snapshot／网关／顶层recorded-session仍未认证。
+
+后续发送必须拥有独立真实预算／权限与官方完整输入 writer append/flush、observeDurable 冷读重建及同一 withGeneration 发送，不以摘要／哈希替代原输入，不复用 T19 固定自检票据或把自检五次请求当用户任务 A/B。先单因素 Notebook／缓存，再有预算矩阵，每轮归档，取消阻止后续并排空；写文件仅用隔离工程副本，外部runner仅走受支持 dsh profile。失败／未知／缺计数不补发，不自动重试／故障转移或执行模型生成命令。原 T19 64-token／最多5次、64KiB／20root／80项／10未终结及 native普通／独立终态额度保持，不猜删除。
+
+T23 若涉及出口，先读 connections/README.md、egress.ts、runtime.ts、store.ts、ConfigEditor.registerValidator、probes/T23-egress-coverage.md、docs/subsystems/boot.md。消费已发布 HttpEgressPolicy/HttpEgressLease、DesktopEgressPolicy 与 Loader前outboundHttp；保存checkConfiguration不授发送权，实际check/fetchFor固定真实distribution/profile与准确Workspace/attachment/provider、策略变化撤销、fetch前同步重验、origin变化与所有redirect拒绝。ConnectionStore.policyRevision不是T23 lease修订；HTTP不代表Shell/Git/socket/worker/web-search/fetch/其他插件/登录/包管理器/MCP stdio全局零外联。T02仍显式overlay，不改默认credentials；禁止safe-export例外、--fix、pnpm exec或下载Electron替代资格。
+
+承担实现、共享配置／构建、全部消费者、必要双语文档与有效验证。保留用户数据，仅隔离合成输入，不创建真实用户会话或计费；不创建Codex聊天／代理／定时器，不push／合并／发布。每单元验证后继续，仅CONTINUOUS真正交接条件或会话硬限制才结束，同模型容量续做。结束前更新NEXT_HANDOFF.md、NEXT_PROMPT.txt，保存下一个未用relay-NN-sol.md，最终贴出同一完整prompt与具体原因。
+```

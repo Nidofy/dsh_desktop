@@ -1,6 +1,6 @@
 /**
  * windows-acl grant ownership through the real LocalSandboxProvider: one
- * standing capability per workspace plus one random, distinct, revocable
+ * admission per session/workspace plus one random, distinct, revocable
  * temp capability per live session/workspace pair. The Win32 grant surface
  * is mocked; native access checks live in sandbox-windows-acl's runner suite.
  */
@@ -17,6 +17,7 @@ import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
 /** Cross-file state shared with the vi.mock factory (hoisting contract). */
 const mockState = vi.hoisted(() => ({
   grants: [] as Array<{ writeSid: string; added: Array<{ path: string; standing: boolean }>; disposed: boolean }>,
+  recoveryFailure: undefined as Error | undefined,
   addFailure: undefined as Error | undefined,
   /** Restrict an add failure to standing (workspace) or revocable (temp). */
   addFailureStanding: undefined as boolean | undefined,
@@ -36,6 +37,14 @@ vi.mock('@deepseek-ai/dsh-sandbox-windows-acl', () => {
     static create(writeSid: string): MockAclWriteGrant {
       if (writeSid.startsWith('TEMP:') && mockState.createTempFailure !== undefined) throw mockState.createTempFailure
       return new MockAclWriteGrant(writeSid)
+    }
+    static recover(): readonly unknown[] {
+      if (mockState.recoveryFailure !== undefined) throw mockState.recoveryFailure
+      return []
+    }
+    authorization(): string {
+      if (this.disposed) throw new Error('Workspace admission released')
+      return `owner-${mockState.grants.indexOf(this)}`
     }
     add(path: string, standing = false): void {
       this.added.push({ path, standing })
@@ -87,6 +96,7 @@ describe('windows-acl write grants (LocalSandboxProvider)', () => {
   const scratch: string[] = []
 
   beforeEach(() => {
+    mockState.recoveryFailure = undefined
     mockState.grants = []
     mockState.addFailure = undefined
     mockState.addFailureStanding = undefined
@@ -102,6 +112,24 @@ describe('windows-acl write grants (LocalSandboxProvider)', () => {
     }
     for (const dir of scratch.splice(0)) rmSync(dir, { recursive: true, force: true })
   }
+
+  it.skipIf(process.platform !== 'win32')('keeps the provider after startup recovery fails but refuses the same failed workspace admission', async () => {
+    const failure = new Error('recovery storage unavailable')
+    mockState.recoveryFailure = failure
+    mockState.addFailure = failure
+    mockState.addFailureStanding = true
+    const { sandbox, fiber } = await setup()
+    try {
+      const ws = workspaceRoot()
+      scratch.push(ws)
+      await expect(sandbox.confine(['true'], {
+        mode: 'workspace-write', workspaceRoot: ws, sessionId: SessionId('unavailable-storage'),
+      })).rejects.toThrow('recovery storage unavailable')
+      expect(mockState.grants).toHaveLength(1)
+      expect(mockState.grants[0]!.disposed).toBe(true)
+      expect(mockState.grants[0]!.added.every(item => item.standing)).toBe(true)
+    } finally { await fiber.dispose(); cleanup() }
+  })
 
   it('does not create grants for a cancelled confinement request', async () => {
     const { sandbox, fiber } = await setup()
@@ -137,6 +165,7 @@ describe('windows-acl write grants (LocalSandboxProvider)', () => {
         '--mode', 'workspace-write',
         '--write-sid', WORKSPACE_SID,
         '--temp-write-sid', tempSid,
+        '--workspace-lease', 'owner-0',
         '--',
         'pwsh', '/Command', 'x',
       ])
@@ -228,7 +257,7 @@ describe('windows-acl write grants (LocalSandboxProvider)', () => {
       expect(flag(child.argv, '--temp')).not.toBe(flag(parent.argv, '--temp'))
       expect(flag(child.argv, '--temp-write-sid')).not.toBe(flag(parent.argv, '--temp-write-sid'))
       expect(flag(moved.argv, '--temp')).not.toBe(flag(parent.argv, '--temp'))
-      expect(mockState.grants).toHaveLength(5) // workspace A + two temps + workspace B + one temp
+      expect(mockState.grants).toHaveLength(6) // three session/workspace admissions and three private temps
 
       await fiber.dispose()
     } finally {

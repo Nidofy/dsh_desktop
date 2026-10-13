@@ -10,9 +10,12 @@
 ```mermaid
 flowchart LR
   pkg_desktop_extras["desktop-extras"]
+  svc_nidofyStorage["ctx.nidofyStorage<br/>Desktop managed storage quota"]
+  pkg_working_notebook["working-notebook"]
   svc_nidofyContextPaths["ctx.nidofyContextPaths<br/>Desktop context storage paths"]
   pkg_session_query_sqlite["session-query-sqlite"]
   svc_nidofyNotebook["ctx.nidofyNotebook<br/>Desktop working notes"]
+  svc_nidofyNotebookV2["ctx.nidofyNotebookV2<br/>Generation-bound working notes"]
   pkg_hmr["hmr"]
   svc_hmr["ctx.hmr<br/>Serialized module and configuration reloads"]
   pkg_app_boot["app-boot"]
@@ -324,6 +327,8 @@ flowchart LR
   pkg_deepseek_llm_api_extensions --> svc_deepseekLlmApiExtensions
   pkg_desktop_extras --> svc_nidofyContextPaths
   pkg_desktop_extras --> svc_nidofyNotebook
+  pkg_desktop_extras --> svc_nidofyNotebookV2
+  pkg_desktop_extras --> svc_nidofyStorage
   pkg_experimental_agent_team --> svc_agentTeams
   pkg_experimental_api_speech_to_text --> svc_speechController
   pkg_experimental_browser_use_chrome_devtools_mcp --> svc_browserUse
@@ -488,6 +493,9 @@ flowchart LR
   svc_mcpResources --> pkg_mcp_resources
   svc_nidofyContextPaths --> pkg_session_query_sqlite
   svc_nidofyNotebook --> pkg_desktop_extras
+  svc_nidofyNotebookV2 --> pkg_working_notebook
+  svc_nidofyStorage --> pkg_desktop_extras
+  svc_nidofyStorage --> pkg_working_notebook
   svc_officeToPdf --> pkg_client_ui_sidebar_documentpreview
   svc_otel --> pkg_host_product_telemetry_otel
   svc_otel --> pkg_session_telemetry_otel
@@ -586,8 +594,10 @@ flowchart LR
 
 | ctx 键 | 角色 | 所属包 | 实现 | 直接消费方 | 配套插件 | 说明 |
 | --- | --- | --- | --- | --- | --- | --- |
+| `ctx.nidofyStorage` | `service` | `desktop-extras` | - | `desktop-extras`, `working-notebook` | - | 通过共享的原生分发账本为托管写入预留容量，并保留结果未知的操作，直到写入者静止且完成完整扫描。 |
 | `ctx.nidofyContextPaths` | `service` | `desktop-extras` | - | [`session-query-sqlite`](../packages/session-query/session-query-sqlite) | - | 在查询服务启动前，将派生索引定位到当前 Harness 数据目录。 |
 | `ctx.nidofyNotebook` | `service` | `desktop-extras` | - | `desktop-extras` | - | 向可选的压缩摘要扩展提供经过校验的版本化笔记；所属插件串行写入并保留原文锚点。 |
+| `ctx.nidofyNotebookV2` | `service` | `desktop-extras` | - | `working-notebook` | - | 在选定的 Session 物理代次保护下读取已提交的 v2 笔记，并在工具或提示词使用前恢复已确认的压缩结果。 |
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | 负责模块和精确配置监听；应用修改共用其队列，自动重载等待应用文件锁。 |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | 在 Host 上并发比较公共安装源响应；初始安装源推荐由 Client 负责。 |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | 与 CLI 共享 profile 包操作，并向 Web 和 Agent 调用方分别报告持久状态与运行状态。 |

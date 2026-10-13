@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rejects a managed save before journal or secrets, then sends an allowed managed prepared call 1`] = `
+{
+  "reason": {
+    "failure": {
+      "code": "EGRESS_REVISION_CHANGED",
+      "message": "EGRESS_REVISION_CHANGED",
+    },
+    "kind": "error",
+  },
+  "type": "finish",
+}
+`;
