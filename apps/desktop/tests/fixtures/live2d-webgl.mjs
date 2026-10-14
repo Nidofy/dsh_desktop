@@ -9,7 +9,7 @@ const repo = resolve(import.meta.dirname, '../../../..'), evidence = resolve(pro
 await mkdir(evidence, { recursive: true })
 const require = createRequire(join(repo, 'apps/web/package.json')), { _electron } = require('playwright')
 const viteRequire = createRequire(require.resolve('vite/package.json')), { build } = await import(pathToFileURL(viteRequire.resolve('esbuild')).href)
-await build({ entryPoints: [join(repo, 'packages/nidofy/desktop-extras/src/client/fixed-live2d.ts')], format: 'esm', platform: 'browser',
+await build({ entryPoints: [join(repo, 'packages/nidofy/desktop-extras/src/client/fixed-live2d.ts')], bundle: true, format: 'esm', platform: 'browser',
   outfile: join(evidence, 'controller.mjs'), target: 'es2022' })
 const assets = join(repo, 'packages/nidofy/desktop-extras/assets/companion/bluewhale/live2d'), requests = [], errors = []
 const html = `<html><head><meta charset="utf-8"></head><body style="margin:0;background:#202733"><canvas width="410" height="548"></canvas><script type="module">
@@ -80,6 +80,25 @@ try {
   await page.screenshot({ path: join(evidence, 'bluewhale-webgl.png') })
   observations.push({ phase: 'active-before', metrics: await app.evaluate(({ app }) => app.getAppMetrics()), visible })
   assert(visible.alpha > 1000, JSON.stringify(visible))
+  const framing = []
+  await page.evaluate(() => { fixture.originalRenderer = fixture.renderer })
+  for (const frame of ['full', 'half', 'portrait']) {
+    const value = await page.evaluate(frame => {
+      fixture.controller.viewport({ width: 600, height: 800, frame, zoom: 1, panX: 0, panY: 0 })
+      fixture.renderer.draw(performance.now() / 1000, 'idle')
+      const gl = fixture.canvas.getContext('webgl'), pixels = new Uint8Array(600 * 800 * 4)
+      gl.readPixels(0, 0, 600, 800, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+      return { frame, width: fixture.canvas.width, height: fixture.canvas.height,
+        sameRenderer: fixture.originalRenderer === fixture.renderer,
+        alpha: pixels.filter((value, index) => index % 4 === 3 && value !== 0).length, glError: gl.getError() }
+    }, frame)
+    assert(value.sameRenderer); assert.equal(value.width, 600); assert.equal(value.height, 800)
+    assert(value.alpha > 1000); assert.equal(value.glError, 0)
+    framing.push(value)
+    await page.locator('canvas').screenshot({ path: join(evidence, `bluewhale-${frame}.png`) })
+  }
+  assert.equal(new Set(framing.map(row => row.alpha)).size, 3)
+  observations.push({ phase: 'same-renderer-framing', framing })
   await page.evaluate(() => fixture.controller.stop())
   const released = await page.evaluate(() => fixture.allocations())
   assert.equal(released.frames, 0); assert.equal(released.listeners, 0)

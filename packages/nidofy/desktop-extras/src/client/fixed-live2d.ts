@@ -1,11 +1,19 @@
 /** Fixed offline Bluewhale resource loader; an authorized Web SDK adapter owns all Core and GPU calls. */
 import { OfflineScriptOwner } from './offline-script.ts'
+import type { FramePreset } from './presentation.ts'
 const base = '/api/nidofy-extras/assets/companion/bluewhale/live2d/'
 const files = ['bluewhale.model3.json', 'bluewhale.moc3', 'bluewhale.2048/texture_00.png', 'bluewhale.cdi3.json', 'motions/idle.motion3.json'] as const
 /** Exact offline bytes; source projects and unsupported motions are never loaded. */
 export interface BluewhaleResources { model: Uint8Array; moc: Uint8Array; texture: Uint8Array; display: Uint8Array; idle: Uint8Array }
 /** An SDK adapter must release its model, textures, shader resources and WebGL ownership on dispose. */
-export interface Live2dRenderer { draw(timeSeconds: number, state: 'idle' | 'working' | 'waiting' | 'disconnected'): void; dispose(): void }
+/** Backing pixels and bounded camera data; no resource names or application commands. */
+export interface Live2dViewport { width: number; height: number; frame: FramePreset; zoom: number; panX: number; panY: number }
+export interface Live2dRenderer {
+  draw(timeSeconds: number, state: 'idle' | 'working' | 'waiting' | 'disconnected'): void
+  /** Optional presentation-only update; never reloads model resources. */
+  setViewport?(viewport: Live2dViewport): void
+  dispose(): void
+}
 /** Authorized Core/Framework adapter; it receives no Session, credentials, execution or connection services. */
 export type Live2dFactory = (canvas: HTMLCanvasElement, resources: BluewhaleResources, signal: AbortSignal) => Promise<Live2dRenderer>
 const core = new OfflineScriptOwner(base + 'live2dcubismcore.min.js')
@@ -74,6 +82,12 @@ export class FixedLive2dController {
     remove(): void
   } | null = null
   private state: Parameters<Live2dRenderer['draw']>[1] = 'idle'
+  private viewportValue: Live2dViewport | null = null
+  /** @param value - Backing dimensions and bounded local framing; retained through display recreation. */
+  viewport(value: Live2dViewport): void {
+    this.viewportValue = value
+    this.active?.renderer?.setViewport?.(value)
+  }
   /** @param state - Semantic display status; missing actions remain idle in the fixed SDK adapter. */
   status(state: Parameters<Live2dRenderer['draw']>[1]): void { this.state = state }
   /** @param canvas - Caller-owned canvas. @param factory - Authorized offline SDK adapter.
@@ -91,6 +105,7 @@ export class FixedLive2dController {
       const renderer = await factory(canvas, resources, abort.signal)
       if (abort.signal.aborted) { renderer.dispose(); abort.signal.throwIfAborted() }
       operation.renderer = renderer
+      if (this.viewportValue) renderer.setViewport?.(this.viewportValue)
       const lost = (event: Event): void => { event.preventDefault(); this.unavailable(Error('LIVE2D_CONTEXT_LOST')); void this.stop() }
       canvas.addEventListener('webglcontextlost', lost)
       operation.remove = () =>{  canvas.removeEventListener('webglcontextlost', lost) }

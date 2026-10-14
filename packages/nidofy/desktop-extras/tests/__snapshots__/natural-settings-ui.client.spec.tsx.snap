@@ -7,7 +7,7 @@ exports[`cancels a pending preview, ignores late controls and permits a new expl
     open=""
   >
     <summary>
-      Settings in words
+      Quick settings
     </summary>
     <div
       class="nidofy-detail nidofy-settings"
@@ -141,7 +141,7 @@ exports[`reads only on explicit choice, shows original settings and withdraws fa
     open=""
   >
     <summary>
-      Settings in words
+      Quick settings
     </summary>
     <div
       class="nidofy-detail nidofy-settings"
@@ -268,7 +268,7 @@ exports[`reads only on explicit choice, shows original settings and withdraws fa
           Read-only snapshot of the current conversation, selected pet and attention. Refresh after changes elsewhere. This is not an action receipt; choose a new preview explicitly.
         </p>
         <p>
-          Read at (local time):\u0020
+          Read at (local time):
           <time
             datetime="2026-10-13T04:00:00.000Z"
           >
@@ -337,7 +337,7 @@ exports[`reads only on explicit choice, shows original settings and withdraws fa
     open=""
   >
     <summary>
-      用一句话设置
+      快捷设置
     </summary>
     <div
       class="nidofy-detail nidofy-settings"
@@ -464,7 +464,7 @@ exports[`reads only on explicit choice, shows original settings and withdraws fa
           当前会话、所选桌宠和关注目标的只读快照；在其他地方更改后请重新读取。这不是操作回执，请明确选择新的预览。
         </p>
         <p>
-          读取时间（本地时间）：\u0020
+          读取时间（本地时间）：
           <time
             datetime="2026-10-13T04:00:00.000Z"
           >
@@ -533,7 +533,7 @@ exports[`shows selected targets and the bound deadline in en and refuses an expi
     open=""
   >
     <summary>
-      Settings in words
+      Quick settings
     </summary>
     <div
       class="nidofy-detail nidofy-settings"
@@ -662,7 +662,7 @@ exports[`shows selected targets and the bound deadline in zh and refuses an expi
     open=""
   >
     <summary>
-      用一句话设置
+      快捷设置
     </summary>
     <div
       class="nidofy-detail nidofy-settings"

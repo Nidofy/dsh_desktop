@@ -30,6 +30,7 @@ function optionOf(value: unknown): Option {
   return { connection: value.connection, model: value.model }
 }
 type Props = {
+  onBusyChange?: (busy: boolean) => void
   draft?: CompanionDraft
   editDraft?: (change: Partial<CompanionDraft>) => void
   scope: CompanionScope
@@ -38,7 +39,7 @@ type Props = {
   t: PropsLocale<'nidofy.environment'>['t']
 }
 /** @param props - Current scope and official analysis/draft delegates. @returns Explicit preview, private result and draft choice. */
-export function SideAnalysis({ scope, analysis, appendAnalysis, draft, editDraft, t }: Props) {
+export function SideAnalysis({ scope, analysis, appendAnalysis, draft, editDraft, onBusyChange, t }: Props) {
   const id = useId()
   const [options, setOptions] = useState<Option[]>([]), [localChosen, localChoose] = useState('')
   const [localText, localSetText] = useState(''), [localTokens, localSetTokens] = useState(512)
@@ -49,6 +50,7 @@ export function SideAnalysis({ scope, analysis, appendAnalysis, draft, editDraft
   const [preview, setPreview] = useState<Preview | null>(null), [result, setResult] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false), [status, setStatus] = useState<Status>('')
   const operation = useRef<AbortController | null>(null), alive = useRef(true)
+  useEffect(() => { onBusyChange?.(busy); return () => { onBusyChange?.(false) } }, [busy, onBusyChange])
   useEffect(() => {
     alive.current = true
     const abort = new AbortController()

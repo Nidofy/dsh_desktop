@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { load } from 'js-yaml'
 import { afterEach, beforeAll, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { createElement, useEffect } from 'react'
 import { webcrypto } from 'node:crypto'
 import { RemoteMock, ok } from '@deepseek-ai/dsh-remote-mock'
@@ -274,7 +274,7 @@ it('shows source-labelled bilingual rules, persists independent ignore choices a
     return Response.json(preferences)
   })
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open companion' })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Recent facts' })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Recent progress' })) })
   await expect.poll(() => owner.view.getSnapshot().hints.length).toBeGreaterThan(0)
   expect(document.querySelector('.nidofy-hints')?.innerHTML).toMatchSnapshot('hints-en')
   await act(async () => { ctx.locale.setLocale('zh') })
@@ -284,6 +284,8 @@ it('shows source-labelled bilingual rules, persists independent ignore choices a
   await expect.poll(() => preferences.ignored.length).toBe(1)
   await act(async () => { ctx.uiWorkspace.openSession(f.ids[1]!) })
   await expect.poll(() => owner.view.getSnapshot().returnCard?.hints.length ?? 0).toBeGreaterThan(0)
+  expect(preferences.offered).toHaveLength(0)
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Recent progress' })) })
   await expect.poll(() => preferences.offered.length).toBeGreaterThan(0)
   await act(async () => { ctx.uiWorkspace.openSession(f.ids[0]!) })
   await expect.poll(() => owner.view.getSnapshot().facts?.sessionId).toBe(f.ids[0])
@@ -376,11 +378,22 @@ it('mounts one static companion in the production Frame at narrow width and rest
   const draft = input.state.getSnapshot()
   expect(draft.draft).toBe('未发送草稿')
   expect(draft.attachmentIds).toHaveLength(1)
-  const trigger = await screen.findByRole('button', { name: /Open companion|打开小鲸/ })
+  const trigger = await screen.findByRole('button', { name: /Open companion|打开伙伴/ })
   trigger.focus()
   await act(async () => { fireEvent.click(trigger) })
   expect(document.querySelector('.nidofy-drawer-trigger')?.getAttribute('aria-expanded')).toBe('true')
   const dialog = await screen.findByRole('dialog')
+  const canvas = dialog.querySelector('canvas')
+  expect(dialog.querySelectorAll('.nidofy-primary-actions button')).toHaveLength(2)
+  expect(screen.getByRole('button', { name: 'Full', exact: true }).hasAttribute('disabled')).toBe(true)
+  for (let cycle = 0; cycle < 10; cycle++) {
+    for (const mode of ['Project', 'Tools', 'Assistant']) {
+      await act(async () => { fireEvent.click(screen.getByRole('tab', { name: mode, exact: true })) })
+      expect(dialog.querySelector('canvas')).toBe(canvas)
+      expect(input.state.getSnapshot()).toEqual(draft)
+    }
+  }
+  expect(f.calls.every(isRead)).toBe(true)
   expect(dialog.querySelectorAll('.nidofy-character img')).toHaveLength(1)
   expect(dialog.querySelector('.nidofy-character img')?.getAttribute('src')).toBe('/api/nidofy-extras/assets/companion/bluewhale/upperbody.png')
   await act(async () => { fireEvent.keyDown(dialog, { key: 'Escape', isComposing: true }) })
@@ -418,6 +431,14 @@ it('shares one character slot across wide and narrow layouts, visibility and bot
   await act(async () => { dispose = ctx.slots.register({ name: 'nidofy.companion' }, Character) })
   expect(document.querySelectorAll('[data-companion-test]')).toHaveLength(1)
   expect(document.querySelector('.nidofy-drawer-trigger')).toBeNull()
+  const stage = document.querySelector('.nidofy-character')
+  for (const mode of ['Project', 'Tools', 'Assistant']) {
+    await act(async () => { fireEvent.click(screen.getByRole('tab', { name: mode, exact: true })) })
+    expect(document.querySelector('.nidofy-character')).toBe(stage)
+    expect(mounted - unmounted).toBe(1)
+    if (mode === 'Project') expect(document.querySelectorAll('.nidofy-primary-actions button')).toHaveLength(4)
+    if (mode === 'Tools') expect(document.querySelectorAll('.nidofy-tool-rows button')).toHaveLength(3)
+  }
   expect(document.querySelector('.nidofy-body')?.innerHTML).toMatchSnapshot('en-wide')
   const scope = ctx.companion.view.getSnapshot().scope
   await act(async () => { wide = false; for (const observer of observers) observer.fire() })
@@ -427,7 +448,7 @@ it('shares one character slot across wide and narrow layouts, visibility and bot
   expect(document.querySelectorAll('[data-companion-test]')).toHaveLength(1)
   expect(document.querySelector('.nidofy-body')?.innerHTML).toMatchSnapshot('en-narrow')
   await act(async () => { ctx.locale.setLocale('zh') })
-  expect(screen.getByRole('button', { name: '关闭小鲸' })).toBeDefined()
+  expect(screen.getByRole('button', { name: '关闭伙伴' })).toBeDefined()
   expect(document.querySelector('.nidofy-body')?.innerHTML).toMatchSnapshot('zh-narrow')
   await act(async () => { ctx.locale.setLocale('en') })
   expect(screen.getByRole('button', { name: 'Close companion' })).toBeDefined()
@@ -443,4 +464,126 @@ it('shares one character slot across wide and narrow layouts, visibility and bot
   expect(f.calls.every(isRead)).toBe(true)
   await act(async () => { dispose() })
   expect(f.mock.remote.session.prompt).not.toHaveBeenCalled()
+})
+
+it('guards in-flight analysis closure, keeps drafts across modes and rejects its late response', async () => {
+  const f = await fixture(7, true), ctx = f.client.ctx
+  await expect.poll(() => ctx.companion.view.getSnapshot().connected).toBe(true)
+  await act(async () => {
+    f.mock.streams.push('$events', { type: 'emit', event: 'api-session/status', args: [f.ids[0]!, false] })
+    await f.client.flush()
+  })
+  await expect.poll(() => ctx.companion.view.getSnapshot().state).toBe('idle')
+  const original = globalThis.fetch, gate = Promise.withResolvers<Response>(), requested: string[] = []
+  let aborted = false
+  vi.stubGlobal('fetch', async (url: string, input?: RequestInit) => {
+    if (!url.includes('/analysis/')) return original(url, input)
+    requested.push(url)
+    if (url.endsWith('/options')) return Response.json([{ connection: 'local', model: 'synthetic' }])
+    if (url.endsWith('/prepare')) return Response.json({ ticket: 'explicit-ticket', input: 'isolated analysis', connection: 'local', model: 'synthetic', inputBytes: 17, maxOutputTokens: 512 })
+    if (url.endsWith('/run')) {
+      input?.signal?.addEventListener('abort', () => { aborted = true }, { once: true })
+      return gate.promise
+    }
+    throw Error('Unexpected analysis operation')
+  })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open companion' })) })
+  await act(async () => { fireEvent.click(screen.getByRole('tab', { name: 'Tools', exact: true })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Side analysis/ })) })
+  await screen.findByRole('option', { name: 'local / synthetic' })
+  expect(requested).toEqual(['/api/nidofy/workbench/analysis/options'])
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText('Connection and model'), { target: { value: 'local/synthetic' } })
+    fireEvent.change(screen.getByLabelText('Selected text or question'), { target: { value: 'isolated analysis' } })
+  })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Preview request' })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Send this one request' })) })
+  await act(async () => { fireEvent.click(screen.getByRole('tab', { name: 'Assistant', exact: true })) })
+  const guard = await screen.findByRole('dialog', { name: 'Operation in progress' })
+  expect(guard.textContent).toContain('usage may have occurred')
+  expect(aborted).toBe(false)
+  await act(async () => { fireEvent.keyDown(guard, { key: 'Escape' }) })
+  expect(screen.queryByRole('dialog', { name: 'Operation in progress' })).toBeNull()
+  expect(aborted).toBe(false)
+  await act(async () => { fireEvent.click(screen.getByRole('tab', { name: 'Assistant', exact: true })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Cancel waiting and close' })) })
+  expect(aborted).toBe(true)
+  gate.resolve(Response.json({ status: 'COMPLETED', text: 'late result must stay withdrawn', counts: { inputTokens: 1, outputTokens: 1 } }))
+  await act(async () => { await Promise.resolve() })
+  await act(async () => { fireEvent.click(screen.getByRole('tab', { name: 'Tools', exact: true })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Side analysis/ })) })
+  expect((screen.getByLabelText('Selected text or question')).value).toBe('isolated analysis')
+  expect(screen.queryByText('late result must stay withdrawn')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Send this one request' })).toBeNull()
+  expect(requested.filter(path => path.endsWith('/run'))).toHaveLength(1)
+  expect(f.mock.remote.session.prompt).not.toHaveBeenCalled()
+})
+
+it('keeps admitted approval and generic questions visible across all modes without answering them', async () => {
+  const f = await fixture(7, true), ctx = f.client.ctx, owner = ctx.companion
+  await expect.poll(() => owner.view.getSnapshot().connected).toBe(true)
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open companion' })) })
+  const answer = vi.fn(), publish = ctx.uiSession.registerPendingInteraction(() => 1)
+  let remove = () => {}
+  await act(async () => { remove = publish({ kind: 'approval', sessionId: f.ids[0]!, key: 'pending-ui-approval' }, answer) })
+  for (const mode of ['Project', 'Tools', 'Assistant']) {
+    await act(async () => { fireEvent.click(screen.getByRole('tab', { name: mode, exact: true })) })
+    expect(screen.getByRole('button', { name: 'Open pending approval' }).hasAttribute('disabled')).toBe(false)
+    expect(screen.getByText('Your confirmation is needed')).toBeTruthy()
+  }
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open pending approval' })) })
+  expect(answer).not.toHaveBeenCalled()
+  await act(async () => { remove(); remove = publish({ kind: 'question', sessionId: f.ids[0]!, key: 'pending-ui-question' }, answer) })
+  expect(screen.queryByRole('button', { name: 'Open pending approval' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'Return to conversation', exact: true })).toBeTruthy()
+  await act(async () => { remove() })
+  expect(answer).not.toHaveBeenCalled()
+  expect(f.mock.remote.session.prompt).not.toHaveBeenCalled()
+})
+
+it('keeps local appearance available without a Session and reports unknown pending state while disconnected', async () => {
+  const f = await fixture(7, true), ctx = f.client.ctx
+  await expect.poll(() => ctx.companion.view.getSnapshot().connected).toBe(true)
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open companion' })); ctx.uiSession.selectMain(undefined) })
+  await expect.poll(() => ctx.companion.view.getSnapshot().scope.sessionId).toBeNull()
+  expect(document.querySelector('.nidofy-status-strip')?.textContent).toContain('No conversation selected')
+  await act(async () => { fireEvent.click(document.querySelector('.nidofy-stage button')!) })
+  expect(screen.getByRole('button', { name: 'Enable local Live2D' }).hasAttribute('disabled')).toBe(false)
+  await act(async () => { ctx.uiWorkspace.openSession(f.ids[0]!) })
+  await expect.poll(() => ctx.companion.view.getSnapshot().scope.sessionId).toBe(f.ids[0])
+  const original = globalThis.fetch, gate = Promise.withResolvers<Response>()
+  vi.stubGlobal('fetch', (url: string, input?: RequestInit) => url === '/api/nidofy/companion' ? gate.promise : original(url, input))
+  const connection = ctx.get('connection') as ConnectionHandle
+  await act(async () => { connection.reconnect() })
+  await expect.poll(() => ctx.companion.view.getSnapshot().connected).toBe(false)
+  await act(async () => { fireEvent.click(document.querySelector('.nidofy-status-strip button')!) })
+  expect(screen.getByText('Pending interaction status unavailable')).toBeTruthy()
+  expect(screen.queryByRole('button', { name: 'Open pending approval' })).toBeNull()
+  gate.resolve(Response.json(f.bootstrap))
+  await expect.poll(() => ctx.companion.view.getSnapshot().connected).toBe(true)
+  expect(f.mock.remote.session.prompt).not.toHaveBeenCalled()
+})
+
+it('asks before replacing the one followed conversation and preserves it when cancelled', async () => {
+  const f = await fixture(7, true), ctx = f.client.ctx
+  await expect.poll(() => ctx.companion.view.getSnapshot().connected).toBe(true)
+  await act(async () => {
+    ctx.companion.follow(ctx.companion.view.getSnapshot().scope)
+    ctx.uiWorkspace.openSession(f.ids[1]!)
+  })
+  await expect.poll(() => ctx.companion.view.getSnapshot().scope.sessionId).toBe(f.ids[1])
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open companion' })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Follow this conversation', exact: true })) })
+  const dialog = screen.getByRole('dialog', { name: 'Replace followed conversation?' })
+  expect(dialog.textContent).toContain('parent')
+  await act(async () => { fireEvent.click(within(dialog).getByText('Keep current target', { selector: 'button' })) })
+  expect(ctx.companion.attention.getSnapshot()?.scope.sessionId).toBe(f.ids[0])
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Follow this conversation', exact: true })) })
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Replace followed conversation?' })).getByRole('button', { name: 'Follow this conversation', exact: true }))
+  })
+  expect(ctx.companion.attention.getSnapshot()?.scope.sessionId).toBe(f.ids[1])
+  expect(ctx.sessions.retainInfo(f.ids[0]!).getSnapshot().retainedBy.companionAttention).toBeUndefined()
+  expect(f.mock.remote.session.prompt).not.toHaveBeenCalled()
+  await act(async () => { ctx.companion.releaseAttention() })
 })

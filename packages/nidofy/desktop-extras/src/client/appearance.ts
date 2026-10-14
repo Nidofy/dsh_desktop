@@ -1,3 +1,4 @@
+import { panelAppearanceCss } from './panel-appearance.ts'
 /** Wallpaper asset, inset and opacity match the Tauri edition. */
 export const wallpaperCss = `
 [data-conversation-surface="main"]{isolation:isolate}
@@ -67,4 +68,5 @@ export const appearanceCss = `
 .nidofy-analysis,.nidofy-settings{padding:12px;min-width:0}.nidofy-analysis button,.nidofy-settings button{padding:8px;border:0.5px solid var(--dsw-alias-border-l2);margin:8px 4px 0 0}
 .nidofy-analysis pre,.nidofy-settings pre{overflow-wrap:anywhere}.nidofy-character>div>button{padding:5px 8px;background:var(--dsw-alias-bg-layer-1);font-size:11px}
 .nidofy-operation-preview{padding:8px;border:0.5px solid var(--dsw-alias-border-l2);border-radius:8px}.nidofy-operation-preview button{margin:8px 4px 0 0}
+${panelAppearanceCss}
 `

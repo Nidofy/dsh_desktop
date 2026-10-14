@@ -1846,9 +1846,10 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     doc: 'Register one root renderer without a key. Absence retains the static portrait.\nReceives active/view/act; never independently registers model data or acquires a Session.',
     registerOptions: [],
     ownerProps: [
-      '/** Replaceable single character renderer; animation visibility carries no Session ownership. */\nexport interface CompanionOwnerProps {\n  /** Pause graphics and animation while hidden; dispose on unmount. */\n  active: boolean\n  /** Bounded facts from official owners, including admitted semantic commands. */\n  view: CompanionView\n  /** Delegate a local-user semantic command through the full current scope.\n   * @param action - An admitted command from view.actions.\n   * @returns Existing owner\'s navigation completion.\n   */\n  act(action: CompanionAction): Promise<void>\n}',
+      '/** Replaceable single character renderer; animation visibility carries no Session ownership. */\nexport interface CompanionOwnerProps {\n  /** Pause graphics and animation while hidden; dispose on unmount. */\n  active: boolean\n  /** Bounded facts from official owners, including admitted semantic commands. */\n  view: CompanionView\n  /** Optional display preferences; older character registrations may ignore them. */\n  presentation?: CharacterPresentation\n  /** Delegate a local-user semantic command through the full current scope.\n   * @param action - An admitted command from view.actions.\n   * @returns Existing owner\'s navigation completion.\n   */\n  act(action: CompanionAction): Promise<void>\n}',
     ],
     ownerPropsReferences: [
+      'CharacterPresentation',
       'CompanionAction',
       'CompanionView',
     ],
@@ -1869,7 +1870,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     occupants: [],
     replaceRisk: 'none',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'nidofy.companion\', () => ctx.slots.register(\n      { name: \'nidofy.companion\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
-    source: 'packages/nidofy/desktop-extras/src/client/Environment.tsx:42',
+    source: 'packages/nidofy/desktop-extras/src/client/Environment.tsx:52',
   },
   {
     key: 'nidofy.notebook',
@@ -1879,7 +1880,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     doc: 'Explicitly opened Notebook; scope invalidation unmounts its old operation surface.',
     registerOptions: [],
     ownerProps: [
-      '/** Full transient observation; null means the corresponding owner has not established an identity. */\nexport interface CompanionScope {\n  readonly hostEpoch: CompanionHostEpoch | null\n  readonly windowId: CompanionWindowId | null\n  readonly viewId: CompanionViewId | null\n  readonly panelId: string | null\n  readonly workspaceId: WorkspaceId | null\n  readonly sessionId: SessionId | null\n  readonly turn: number | null\n  readonly revision: number\n}',
+      '/** Null identities remain unavailable; revision advances on permission, view or Host changes. */\nexport interface CompanionScope {\n  readonly hostEpoch: CompanionHostEpoch | null\n  readonly windowId: CompanionWindowId | null\n  readonly viewId: CompanionViewId | null\n  readonly panelId: string | null\n  readonly workspaceId: WorkspaceId | null\n  readonly sessionId: SessionId | null\n  readonly turn: number | null\n  readonly revision: number\n}',
     ],
     ownerPropsReferences: [
       'CompanionHostEpoch',
@@ -1906,7 +1907,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     ],
     replaceRisk: 'shadows-shipped-ui',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'nidofy.notebook\', () => ctx.slots.register(\n      { name: \'nidofy.notebook\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
-    source: 'packages/nidofy/desktop-extras/src/client/Environment.tsx:29',
+    source: 'packages/nidofy/desktop-extras/src/client/Environment.tsx:39',
   },
   {
     key: 'plugins.bundle.activation',
@@ -2483,6 +2484,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
       'client-ui-shortcuts ShortcutsRow id \'shortcuts\'',
       'client-ui-theme AppearanceRow id \'appearance\'',
       'client-ui-theme FontSizeRow id \'font-size\'',
+      '@nidofy/dsh-desktop-extras NotificationSettings id \'nidofy-notifications\'',
     ],
     replaceRisk: 'none',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'settings.general.item\', () => ctx.slots.register(\n      { name: \'settings.general.item\', id: \'my-entry\', order: 100, label: \'My entry\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
@@ -2596,7 +2598,9 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     hookContext: '',
     slotInject: '',
     declaredBy: 'an entry in \'settings.section\' (client-ui-settings-models), so it exists while that entry is mounted',
-    occupants: [],
+    occupants: [
+      '@nidofy/dsh-desktop-extras ManagedConnections id \'nidofy-connections\'',
+    ],
     replaceRisk: 'none',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'settings.models.footer\', () => ctx.slots.register(\n      { name: \'settings.models.footer\', id: \'my-entry\', order: 100, label: \'My entry\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
     source: 'packages/client/ui-settings-models/src/client/slot-contract.ts:40',
@@ -2800,7 +2804,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
       },
     ],
     ownerProps: [
-      '/**\n * Owner share of a settings section entry. The shell owns modal visibility\n * and navigation; a section\'s data arrives through its own inject faces and\n * stores. `close` is the one shell affordance a section receives, for flows\n * that leave settings altogether (starting a session from a section) — the\n * onboarding coordinator\'s `openSection`/`complete` precedent, inverted.\n */\nexport interface SettingsSectionOwnerProps {\n  /** Close the settings panel (the shell owns the open state). */\n  close: () => void\n}',
+      '/**\n * Owner share of a settings section entry. The shell owns modal visibility\n * and navigation; a section\'s data arrives through its own inject faces and\n * stores. `close` is the one shell affordance a section receives, for flows\n * that leave settings altogether (starting a session from a section) — the\n * onboarding coordinator\'s `openSection`/`complete` precedent, inverted.\n */\nexport interface SettingsSectionOwnerProps {\n  /** Close the settings panel (the shell owns the open state). */\n  close: () => void\n  /** Register a mounted editor\'s asynchronous discard decision for section changes and panel dismissal.\n   * @param guard - Returns true only when the user permits leaving the editor.\n   * @returns Disposer removing this editor\'s guard.\n   */\n  registerNavigationGuard?: ((guard: () => Promise<boolean>) => () => void) | undefined\n}',
     ],
     ownerPropsReferences: [],
     standardProps: [

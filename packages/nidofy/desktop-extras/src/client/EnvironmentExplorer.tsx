@@ -12,12 +12,13 @@ type Action = 'commit' | 'push' | 'create' | 'switch'
 interface Change { path: string; status: string }
 interface Preview { token: string; description: string; workspace: string; branch: string | null; permission: 'deployment-default' | 'danger-full-access'; expires: number }
 /** Card details never launch another window until the user selects the explicit full-workbench link. */
-export function EnvironmentExplorer({ info, scope, workbench, t, launch, refresh }: PropsLocale<'nidofy.environment'> & {
+export function EnvironmentExplorer({ info, scope, workbench, t, launch, refresh, onBusyChange }: PropsLocale<'nidofy.environment'> & {
   info: EnvironmentInfo
   scope: CompanionScope
   workbench: EnvironmentInjected['workbench']
   launch: (target: CompanionAction) => void
   refresh: () => void
+  onBusyChange?: (busy: boolean) => void
 }) {
   const root = useRef<HTMLDivElement>(null), more = useRef<HTMLButtonElement>(null)
   const lifetime = useRef(new AbortController())
@@ -34,6 +35,7 @@ export function EnvironmentExplorer({ info, scope, workbench, t, launch, refresh
   const [rows, setRows] = useState<Change[]>([]), [file, setFile] = useState(''), [patch, setPatch] = useState<string | null>(null)
   const [busy, setBusy] = useState(false), [reading, setReading] = useState(false), [error, setError] = useState(''), [done, setDone] = useState(false)
   const [revision, setRevision] = useState(0)
+  useEffect(() => { onBusyChange?.(busy); return () => { onBusyChange?.(false) } }, [busy, onBusyChange])
   useEffect(() => {
     if (!menu) return
     const close = (event: PointerEvent) => { if (event.target instanceof Node && !root.current?.contains(event.target)) setMenu(false) }

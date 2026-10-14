@@ -8,7 +8,8 @@ import { parseSettingsIntent, settingsActions, settingsTargetsPet } from './natu
 /** @param props - Current scope, selected instance and original owner delegates.
  * @returns Explicit preview/receipt UI; cancellation withdraws waiting but cannot undo an owner's committed action.
  */
-export function NaturalSettings({ scope, pet, previewSettings, executeSettings, readSettings, textDraft, editText, t }: {
+export function NaturalSettings({ scope, pet, previewSettings, executeSettings, readSettings,
+  textDraft, editText, onBusyChange, expanded, t }: {
   scope: CompanionScope
   pet: string
   previewSettings: EnvironmentInjected['previewSettings']
@@ -16,6 +17,8 @@ export function NaturalSettings({ scope, pet, previewSettings, executeSettings, 
   readSettings: EnvironmentInjected['readSettings']
   textDraft?: string
   editText?: (text: string) => void
+  onBusyChange?: (busy: boolean) => void
+  expanded?: boolean
   t: PropsLocale<'nidofy.environment'>['t']
 }) {
   const choicesId = useId()
@@ -26,6 +29,7 @@ export function NaturalSettings({ scope, pet, previewSettings, executeSettings, 
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null)
   const [readFailed, setReadFailed] = useState(false)
   const [expired, setExpired] = useState(false)
+  useEffect(() => { onBusyChange?.(busy); return () => { onBusyChange?.(false) } }, [busy, onBusyChange])
   const lifetime = useRef(new AbortController()), operation = useRef<AbortController | null>(null)
   useEffect(() => {
     const controller = new AbortController(); lifetime.current = controller
@@ -69,7 +73,7 @@ export function NaturalSettings({ scope, pet, previewSettings, executeSettings, 
   const shownAction = plan?.action ?? selected
   const followingTarget = plan?.action === 'unfollow' && plan.ownerPreview && 'followingSessionId' in plan.ownerPreview
     && typeof plan.ownerPreview.followingSessionId === 'string' ? plan.ownerPreview.followingSessionId : t('settingsNoFollowing')
-  return <details className="nidofy-control-fold"><summary>{t('naturalSettings')}</summary><div className="nidofy-detail nidofy-settings"><p>{t('settingsExamples')}</p>
+  return <details className="nidofy-control-fold" open={expanded || undefined}><summary>{t('naturalSettings')}</summary><div className="nidofy-detail nidofy-settings"><p>{t('settingsExamples')}</p>
     <label htmlFor={choicesId}>{t('settingsChoices')}</label><select id={choicesId} value={selected} disabled={busy} onChange={(event) => {
       const action = settingsActions.find(value => value === event.target.value)
       choose(action ? t(`settingsAction${action}`) : '')
@@ -82,7 +86,7 @@ export function NaturalSettings({ scope, pet, previewSettings, executeSettings, 
     <button disabled={busy || !text.trim()} onClick={() => { void act('preview') }}>{t('settingsPreview')}</button>
     <button disabled={busy} onClick={() => { void act('read') }}>{t('settingsRead')}</button>
     {snapshot && <section className="nidofy-settings-observed" aria-label={t('settingsObservedLabel')}>
-      <p>{t('settingsObserved')}</p><p>{t('settingsReadAt')} <time dateTime={new Date(snapshot.readAt).toISOString()}>{new Date(snapshot.readAt).toLocaleString(t('dateLocale'))}</time></p>
+      <p>{t('settingsObserved')}</p><p>{t('settingsReadAt')}<time dateTime={new Date(snapshot.readAt).toISOString()}>{new Date(snapshot.readAt).toLocaleString(t('dateLocale'))}</time></p>
       <dl className="nidofy-settings-target"><dt>{t('settingsToneState')}</dt><dd>{t(snapshot.toneEnabled ? 'petInstanceEnabled' : 'petInstanceDisabled')}</dd>
         <dt>{t('settingsFollowingState')}</dt><dd>{snapshot.followingSessionId ?? t('settingsNoFollowing')}</dd>
         <dt>{t('settingsPetsState')}</dt><dd>{t(snapshot.petsEnabled ? 'petInstanceEnabled' : 'petInstanceDisabled')}</dd>

@@ -30,7 +30,7 @@ function props(previewSettings: EnvironmentInjected['previewSettings'], executeS
   return { readSettings: vi.fn<EnvironmentInjected['readSettings']>(async () => snapshot), scope, pet: '1', t, previewSettings, executeSettings }
 }
 function begin() {
-  fireEvent.click(screen.getByText('Settings in words'))
+  fireEvent.click(screen.getByText('Quick settings'))
   fireEvent.change(screen.getByLabelText('One instruction'), { target: { value: 'Please follow this conversation.' } })
   fireEvent.click(screen.getByRole('button', { name: 'Preview setting' }))
 }
@@ -87,7 +87,7 @@ it('selects one finite action without previewing or executing and withdraws a pr
   const preview = vi.fn<EnvironmentInjected['previewSettings']>(async (scope, _text, pet) => ({ ...plan, scope, action: 'mute', target: pet }))
   const execute = vi.fn<EnvironmentInjected['executeSettings']>(async () => receipt)
   render(createElement(NaturalSettings, props(preview, execute)))
-  fireEvent.click(screen.getByText('Settings in words'))
+  fireEvent.click(screen.getByText('Quick settings'))
   expect(screen.getByRole('combobox', { name: 'Available actions' }).querySelectorAll('option')).toHaveLength(13)
   fireEvent.change(screen.getByLabelText('Available actions'), { target: { value: 'mute' } })
   expect(screen.getByLabelText('One instruction')).toHaveProperty('value', 'Mute pet')
